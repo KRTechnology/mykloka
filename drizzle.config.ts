@@ -1,26 +1,26 @@
-// import type { Config } from "drizzle-kit";
-// import { env } from "@/lib/env";
-
-// export default {
-//   schema: "./lib/db/schema/*",
-//   out: "./drizzle",
-//   driver: 'pg',
-//   dbCredentials: {
-//     connectionString: env.DATABASE_URL,
-//   },
-//   verbose: true,
-//   strict: true,
-// } satisfies Config;
-
-import "dotenv/config";
+import * as dotenv from "dotenv";
 import { defineConfig } from "drizzle-kit";
-import { env } from "@/lib/env";
+import { resolve } from "path";
+
+// Load environment variables
+dotenv.config({ path: resolve(__dirname, ".env") });
+dotenv.config({ path: resolve(__dirname, ".env.local") });
+
+const databaseUrl =
+  process.env.NODE_ENV === "production"
+    ? process.env.DATABASE_URL_UNPOOLED
+    : process.env.DATABASE_URL_LOCAL;
+
+if (!databaseUrl) {
+  throw new Error("Database URL not found in environment variables");
+}
 
 export default defineConfig({
   out: "./drizzle",
   schema: "./lib/db/schema/*",
   dialect: "postgresql",
   dbCredentials: {
-    url: env.NODE_ENV === "production" ? env.POSTGRES_URL! : env.DATABASE_URL!,
+    url: databaseUrl,
   },
+  verbose: true,
 });

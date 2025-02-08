@@ -1,23 +1,32 @@
-import { drizzle } from "drizzle-orm/postgres-js";
-import { drizzle as drizzleNeon } from 'drizzle-orm/neon-http';
-import postgres from "postgres";
+// lib/db/index.ts
+import { drizzle } from "drizzle-orm/neon-http";
+import { drizzle as drizzlePostgres } from "drizzle-orm/postgres-js";
 import { neon } from "@neondatabase/serverless";
+import postgres from "postgres";
 import { env } from "@/lib/env";
 
-const getDbClient = () => {
-  if (env.NODE_ENV === "production") {
-    // Use Neon serverless driver in production
-    const sql = neon(env.DATABASE_URL);
-    return drizzleNeon(sql);
-  } else {
-    // Use regular postgres in development
-    const queryClient = postgres(env.DATABASE_URL_LOCAL);
-    return drizzle(queryClient);
-  }
+// For development (local PostgreSQL)
+const getLocalDb = () => {
+  const queryClient = postgres(env.DATABASE_URL_LOCAL);
+  return drizzlePostgres(queryClient);
 };
 
-// For migrations (always use postgres driver)
-export const migrationClient = postgres(env.DATABASE_URL, { max: 1 });
+// For production (Neon)
+const getNeonDb = () => {
+  const sql = neon(env.DATABASE_URL!);
+  return drizzle(sql); // Use drizzle directly with the neon client
+};
+
+// For migrations
+export const migrationClient = postgres(
+  env.NODE_ENV === "production"
+    ? env.DATABASE_URL!
+    : env.DATABASE_URL_LOCAL!,
+  {
+    max: 1,
+    ssl: env.NODE_ENV === "production",
+  }
+);
 
 // Export the appropriate client based on environment
-export const db = getDbClient();
+export const db = env.NODE_ENV === "production" ? getNeonDb() : getLocalDb();
