@@ -11,12 +11,12 @@
     "db:generate": "npx drizzle-kit generate",
     "db:migrate": "npx drizzle-kit migrate",
     "db:push": "drizzle-kit push:pg",
-    "db:studio": "drizzle-kit studio"
+    "db:studio": "drizzle-kit studio",
+    "db:drop": "npx drizzle-kit drop"
   },
   "dependencies": {
     "@neondatabase/serverless": "^0.10.4",
     "@react-email/components": "^0.0.32",
-    "@t3-oss/env-nextjs": "^0.12.0",
     "argon2": "^0.41.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
