@@ -17,7 +17,7 @@ export interface UserJWTPayload extends JWTPayload {
   permissions: Permission[];
   departmentId?: string;
   managerId?: string;
-  [key: string]: unknown; // Add index signature for JWTPayload compatibility
+  [key: string]: unknown;
 }
 
 export class AuthService {
