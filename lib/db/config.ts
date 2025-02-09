@@ -5,16 +5,28 @@ import { drizzle as drizzlePostgres } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import * as schema from "./schema";
 
+// Debug environment
+
+if (!process.env.DATABASE_URL_LOCAL) {
+  throw new Error("DATABASE_URL_LOCAL is not defined in environment variables");
+}
+
 // For development (local PostgreSQL)
 const getLocalDb = () => {
-  const queryClient = postgres(process.env.DATABASE_URL_LOCAL!);
+  const queryClient = postgres(process.env.DATABASE_URL_LOCAL!, {
+    max: 1,
+    ssl: false,
+  });
   return drizzlePostgres(queryClient, { schema });
 };
 
 // For production (Neon)
 const getNeonDb = () => {
-  const sql = neon(process.env.DATABASE_URL!);
-  return drizzle(sql, { schema }); // Use drizzle directly with the neon client
+  if (!process.env.DATABASE_URL) {
+    throw new Error("DATABASE_URL is not defined in environment variables");
+  }
+  const sql = neon(process.env.DATABASE_URL);
+  return drizzle(sql, { schema });
 };
 
 // For migrations
