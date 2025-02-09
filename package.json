@@ -13,7 +13,8 @@
     "db:push": "drizzle-kit push:pg",
     "db:studio": "drizzle-kit studio",
     "db:drop": "npx drizzle-kit drop",
-    "seed": "dotenv -e .env.local -- tsx scripts/seed-roles.ts"
+    "seed:roles": "dotenv -e .env.local -- tsx scripts/seed-roles.ts",
+    "seed:admin": "dotenv -e .env.local -- tsx scripts/seed-super-admin.ts"
   },
   "dependencies": {
     "@neondatabase/serverless": "^0.10.4",
