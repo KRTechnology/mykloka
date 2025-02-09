@@ -29,7 +29,7 @@ async function seedSuperAdmin() {
 
   // Create super admin user
   await db.insert(users).values({
-    email: "superadmin@kimberly-ryan.net",
+    email: "super-admin@kimberly-ryan.net",
     firstName: "Super",
     lastName: "Admin",
     passwordHash: hashedPassword,
