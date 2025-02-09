@@ -40,6 +40,9 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   manager: one(users, {
     fields: [users.managerId],
     references: [users.id],
+    relationName: "userToManager",
   }),
-  subordinates: many(users),
+  subordinates: many(users, {
+    relationName: "userToManager",
+  }),
 }));
