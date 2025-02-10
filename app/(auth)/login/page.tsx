@@ -7,7 +7,14 @@ export const metadata: Metadata = {
   description: "Login to your account",
 };
 
-export default function LoginPage() {
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<any>;
+}) {
+  const params = await searchParams;
+  const from = params.from;
+
   return (
     <div className="min-h-screen flex flex-col mx-auto w-full max-w-[400px] px-4">
       <main className="flex-1 flex flex-col items-center justify-center">
@@ -22,7 +29,7 @@ export default function LoginPage() {
               className=""
             />
           </div>
-          <LoginForm />
+          <LoginForm from={from} />
         </div>
       </main>
       <footer className="py-6 text-center text-sm text-muted-foreground">

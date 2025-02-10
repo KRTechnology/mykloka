@@ -1,16 +1,16 @@
 import { z } from "zod";
 
-const inviteUserSchema = z.object({
+export const inviteUserSchema = z.object({
   email: z.string().email("Invalid email address"),
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
-  roleId: z.string().min(1, "Please select a role"),
+  roleId: z.string().uuid("Please select a role"),
   departmentId: z.string().optional(),
   managerId: z.string().optional(),
   phoneNumber: z.string().optional(),
 });
 
-type InviteUserData = z.infer<typeof inviteUserSchema>;
+export type InviteUserData = z.infer<typeof inviteUserSchema>;
 
 class UsersAPI {
   private async fetchAPI(endpoint: string, options: RequestInit) {

@@ -1,10 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import * as z from "zod";
+import { AuthCard } from "@/components/ui/auth-card";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -14,11 +10,15 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { AuthCard } from "@/components/ui/auth-card";
 import { Icons } from "@/components/ui/icons";
-import { toast } from "sonner";
+import { Input } from "@/components/ui/input";
 import { authAPI } from "@/lib/api/auth";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import * as z from "zod";
 
 const formSchema = z.object({
   email: z.string().min(1, "Email is required").email("Invalid email address"),
@@ -27,11 +27,10 @@ const formSchema = z.object({
 
 type FormData = z.infer<typeof formSchema>;
 
-export function LoginForm() {
+export function LoginForm({ from }: { from: string }) {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const from = searchParams.get("from") || "/dashboard";
+
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
