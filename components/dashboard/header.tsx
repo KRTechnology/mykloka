@@ -11,12 +11,18 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Icons } from "@/components/ui/icons";
 import { authAPI } from "@/lib/api/auth";
+import { UserJWTPayload } from "@/lib/auth/auth.service";
+// import { UserJWTPayload } from "@/lib/auth/types";
 import { Bell, User } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 
-export function Header() {
+interface HeaderProps {
+  user: UserJWTPayload;
+}
+
+export function Header({ user }: HeaderProps) {
   const [isClockedIn, setIsClockedIn] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const router = useRouter();
@@ -66,12 +72,17 @@ export function Header() {
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="p-2 rounded-lg hover:bg-accent">
+              <button className="flex items-center space-x-2 p-2 rounded-lg hover:bg-accent">
                 <User className="h-5 w-5" />
+                <span>{`${user.firstName} ${user.lastName}`}</span>
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel>My Account</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem className="text-sm text-muted-foreground">
+                {user.email}
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem>Profile</DropdownMenuItem>
               <DropdownMenuItem>Settings</DropdownMenuItem>

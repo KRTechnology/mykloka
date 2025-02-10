@@ -4,22 +4,39 @@ export type Permission =
   | "create_users"
   | "edit_users"
   | "delete_users"
+  | "view_user_profiles"
 
-  // Report/View permissions
-  | "view_reports"
+  // Department permissions
   | "view_all_departments"
-  | "view_department_reports"
-
-  // Task permissions
-  | "create_tasks"
-  | "view_tasks"
-  | "approve_tasks"
-  | "view_all_tasks"
+  | "create_departments"
+  | "edit_departments"
+  | "delete_departments"
+  | "view_department"
+  | "view_department_members"
 
   // Attendance permissions
-  | "view_attendance"
-  | "view_department_attendance"
   | "view_all_attendance"
+  | "create_attendance"
+  | "view_attendance_reports"
+  | "view_department_attendance"
+  | "view_department_attendance_reports"
+  | "view_own_attendance"
 
-  // Role management
-  | "manage_roles";
+  // Task permissions
+  | "view_all_tasks"
+  | "create_tasks"
+  | "edit_tasks"
+  | "delete_tasks"
+  | "approve_tasks"
+  | "create_tasks_for_others"
+  | "view_department_tasks"
+  | "edit_own_tasks"
+  | "delete_own_tasks"
+  | "approve_department_tasks"
+  | "create_tasks_for_department"
+  | "view_own_tasks"
+
+  // System management permissions
+  | "manage_roles"
+  | "view_system_reports"
+  | "manage_system_settings";

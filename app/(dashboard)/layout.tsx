@@ -1,28 +1,18 @@
-"use client";
+import { getServerSession } from "@/lib/auth/auth";
+import { redirect } from "next/navigation";
+import { DashboardClient } from "./dashboard-client";
 
-import { motion } from "framer-motion";
-import { Sidebar } from "@/components/dashboard/sidebar";
-import { Header } from "@/components/dashboard/header";
 
-export default function DashboardLayout({
+export default async function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return (
-    <div className="flex h-screen overflow-hidden">
-      <Sidebar />
-      <motion.div 
-        className="flex-1 overflow-auto"
-        initial={{ opacity: 0, x: 20 }}
-        animate={{ opacity: 1, x: 0 }}
-        exit={{ opacity: 0, x: -20 }}
-      >
-        <Header />
-        <main className="p-6">
-          {children}
-        </main>
-      </motion.div>
-    </div>
-  );
-} 
+  const session = await getServerSession();
+
+  if (!session) {
+    redirect("/login");
+  }
+
+  return <DashboardClient  user={session}>{children}</DashboardClient>;
+}

@@ -1,5 +1,7 @@
 "use client";
 
+import { UserJWTPayload } from "@/lib/auth/auth.service";
+import { Permission } from "@/lib/auth/types";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import {
@@ -14,43 +16,66 @@ import {
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+// import { UserJWTPayload } from "@/lib/auth/types";
 
-const menuItems = [
+interface SidebarProps {
+  user: UserJWTPayload;
+}
+
+interface MenuItem {
+  title: string;
+  icon: any;
+  href: string;
+  permissions: Permission[];
+}
+
+const menuItems: MenuItem[] = [
   {
     title: "Dashboard",
     icon: LayoutDashboard,
     href: "/dashboard",
+    permissions: ["view_user_profiles"], // Basic permission all users have
   },
   {
     title: "Users",
     icon: Users,
     href: "/dashboard/users",
+    permissions: ["view_users", "create_users"],
   },
   {
     title: "Attendance",
     icon: Clock,
     href: "/dashboard/attendance",
+    permissions: ["view_own_attendance", "view_all_attendance"],
   },
   {
     title: "Tasks",
     icon: ClipboardList,
     href: "/dashboard/tasks",
+    permissions: ["create_tasks", "view_own_tasks", "view_all_tasks"],
   },
   {
     title: "Departments",
     icon: Building2,
     href: "/dashboard/departments",
+    permissions: ["view_department", "view_all_departments"],
   },
   {
     title: "Settings",
     icon: Settings,
     href: "/dashboard/settings",
+    permissions: ["manage_system_settings"],
   },
 ];
 
-export function Sidebar() {
+export function Sidebar({ user }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
   const pathname = usePathname();
+
+  // Filter menu items based on user permissions
+  const authorizedMenuItems = menuItems.filter((item) =>
+    item.permissions.some((permission) => user.permissions.includes(permission))
+  );
 
   return (
     <motion.div
@@ -84,7 +109,7 @@ export function Sidebar() {
       </div>
 
       <nav className="flex-1 p-4 space-y-2">
-        {menuItems.map((item) => (
+        {authorizedMenuItems.map((item) => (
           <Link
             key={item.href}
             href={item.href}
