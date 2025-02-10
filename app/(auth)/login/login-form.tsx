@@ -31,7 +31,6 @@ export function LoginForm({ from }: { from: string }) {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
-
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -48,7 +47,7 @@ export function LoginForm({ from }: { from: string }) {
 
       if (result?.success) {
         toast.success("Login successful");
-        router.push(from);
+        if (from) router.push(from);
         router.refresh();
       } else {
         throw new Error("Login failed");

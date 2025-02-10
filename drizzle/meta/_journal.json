@@ -15,6 +15,13 @@
       "when": 1739179536114,
       "tag": "0001_lowly_madrox",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1739192610059,
+      "tag": "0002_messy_mentor",
+      "breakpoints": true
     }
   ]
 }

@@ -46,32 +46,41 @@ export class AuthService {
   }
 
   async verifyEmailToken(token: string) {
-    const verificationToken =
-      await this.db.query.emailVerificationTokens.findFirst({
-        where: eq(emailVerificationTokens.token, token),
-        with: {
-          user: true,
-        },
-      });
+    console.log("Verifying token:", token);
 
-    if (!verificationToken) {
-      throw new Error("Invalid token");
-    }
+    try {
+      const verificationToken = await this.db
+        .select()
+        .from(emailVerificationTokens)
+        .where(eq(emailVerificationTokens.token, token))
+        .leftJoin(users, eq(emailVerificationTokens.userId, users.id))
+        .limit(1)
+        .then(rows => rows[0]);
 
-    if (verificationToken.expiresAt < new Date()) {
-      // Delete expired token
+      console.log("Verification token found:", verificationToken);
+
+      if (!verificationToken) {
+        throw new Error("Invalid token");
+      }
+
+      if (verificationToken.email_verification_tokens.expiresAt < new Date()) {
+        // Delete expired token
+        await this.db
+          .delete(emailVerificationTokens)
+          .where(eq(emailVerificationTokens.token, token));
+        throw new Error("Token expired");
+      }
+
+      // Delete used token
       await this.db
         .delete(emailVerificationTokens)
         .where(eq(emailVerificationTokens.token, token));
-      throw new Error("Token expired");
+
+      return verificationToken.email_verification_tokens.userId;
+    } catch (error) {
+      console.error("Error verifying token:", error);
+      throw error;
     }
-
-    // Delete used token
-    await this.db
-      .delete(emailVerificationTokens)
-      .where(eq(emailVerificationTokens.token, token));
-
-    return verificationToken.userId;
   }
 
   async setPassword(userId: string, password: string) {
