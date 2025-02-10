@@ -7,6 +7,13 @@ const loginSchema = z.object({
 
 type LoginData = z.infer<typeof loginSchema>;
 
+const verifyEmailSchema = z.object({
+  token: z.string(),
+  password: z.string(),
+});
+
+type VerifyEmailData = z.infer<typeof verifyEmailSchema>;
+
 class AuthAPI {
   private async fetchAPI(endpoint: string, options: RequestInit) {
     const response = await fetch(`/api/${endpoint}`, {
@@ -44,10 +51,12 @@ class AuthAPI {
     });
   }
 
-  async verifyEmail(token: string, password: string) {
+  async verifyEmail(data: VerifyEmailData) {
+    verifyEmailSchema.parse(data);
+
     return this.fetchAPI("verify", {
       method: "POST",
-      body: JSON.stringify({ token, password }),
+      body: JSON.stringify(data),
     });
   }
 
