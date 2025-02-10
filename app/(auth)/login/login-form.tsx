@@ -45,11 +45,15 @@ export function LoginForm() {
   async function onSubmit(data: FormData) {
     try {
       setIsLoading(true);
-      await authAPI.login(data);
+      const result = await authAPI.login(data);
 
-      toast.success("Login successful");
-      // router.push(from);
-      // router.refresh();
+      if (result?.success) {
+        toast.success("Login successful");
+        router.push(from);
+        router.refresh();
+      } else {
+        throw new Error("Login failed");
+      }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Login failed");
     } finally {

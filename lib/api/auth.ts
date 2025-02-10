@@ -17,14 +17,18 @@ class AuthAPI {
       },
     });
 
-    const data = await response.json();
+    // Only try to parse JSON if we have content
+    const contentType = response.headers.get("content-type");
+    const data = contentType?.includes("application/json")
+      ? await response.json()
+      : null;
 
     if (!response.ok) {
       // Handle different types of errors
-      if (response.status === 400 && data.details) {
+      if (response.status === 400 && data?.details) {
         throw new Error(data.details.map((d: any) => d.message).join(", "));
       }
-      throw new Error(data.error || "Something went wrong");
+      throw new Error(data?.error || "Something went wrong");
     }
 
     return data;
