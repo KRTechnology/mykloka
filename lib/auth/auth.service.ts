@@ -46,8 +46,6 @@ export class AuthService {
   }
 
   async verifyEmailToken(token: string) {
-    console.log("Verifying token:", token);
-
     try {
       const verificationToken = await this.db
         .select()
@@ -55,9 +53,7 @@ export class AuthService {
         .where(eq(emailVerificationTokens.token, token))
         .leftJoin(users, eq(emailVerificationTokens.userId, users.id))
         .limit(1)
-        .then(rows => rows[0]);
-
-      console.log("Verification token found:", verificationToken);
+        .then((rows) => rows[0]);
 
       if (!verificationToken) {
         throw new Error("Invalid token");
