@@ -1,6 +1,5 @@
 import {
   Loader2,
-  LucideProps,
   Moon,
   SunMedium,
   type Icon as LucideIcon,
