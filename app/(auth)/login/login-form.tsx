@@ -18,6 +18,7 @@ import { Input } from "@/components/ui/input";
 import { AuthCard } from "@/components/ui/auth-card";
 import { Icons } from "@/components/ui/icons";
 import { toast } from "sonner";
+import { authAPI } from "@/lib/api/auth";
 
 const formSchema = z.object({
   email: z.string().min(1, "Email is required").email("Invalid email address"),
@@ -38,33 +39,19 @@ export function LoginForm() {
       email: "",
       password: "",
     },
-    mode: "onSubmit", // Only validate on submit
+    mode: "onSubmit",
   });
 
   async function onSubmit(data: FormData) {
     try {
       setIsLoading(true);
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
+      await authAPI.login(data);
 
-      const result = await response.json();
-
-      console.log({ result });
-      
       toast.success("Login successful");
-      // Redirect to dashboard or previous page
-      //   router.push(from);
-      //   router.refresh();
+      // router.push(from);
+      // router.refresh();
     } catch (error) {
-      toast.error("An Error Occurred");
-
-      console.error("Login error:", error);
-      toast.error(
-        error instanceof Error ? error.message : "Something went wrong"
-      );
+      toast.error(error instanceof Error ? error.message : "Login failed");
     } finally {
       setIsLoading(false);
     }
