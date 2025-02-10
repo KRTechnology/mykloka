@@ -11,9 +11,10 @@ export const metadata: Metadata = {
 export default async function VerifyPage({
   searchParams,
 }: {
-  searchParams: { token?: string };
+  searchParams: Promise<any>;
 }) {
-  const token = searchParams.token;
+  const params = await searchParams;
+  const token = params.token;
 
   if (!token) {
     redirect("/login");
@@ -30,7 +31,6 @@ export default async function VerifyPage({
               width={200}
               height={90}
               priority
-              className=""
             />
           </div>
           <VerifyForm token={token} />

@@ -54,7 +54,7 @@ class AuthAPI {
   async verifyEmail(data: VerifyEmailData) {
     verifyEmailSchema.parse(data);
 
-    return this.fetchAPI("verify", {
+    return this.fetchAPI("auth/verify", {
       method: "POST",
       body: JSON.stringify(data),
     });
