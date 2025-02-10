@@ -20,7 +20,7 @@ import { Icons } from "@/components/ui/icons";
 import { toast } from "sonner";
 
 const formSchema = z.object({
-  email: z.string().email("Invalid email address"),
+  email: z.string().min(1, "Email is required").email("Invalid email address"),
   password: z.string().min(1, "Password is required"),
 });
 
@@ -38,6 +38,7 @@ export function LoginForm() {
       email: "",
       password: "",
     },
+    mode: "onSubmit", // Only validate on submit
   });
 
   async function onSubmit(data: FormData) {
@@ -51,15 +52,19 @@ export function LoginForm() {
 
       const result = await response.json();
 
-      if (!response.ok) {
-        throw new Error(result.error || "Login failed");
-      }
-
+      console.log({ result });
+      
+      toast.success("Login successful");
       // Redirect to dashboard or previous page
-      router.push(from);
-      router.refresh();
+      //   router.push(from);
+      //   router.refresh();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Login failed");
+      toast.error("An Error Occurred");
+
+      console.error("Login error:", error);
+      toast.error(
+        error instanceof Error ? error.message : "Something went wrong"
+      );
     } finally {
       setIsLoading(false);
     }
@@ -81,6 +86,7 @@ export function LoginForm() {
                     type="email"
                     disabled={isLoading}
                     className="bg-background"
+                    error={Boolean(form.formState.errors.email)}
                     {...field}
                   />
                 </FormControl>
@@ -100,6 +106,7 @@ export function LoginForm() {
                     type="password"
                     disabled={isLoading}
                     className="bg-background"
+                    error={Boolean(form.formState.errors.password)}
                     {...field}
                   />
                 </FormControl>

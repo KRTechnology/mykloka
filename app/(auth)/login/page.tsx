@@ -16,10 +16,10 @@ export default function LoginPage() {
             <Image
               src="/images/kr-logo-and-tagline.png"
               alt="Kimberly Ryan"
-              width={300}
-              height={120}
+              width={200}
+              height={90}
               priority
-              className="mb-8"
+              className=""
             />
           </div>
           <LoginForm />
