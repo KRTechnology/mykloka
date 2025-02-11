@@ -14,15 +14,18 @@
     "db:studio": "drizzle-kit studio",
     "db:drop": "npx drizzle-kit drop",
     "seed:roles": "dotenv -e .env.local -- tsx scripts/seed-roles.ts",
-    "seed:admin": "dotenv -e .env.local -- tsx scripts/seed-super-admin.ts"
+    "seed:admin": "dotenv -e .env.local -- tsx scripts/seed-super-admin.ts",
+    "seed:departments": "dotenv -e .env.local -- tsx scripts/seed-departments.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
     "@neondatabase/serverless": "^0.10.4",
+    "@radix-ui/react-dialog": "^1.1.6",
     "@radix-ui/react-dropdown-menu": "^2.1.6",
     "@radix-ui/react-label": "^2.1.2",
     "@radix-ui/react-scroll-area": "^1.2.3",
     "@radix-ui/react-select": "^2.1.6",
+    "@radix-ui/react-separator": "^1.1.2",
     "@radix-ui/react-slot": "^1.1.2",
     "@react-email/components": "^0.0.32",
     "@types/nodemailer": "^6.4.17",

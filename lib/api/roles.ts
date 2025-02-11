@@ -12,7 +12,11 @@ export type Role = z.infer<typeof roleSchema>;
 
 class RolesAPI {
   private async fetchAPI(endpoint: string, options?: RequestInit) {
-    const response = await fetch(`/api/roles/${endpoint}`, {
+    // Remove the trailing slash and handle base URL properly
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "";
+    const url = new URL("/api/roles" + endpoint, baseUrl);
+
+    const response = await fetch(url, {
       ...options,
       headers: {
         "Content-Type": "application/json",
@@ -20,16 +24,15 @@ class RolesAPI {
       },
     });
 
-    const contentType = response.headers.get("content-type");
-    const data = contentType?.includes("application/json")
-      ? await response.json()
-      : null;
-
     if (!response.ok) {
+      const contentType = response.headers.get("content-type");
+      const data = contentType?.includes("application/json")
+        ? await response.json()
+        : null;
       throw new Error(data?.error || "Something went wrong");
     }
 
-    return data;
+    return response.json();
   }
 
   async getAllRoles(): Promise<Role[]> {

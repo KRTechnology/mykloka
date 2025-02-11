@@ -1,50 +1,159 @@
+import { revalidateTag } from "next/cache";
 import { z } from "zod";
 
 export const inviteUserSchema = z.object({
-  email: z.string().email("Invalid email address"),
-  firstName: z.string().min(1, "First name is required"),
-  lastName: z.string().min(1, "Last name is required"),
-  roleId: z.string().uuid("Please select a role"),
-  departmentId: z.string().optional(),
-  managerId: z.string().optional(),
+  email: z.string().email(),
+  firstName: z.string().min(1),
+  lastName: z.string().min(1),
+  roleId: z.string().uuid(),
+  departmentId: z.string().uuid().optional(),
+  managerId: z.string().uuid().optional(),
   phoneNumber: z.string().optional(),
 });
 
+export const updateUserSchema = z
+  .object({
+    firstName: z.string().min(1),
+    lastName: z.string().min(1),
+    email: z.string().email(),
+    roleId: z.string().uuid(),
+    departmentId: z.string().uuid().optional(),
+    managerId: z.string().uuid().optional(),
+    phoneNumber: z.string().optional(),
+  })
+  .partial(); // Makes all fields optional for updates
+
 export type InviteUserData = z.infer<typeof inviteUserSchema>;
+export type UpdateUserData = z.infer<typeof updateUserSchema>;
 
-class UsersAPI {
-  private async fetchAPI(endpoint: string, options: RequestInit) {
-    const response = await fetch(`/api/users/${endpoint}`, {
-      ...options,
-      headers: {
-        "Content-Type": "application/json",
-        ...options.headers,
-      },
-    });
+export interface User {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  status: boolean;
+  role: {
+    id: string;
+    name: string;
+  } | null;
+  department: {
+    id: string;
+    name: string;
+  } | null;
+  createdAt: string;
+  updatedAt?: string;
+}
 
-    const contentType = response.headers.get("content-type");
-    const data = contentType?.includes("application/json")
-      ? await response.json()
-      : null;
+export interface PaginatedUsers {
+  data: User[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
 
-    if (!response.ok) {
-      if (response.status === 400 && data?.details) {
-        throw new Error(data.details.map((d: any) => d.message).join(", "));
+export async function getUsers(
+  baseUrl?: string,
+  options: {
+    page?: number;
+    pageSize?: number;
+    search?: string;
+    sortBy?: string;
+    sortDirection?: "asc" | "desc";
+  } = {}
+) {
+  try {
+    const { page = 1, pageSize = 10, search, sortBy, sortDirection } = options;
+
+    if (baseUrl) {
+      const queryParams = new URLSearchParams({
+        page: page.toString(),
+        pageSize: pageSize.toString(),
+        ...(search && { search }),
+        ...(sortBy && { sortBy }),
+        ...(sortDirection && { sortDirection }),
+      });
+
+      const url = `${baseUrl}/api/users?${queryParams}`;
+      const res = await fetch(url, {
+        next: { tags: ["users"], revalidate: 3600 },
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to fetch users");
       }
-      throw new Error(data?.error || "Something went wrong");
+
+      return (await res.json()) as PaginatedUsers;
     }
 
-    return data;
-  }
-
-  async inviteUser(userData: InviteUserData) {
-    inviteUserSchema.parse(userData);
-
-    return this.fetchAPI("", {
-      method: "POST",
-      body: JSON.stringify(userData),
+    const res = await fetch("/api/users", {
+      next: { tags: ["users"], revalidate: 3600 },
     });
+
+    if (!res.ok) {
+      throw new Error("Failed to fetch users");
+    }
+
+    return (await res.json()) as PaginatedUsers;
+  } catch (error) {
+    console.error("Error fetching users:", error);
+    return {
+      data: [],
+      total: 0,
+      page: 1,
+      pageSize: 10,
+      totalPages: 0,
+    };
   }
 }
 
-export const userAPI = new UsersAPI();
+export async function inviteUser(userData: InviteUserData) {
+  const res = await fetch("/api/users", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(userData),
+  });
+
+  if (!res.ok) {
+    const data = await res.json();
+    if (res.status === 400 && data?.details) {
+      throw new Error(data.details.map((d: any) => d.message).join(", "));
+    }
+    throw new Error(data?.error || "Failed to invite user");
+  }
+
+  revalidateTag("users");
+  return res.json();
+}
+
+export async function updateUser(userId: string, data: Partial<User>) {
+  const res = await fetch(`/api/users/${userId}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to update user");
+  }
+
+  revalidateTag("users");
+  return res.json();
+}
+
+export async function deleteUser(userId: string) {
+  const res = await fetch(`/api/users/${userId}`, {
+    method: "DELETE",
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to delete user");
+  }
+
+  revalidateTag("users");
+  return res.json();
+}

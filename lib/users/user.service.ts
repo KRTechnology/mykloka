@@ -1,8 +1,8 @@
-import { eq } from "drizzle-orm";
+import { AuthService } from "@/lib/auth/auth.service";
 import { db as dbClient } from "@/lib/db/config";
 import { users } from "@/lib/db/schema";
-import { AuthService } from "@/lib/auth/auth.service";
 import { emailService } from "@/lib/email/email.service";
+import { eq } from "drizzle-orm";
 
 const authService = new AuthService(dbClient);
 
@@ -26,7 +26,7 @@ export class UserService {
       throw new Error("User with this email already exists");
     }
 
-    // Create user with temporary password
+    // Create user without password
     const [user] = await this.db
       .insert(users)
       .values({
@@ -62,6 +62,20 @@ export class UserService {
     // Create auth token for automatic login
     const authToken = await authService.createAuthToken(userId);
     return authToken;
+  }
+
+  async updateUser(id: string, data: any) {
+    const updatedUser = await this.db
+      .update(users)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(users.id, id))
+      .returning();
+
+    if (!updatedUser[0]) {
+      throw new Error("User not found");
+    }
+
+    return updatedUser[0];
   }
 }
 

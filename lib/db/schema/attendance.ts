@@ -1,11 +1,11 @@
-import { pgTable, uuid, timestamp, varchar, point } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
+import { pgTable, point, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
 import { users } from "./users";
 
 export const attendance = pgTable("attendance", {
   id: uuid("id").defaultRandom().primaryKey(),
   userId: uuid("user_id")
-    .references(() => users.id)
+    .references(() => users.id, { onDelete: "cascade" })
     .notNull(),
   clockInTime: timestamp("clock_in_time").notNull(),
   clockOutTime: timestamp("clock_out_time"),

@@ -1,9 +1,9 @@
+import { DepartmentsTable } from "@/components/departments/departments-table";
 import { Button } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
 import { Separator } from "@/components/ui/separator";
 import { TableSkeleton } from "@/components/ui/table-skeleton";
-import { UsersTable } from "@/components/users/users-table";
-import { getUsers } from "@/lib/api/users";
+import { getAllDepartments } from "@/lib/api/departments";
 import { Plus } from "lucide-react";
 import { headers } from "next/headers";
 import Link from "next/link";
@@ -21,7 +21,7 @@ interface PageProps {
   searchParams: Promise<SearchParams | undefined>;
 }
 
-export default async function UsersPage({ searchParams }: PageProps) {
+export default async function DepartmentsPage({ searchParams }: PageProps) {
   try {
     const headersList = await headers();
     const protocol = headersList.get("x-forwarded-proto") || "http";
@@ -32,36 +32,30 @@ export default async function UsersPage({ searchParams }: PageProps) {
 
     const page = params?.page ? parseInt(params.page) : 1;
     const pageSize = params?.per_page ? parseInt(params.per_page) : 10;
-    const sortBy = params?.sortBy;
-    const sortDirection = params?.sortDirection as "asc" | "desc" | undefined;
-    const search = params?.search;
 
-    const { data: users, totalPages } = await getUsers(baseUrl, {
+    const { data: departments, totalPages } = await getAllDepartments(baseUrl, {
       page,
       pageSize,
-      sortBy,
-      sortDirection,
-      search,
     });
 
     return (
       <div className="flex-1 space-y-4 p-8 pt-6">
         <div className="flex items-center justify-between">
           <Heading
-            title="Users"
-            description="Manage your organization's users"
+            title="Departments"
+            description="Manage your organization's departments"
           />
-          <Link href="/dashboard/users/add">
+          <Link href="/dashboard/departments/add">
             <Button>
               <Plus className="mr-2 h-4 w-4" />
-              Add User
+              Add Department
             </Button>
           </Link>
         </div>
         <Separator />
         <Suspense fallback={<TableSkeleton />}>
-          <UsersTable
-            initialUsers={users}
+          <DepartmentsTable
+            initialDepartments={departments}
             totalPages={totalPages}
             currentPage={page}
           />
@@ -69,12 +63,12 @@ export default async function UsersPage({ searchParams }: PageProps) {
       </div>
     );
   } catch (error) {
-    console.error("Failed to load users:", error);
+    console.error("Failed to load departments:", error);
     return (
       <div className="flex-1 p-8 pt-6">
         <div className="text-center">
           <h2 className="text-2xl font-bold text-red-600">Error</h2>
-          <p className="text-gray-600">Failed to load users</p>
+          <p className="text-gray-600">Failed to load departments</p>
           <Button
             variant="outline"
             className="mt-4"

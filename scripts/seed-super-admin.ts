@@ -1,14 +1,13 @@
 import { db } from "@/lib/db/config";
 import { roles, users } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
 import { hash } from "argon2";
+import { eq } from "drizzle-orm";
 
 async function seedSuperAdmin() {
   // First check if any users exist
   const existingUsers = await db.select().from(users);
 
   if (existingUsers.length > 0) {
-    console.log({ existingUsers });
     console.log("Users already exist, skipping super admin creation...");
     return;
   }
@@ -38,7 +37,7 @@ async function seedSuperAdmin() {
   });
 
   console.log("Super admin created successfully!");
-  console.log("Email: admin@company.com");
+  console.log("Email: super-admin@kimberly-ryan.net");
   console.log("Password: Admin@123");
   console.log("Please change these credentials after first login!");
 }

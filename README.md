@@ -91,8 +91,12 @@ npm run dev
 
 # Todos
 
+- [ x ] Add Favicon
 - [  ] Forgot password and reset password.
-- [  ] Setup department management
+- [  ] Show list of users in user page.
+- [  ] Create single user page.
+- [  ] Setup department management. Full CRUD.
+- [  ] Show list of departments in department page
 - [  ] Edit/Update User Roles and Permissions
 - [  ] Edit/Update User Profile, Departments
 - [  ] Setup clock in/out

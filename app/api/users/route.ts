@@ -1,6 +1,10 @@
-import { NextRequest, NextResponse } from "next/server";
-import { userService } from "@/lib/users/user.service";
 import { validatePermission } from "@/lib/auth/auth";
+import { db } from "@/lib/db/config";
+import { departments, roles, users } from "@/lib/db/schema";
+import { userService } from "@/lib/users/user.service";
+import { asc, desc, eq, sql } from "drizzle-orm";
+import { type PgColumn } from "drizzle-orm/pg-core";
+import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
 const createUserSchema = z.object({
@@ -37,6 +41,100 @@ export async function POST(request: NextRequest) {
     }
     return NextResponse.json(
       { error: "Internal server error" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function GET(request: NextRequest) {
+  try {
+    if (!db) {
+      return NextResponse.json(
+        { error: "Database connection not available" },
+        { status: 500 }
+      );
+    }
+
+    const searchParams = request.nextUrl.searchParams;
+    const page = parseInt(searchParams.get("page") || "1");
+    const pageSize = parseInt(searchParams.get("pageSize") || "10");
+    const sortBy = searchParams.get("sortBy") || "firstName";
+    const sortDirection = searchParams.get("sortDirection") || "asc";
+    const search = searchParams.get("search") || "";
+
+    const offset = (page - 1) * pageSize;
+
+    let query = db
+      .select({
+        id: users.id,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        email: users.email,
+        status: users.isActive,
+        role: {
+          id: roles.id,
+          name: roles.name,
+        },
+        department: {
+          id: departments.id,
+          name: departments.name,
+        },
+        createdAt: users.createdAt,
+      })
+      .from(users)
+      .leftJoin(roles, eq(users.roleId, roles.id))
+      .leftJoin(departments, eq(users.departmentId, departments.id))
+      .$dynamic();
+
+    if (search) {
+      query = query.where(
+        sql`LOWER(${users.firstName}) LIKE LOWER(${"%" + search + "%"}) OR 
+            LOWER(${users.lastName}) LIKE LOWER(${"%" + search + "%"}) OR 
+            LOWER(${users.email}) LIKE LOWER(${"%" + search + "%"})`
+      );
+    }
+
+    const totalPromise = db
+      .select({ count: sql<number>`count(*)` })
+      .from(users)
+      .$dynamic();
+
+    const sortColumn = users[sortBy as keyof typeof users] as PgColumn<any>;
+    if (sortColumn) {
+      query = query.orderBy(
+        sortDirection === "desc" ? desc(sortColumn) : asc(sortColumn)
+      );
+    }
+
+    const [{ count }] = await totalPromise;
+
+    query = query.limit(pageSize).offset(offset);
+
+    const results = await query;
+
+    const transformedResults = results.map((user) => ({
+      ...user,
+      department: user?.department?.id ? user.department : null,
+      role: user?.role?.id ? user.role : null,
+    }));
+
+    return NextResponse.json({
+      data: transformedResults,
+      total: count || 0,
+      page,
+      pageSize,
+      totalPages: Math.ceil((count || 0) / pageSize),
+    });
+  } catch (error) {
+    console.error("Failed to fetch users:", error);
+    return NextResponse.json(
+      {
+        data: [],
+        total: 0,
+        page: 1,
+        pageSize: 10,
+        totalPages: 0,
+      },
       { status: 500 }
     );
   }
