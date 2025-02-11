@@ -76,7 +76,7 @@ export async function getUsers(
 
       const url = `${baseUrl}/api/users?${queryParams}`;
       const res = await fetch(url, {
-        next: { tags: ["users"] },
+        next: { tags: ["users"], revalidate: 3600 },
       });
 
       if (!res.ok) {
@@ -87,7 +87,7 @@ export async function getUsers(
     }
 
     const res = await fetch("/api/users", {
-      next: { tags: ["users"] },
+      next: { tags: ["users"], revalidate: 3600 },
     });
 
     if (!res.ok) {

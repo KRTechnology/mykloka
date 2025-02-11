@@ -1,23 +1,27 @@
 import { Suspense } from "react";
 import { DepartmentsTable } from "@/components/departments/departments-table";
-import { CreateDepartmentDialog } from "@/components/departments/create-department-dialog";
 import { Heading } from "@/components/ui/heading";
 import { Separator } from "@/components/ui/separator";
 import { getAllDepartments } from "@/lib/api/departments";
 import { headers } from "next/headers";
-import { Button } from "@/components/ui/button";
 import { TableSkeleton } from "@/components/ui/table-skeleton";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
+import Link from "next/link";
+
+type SearchParams = {
+  page?: string;
+  per_page?: string;
+  sortBy?: string;
+  sortDirection?: string;
+  search?: string;
+};
 
 interface PageProps {
-  searchParams?: {
-    page?: string;
-    per_page?: string;
-  };
+  searchParams: Promise<SearchParams | undefined>;
 }
 
-export default async function DepartmentsPage({
-  searchParams = {},
-}: PageProps) {
+export default async function DepartmentsPage({ searchParams }: PageProps) {
   try {
     const headersList = await headers();
     const protocol = headersList.get("x-forwarded-proto") || "http";
@@ -25,42 +29,41 @@ export default async function DepartmentsPage({
     const baseUrl = `${protocol}://${host}`;
 
     const params = await searchParams;
-    const currentPage = Number(params?.page) || 1;
-    const pageSize = Number(params?.per_page) || 10;
 
-    const { data: departments = [], totalPages = 1 } = await getAllDepartments(
-      baseUrl,
-      {
-        page: currentPage,
-        pageSize,
-      }
-    );
+    const page = params?.page ? parseInt(params.page) : 1;
+    const pageSize = params?.per_page ? parseInt(params.per_page) : 10;
+
+    const { data: departments, totalPages } = await getAllDepartments(baseUrl, {
+      page,
+      pageSize,
+    });
 
     return (
       <div className="flex-1 space-y-4 p-8 pt-6">
         <div className="flex items-center justify-between">
           <Heading
             title="Departments"
-            description={
-              departments?.length
-                ? "Manage your organization's departments"
-                : "Get started by adding your first department"
-            }
+            description="Manage your organization's departments"
           />
-          <CreateDepartmentDialog />
+          <Link href="/dashboard/departments/add">
+            <Button>
+              <Plus className="mr-2 h-4 w-4" />
+              Add Department
+            </Button>
+          </Link>
         </div>
         <Separator />
         <Suspense fallback={<TableSkeleton />}>
           <DepartmentsTable
             initialDepartments={departments}
             totalPages={totalPages}
-            currentPage={currentPage}
+            currentPage={page}
           />
         </Suspense>
       </div>
     );
   } catch (error) {
-    console.error("Error in DepartmentsPage:", error);
+    console.error("Failed to load departments:", error);
     return (
       <div className="flex-1 p-8 pt-6">
         <div className="text-center">

@@ -9,14 +9,19 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import Link from "next/link";
 
+type SearchParams = {
+  page?: string;
+  per_page?: string;
+  sortBy?: string;
+  sortDirection?: string;
+  search?: string;
+};
+
 interface PageProps {
-  searchParams?: {
-    page?: string;
-    per_page?: string;
-  };
+  searchParams: Promise<SearchParams | undefined>;
 }
 
-export default async function UsersPage({ searchParams = {} }: PageProps) {
+export default async function UsersPage({ searchParams }: PageProps) {
   try {
     const headersList = await headers();
     const protocol = headersList.get("x-forwarded-proto") || "http";
@@ -24,12 +29,19 @@ export default async function UsersPage({ searchParams = {} }: PageProps) {
     const baseUrl = `${protocol}://${host}`;
 
     const params = await searchParams;
-    const currentPage = Number(params?.page) || 1;
-    const pageSize = Number(params?.per_page) || 10;
 
-    const { data: users = [], totalPages = 1 } = await getUsers(baseUrl, {
-      page: currentPage,
+    const page = params?.page ? parseInt(params.page) : 1;
+    const pageSize = params?.per_page ? parseInt(params.per_page) : 10;
+    const sortBy = params?.sortBy;
+    const sortDirection = params?.sortDirection as "asc" | "desc" | undefined;
+    const search = params?.search;
+
+    const { data: users, totalPages } = await getUsers(baseUrl, {
+      page,
       pageSize,
+      sortBy,
+      sortDirection,
+      search,
     });
 
     return (
@@ -37,14 +49,10 @@ export default async function UsersPage({ searchParams = {} }: PageProps) {
         <div className="flex items-center justify-between">
           <Heading
             title="Users"
-            description={
-              users?.length
-                ? "Manage your organization's users"
-                : "Get started by inviting your first user"
-            }
+            description="Manage your organization's users"
           />
           <Link href="/dashboard/users/add">
-            <Button className="bg-kr-orange hover:bg-kr-orange/90">
+            <Button>
               <Plus className="mr-2 h-4 w-4" />
               Add User
             </Button>
@@ -55,13 +63,13 @@ export default async function UsersPage({ searchParams = {} }: PageProps) {
           <UsersTable
             initialUsers={users}
             totalPages={totalPages}
-            currentPage={currentPage}
+            currentPage={page}
           />
         </Suspense>
       </div>
     );
   } catch (error) {
-    console.error("Error in UsersPage:", error);
+    console.error("Failed to load users:", error);
     return (
       <div className="flex-1 p-8 pt-6">
         <div className="text-center">

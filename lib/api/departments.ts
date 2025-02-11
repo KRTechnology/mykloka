@@ -39,7 +39,7 @@ export async function getAllDepartments(
 
       const url = `${baseUrl}/api/departments?${queryParams}`;
       const res = await fetch(url, {
-        next: { tags: ["departments"] },
+        next: { tags: ["departments"], revalidate: 3600 },
       });
 
       if (!res.ok) {
@@ -55,7 +55,7 @@ export async function getAllDepartments(
 
     // For client-side requests
     const res = await fetch("/api/departments", {
-      next: { tags: ["departments"] },
+      next: { tags: ["departments"], revalidate: 3600 },
       cache: "no-store",
       headers: {
         "Content-Type": "application/json",
@@ -88,7 +88,7 @@ export async function getAllDepartmentsForDropdown(
   url.searchParams.set("dropdown", "true");
 
   const res = await fetch(url.toString(), {
-    next: { tags: ["departments"] },
+    next: { tags: ["departments"], revalidate: 3600 },
   });
 
   if (!res.ok) {
