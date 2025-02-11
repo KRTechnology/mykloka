@@ -93,10 +93,10 @@ npm run dev
 
 - [ x ] Add Favicon
 - [  ] Forgot password and reset password.
-- [  ] Show list of users in user page.
+- [ x ] Show list of users in user page.
 - [  ] Create single user page.
-- [  ] Setup department management. Full CRUD.
-- [  ] Show list of departments in department page
+- [ x ] Setup department management. Full CRUD.
+- [ x ] Show list of departments in department page
 - [  ] Edit/Update User Roles and Permissions
 - [  ] Edit/Update User Profile, Departments
 - [  ] Setup clock in/out
