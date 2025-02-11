@@ -46,7 +46,6 @@ export function EditDepartmentDialog({
 
       if (result.success) {
         toast.success("Department updated successfully");
-        router.refresh();
         onClose();
       } else {
         toast.error(result.error || "Failed to update department");

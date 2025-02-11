@@ -35,7 +35,6 @@ export function CreateDepartmentDialog() {
         toast.success("Department created successfully");
         setOpen(false);
         setName("");
-        router.refresh();
       } else {
         toast.error(result.error || "Failed to create department");
       }

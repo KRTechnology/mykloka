@@ -60,70 +60,70 @@ export async function getAllDepartments(baseUrl?: string) {
   }
 }
 
-export async function createDepartment(data: DepartmentData) {
-  const res = await fetch(`${BASE_URL}/api/departments`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(data),
-  });
+// export async function createDepartment(data: DepartmentData) {
+//   const res = await fetch(`${BASE_URL}/api/departments`, {
+//     method: "POST",
+//     headers: {
+//       "Content-Type": "application/json",
+//     },
+//     body: JSON.stringify(data),
+//   });
 
-  if (!res.ok) {
-    const error = await res.json();
-    throw new Error(error.error || "Failed to create department");
-  }
+//   if (!res.ok) {
+//     const error = await res.json();
+//     throw new Error(error.error || "Failed to create department");
+//   }
 
-  revalidateTag("departments");
-  return res.json();
-}
+//   revalidateTag("departments");
+//   return res.json();
+// }
 
-export async function updateDepartment(id: string, data: DepartmentData) {
-  const res = await fetch(`${BASE_URL}/api/departments/${id}`, {
-    method: "PATCH",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(data),
-  });
+// export async function updateDepartment(id: string, data: DepartmentData) {
+//   const res = await fetch(`${BASE_URL}/api/departments/${id}`, {
+//     method: "PATCH",
+//     headers: {
+//       "Content-Type": "application/json",
+//     },
+//     body: JSON.stringify(data),
+//   });
 
-  if (!res.ok) {
-    throw new Error("Failed to update department");
-  }
+//   if (!res.ok) {
+//     throw new Error("Failed to update department");
+//   }
 
-  revalidateTag("departments");
-  return res.json();
-}
+//   revalidateTag("departments");
+//   return res.json();
+// }
 
-export async function deleteDepartment(id: string) {
-  const res = await fetch(`${BASE_URL}/api/departments/${id}`, {
-    method: "DELETE",
-  });
+// export async function deleteDepartment(id: string) {
+//   const res = await fetch(`${BASE_URL}/api/departments/${id}`, {
+//     method: "DELETE",
+//   });
 
-  if (!res.ok) {
-    throw new Error("Failed to delete department");
-  }
+//   if (!res.ok) {
+//     throw new Error("Failed to delete department");
+//   }
 
-  revalidateTag("departments");
-  return res.json();
-}
+//   revalidateTag("departments");
+//   return res.json();
+// }
 
-export async function getDepartments(
-  tableState: TableState<"name" | "createdAt" | "updatedAt">
-): Promise<PaginatedResponse<Department>> {
-  const queryString = buildQueryString(
-    tableState.pagination,
-    tableState.sorting,
-    tableState.filters
-  );
+// export async function getDepartments(
+//   tableState: TableState<"name" | "createdAt" | "updatedAt">
+// ): Promise<PaginatedResponse<Department>> {
+//   const queryString = buildQueryString(
+//     tableState.pagination,
+//     tableState.sorting,
+//     tableState.filters
+//   );
 
-  const res = await fetch(`${BASE_URL}/api/departments?${queryString}`, {
-    next: { tags: ["departments"] },
-  });
+//   const res = await fetch(`${BASE_URL}/api/departments?${queryString}`, {
+//     next: { tags: ["departments"] },
+//   });
 
-  if (!res.ok) {
-    throw new Error("Failed to fetch departments");
-  }
+//   if (!res.ok) {
+//     throw new Error("Failed to fetch departments");
+//   }
 
-  return res.json();
-}
+//   return res.json();
+// }

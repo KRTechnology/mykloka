@@ -36,7 +36,6 @@ export function DeleteDepartmentDialog({
 
       if (result.success) {
         toast.success("Department deleted successfully");
-        router.refresh();
         onClose();
       } else {
         toast.error(result.error || "Failed to delete department");
