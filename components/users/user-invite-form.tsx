@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Icons } from "@/components/ui/icons";
-import { userAPI } from "@/lib/api/users";
+// import { userAPI } from "@/lib/api/users";
 import { rolesAPI, type Role } from "@/lib/api/roles";
 
 const formSchema = z.object({
@@ -73,7 +73,7 @@ export function UserInviteForm() {
   async function onSubmit(data: FormData) {
     try {
       setIsLoading(true);
-      await userAPI.inviteUser(data);
+      // await userAPI.inviteUser(data);
       toast.success("Invitation sent successfully");
       router.push("/dashboard/users");
       router.refresh();

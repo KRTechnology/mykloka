@@ -30,8 +30,7 @@ interface DepartmentsTableProps {
   initialDepartments: Department[];
 }
 
-// Update the type definition
-type SortableField = keyof Pick<Department, "name" | "createdAt" | "updatedAt">;
+type SortableField = "name" | "createdAt" | "userCount";
 
 export function DepartmentsTable({
   initialDepartments = [],
@@ -106,18 +105,28 @@ export function DepartmentsTable({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>
-                <Button
-                  variant="ghost"
-                  onClick={() => toggleSort("name")}
-                  className="hover:bg-transparent"
-                >
-                  Name
-                  <ArrowUpDown className="ml-2 h-4 w-4" />
-                </Button>
+              <TableHead
+                className="cursor-pointer"
+                onClick={() => toggleSort("name")}
+              >
+                Name
+                <SortIcon field="name" sorting={sorting} />
               </TableHead>
-              <TableHead>Created At</TableHead>
-              <TableHead>Updated At</TableHead>
+              <TableHead>Department Head</TableHead>
+              <TableHead
+                className="cursor-pointer"
+                onClick={() => toggleSort("userCount")}
+              >
+                Members
+                <SortIcon field="userCount" sorting={sorting} />
+              </TableHead>
+              <TableHead
+                className="cursor-pointer"
+                onClick={() => toggleSort("createdAt")}
+              >
+                Created
+                <SortIcon field="createdAt" sorting={sorting} />
+              </TableHead>
               <TableHead className="w-[100px]">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -134,8 +143,15 @@ export function DepartmentsTable({
                   <TableCell className="font-medium">
                     {department.name}
                   </TableCell>
+                  <TableCell>
+                    {department.head || (
+                      <span className="text-muted-foreground">
+                        No head assigned
+                      </span>
+                    )}
+                  </TableCell>
+                  <TableCell>{department.userCount}</TableCell>
                   <TableCell>{formatDate(department.createdAt)}</TableCell>
-                  <TableCell>{formatDate(department.updatedAt)}</TableCell>
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -181,5 +197,24 @@ export function DepartmentsTable({
         onClose={() => setDeletingDepartment(null)}
       />
     </>
+  );
+}
+
+// Helper component for sort icons
+function SortIcon({
+  field,
+  sorting,
+}: {
+  field: string;
+  sorting: SortingState<string>;
+}) {
+  if (sorting.field !== field) {
+    return null;
+  }
+
+  return (
+    <span className="ml-2 inline-block">
+      {sorting.direction === "asc" ? "↑" : "↓"}
+    </span>
   );
 }

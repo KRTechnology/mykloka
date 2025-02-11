@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db/config";
-import { departments } from "@/lib/db/schema";
+import { departments, users } from "@/lib/db/schema";
 import { validatePermission } from "@/lib/auth/auth";
 import { z } from "zod";
-import { eq, desc, asc, sql } from "drizzle-orm";
+import { eq, desc, asc, sql, count } from "drizzle-orm";
 import { type PgColumn } from "drizzle-orm/pg-core";
 
 const departmentSchema = z.object({
@@ -31,8 +31,24 @@ export async function GET(request: NextRequest) {
     // Calculate offset
     const offset = (page - 1) * pageSize;
 
-    // Build base query
-    let query = db.select().from(departments).$dynamic();
+    // Build base query with head information and user count
+    let query = db
+      .select({
+        id: departments.id,
+        name: departments.name,
+        createdAt: departments.createdAt,
+        headId: departments.headId,
+        head: {
+          id: users.id,
+          firstName: users.firstName,
+          lastName: users.lastName,
+        },
+        userCount: sql<number>`count(distinct ${users.id}) filter (where ${users.departmentId} = ${departments.id})`,
+      })
+      .from(departments)
+      .leftJoin(users, eq(departments.headId, users.id))
+      .groupBy(departments.id, users.id, users.firstName, users.lastName)
+      .$dynamic();
 
     // Add search condition if provided
     if (search) {
@@ -63,8 +79,16 @@ export async function GET(request: NextRequest) {
     // Execute queries in parallel
     const [results, [{ count }]] = await Promise.all([query, totalPromise]);
 
+    // Transform results to include formatted head name
+    const transformedResults = results.map((dept) => ({
+      ...dept,
+      head: dept?.head?.id
+        ? `${dept?.head.firstName} ${dept.head.lastName}`
+        : null,
+    }));
+
     return NextResponse.json({
-      data: results || [],
+      data: transformedResults,
       total: count || 0,
       page,
       pageSize,

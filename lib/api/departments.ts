@@ -16,6 +16,8 @@ export interface Department {
   id: string;
   name: string;
   headId: string | null;
+  head: string | null;
+  userCount: number;
   createdAt: string;
   updatedAt: string;
 }
