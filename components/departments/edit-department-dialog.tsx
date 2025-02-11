@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -13,8 +13,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Department, updateDepartment } from "@/lib/api/departments";
+import { type Department } from "@/lib/api/departments";
+import { updateDepartmentAction } from "@/app/actions/departments";
 import { useRouter } from "next/navigation";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 interface EditDepartmentDialogProps {
   department: Department | null;
@@ -26,7 +28,7 @@ export function EditDepartmentDialog({
   onClose,
 }: EditDepartmentDialogProps) {
   const [name, setName] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [isPending, startTransition] = useTransition();
   const router = useRouter();
 
   useEffect(() => {
@@ -35,49 +37,63 @@ export function EditDepartmentDialog({
     }
   }, [department]);
 
-  async function handleSubmit() {
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
     if (!department) return;
-    try {
-      setIsLoading(true);
-      await updateDepartment(department.id, { name });
-      onClose();
-      router.refresh();
-      toast.success("Department updated successfully");
-    } catch (error: any) {
-      toast.error(error.message);
-    } finally {
-      setIsLoading(false);
-    }
+
+    startTransition(async () => {
+      const result = await updateDepartmentAction(department.id, { name });
+
+      if (result.success) {
+        toast.success("Department updated successfully");
+        router.refresh();
+        onClose();
+      } else {
+        toast.error(result.error || "Failed to update department");
+      }
+    });
   }
 
   return (
     <Dialog open={!!department} onOpenChange={() => onClose()}>
       <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Edit Department</DialogTitle>
-          <DialogDescription>
-            Update the department information.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="grid gap-2">
-            <Label htmlFor="name">Name</Label>
-            <Input
-              id="name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Enter department name"
-            />
+        <form onSubmit={handleSubmit}>
+          <DialogHeader>
+            <DialogTitle>Edit Department</DialogTitle>
+            <DialogDescription>
+              Update the department information.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="name">Name</Label>
+              <Input
+                id="name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Enter department name"
+                disabled={isPending}
+              />
+            </div>
           </div>
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose} disabled={isLoading}>
-            Cancel
-          </Button>
-          <Button onClick={handleSubmit} disabled={!name || isLoading}>
-            {isLoading ? "Updating..." : "Update"}
-          </Button>
-        </DialogFooter>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              disabled={isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              disabled={!name || isPending}
+              className="min-w-[80px]"
+            >
+              {isPending ? <LoadingSpinner /> : "Update"}
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );

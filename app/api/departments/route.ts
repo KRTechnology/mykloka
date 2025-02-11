@@ -13,6 +13,14 @@ const departmentSchema = z.object({
 
 export async function GET(request: NextRequest) {
   try {
+    // Add basic error handling for database connection
+    if (!db) {
+      return NextResponse.json(
+        { error: "Database connection not available" },
+        { status: 500 }
+      );
+    }
+
     const searchParams = request.nextUrl.searchParams;
     const page = parseInt(searchParams.get("page") || "1");
     const pageSize = parseInt(searchParams.get("pageSize") || "10");
@@ -56,16 +64,22 @@ export async function GET(request: NextRequest) {
     const [results, [{ count }]] = await Promise.all([query, totalPromise]);
 
     return NextResponse.json({
-      data: results,
-      total: count,
+      data: results || [],
+      total: count || 0,
       page,
       pageSize,
-      totalPages: Math.ceil(count / pageSize),
+      totalPages: Math.ceil((count || 0) / pageSize),
     });
   } catch (error) {
     console.error("Failed to fetch departments:", error);
     return NextResponse.json(
-      { error: "Failed to fetch departments" },
+      {
+        data: [],
+        total: 0,
+        page: 1,
+        pageSize: 10,
+        totalPages: 0,
+      },
       { status: 500 }
     );
   }

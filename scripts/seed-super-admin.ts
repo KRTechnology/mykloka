@@ -8,7 +8,6 @@ async function seedSuperAdmin() {
   const existingUsers = await db.select().from(users);
 
   if (existingUsers.length > 0) {
-    console.log({ existingUsers });
     console.log("Users already exist, skipping super admin creation...");
     return;
   }

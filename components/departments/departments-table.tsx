@@ -24,6 +24,7 @@ import { useState } from "react";
 import { DeleteDepartmentDialog } from "./delete-department-dialog";
 import { EditDepartmentDialog } from "./edit-department-dialog";
 import { type SortingState } from "@/types/table";
+import { formatDate } from "@/lib/utils/format";
 
 interface DepartmentsTableProps {
   initialDepartments: Department[];
@@ -33,9 +34,8 @@ interface DepartmentsTableProps {
 type SortableField = keyof Pick<Department, "name" | "createdAt" | "updatedAt">;
 
 export function DepartmentsTable({
-  initialDepartments,
+  initialDepartments = [],
 }: DepartmentsTableProps) {
-  const [departments, setDepartments] = useState(initialDepartments);
   const [sorting, setSorting] = useState<SortingState<SortableField>>({
     field: "name",
     direction: "asc",
@@ -46,7 +46,7 @@ export function DepartmentsTable({
   const [deletingDepartment, setDeletingDepartment] =
     useState<Department | null>(null);
 
-  const sortedDepartments = [...departments].sort((a, b) => {
+  const sortedDepartments = [...initialDepartments].sort((a, b) => {
     const aValue = a[sorting.field];
     const bValue = b[sorting.field];
 
@@ -72,6 +72,33 @@ export function DepartmentsTable({
       });
     }
   };
+
+  if (!initialDepartments.length) {
+    return (
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Name</TableHead>
+              <TableHead>Created At</TableHead>
+              <TableHead>Updated At</TableHead>
+              <TableHead className="w-[100px]">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            <TableRow>
+              <TableCell
+                colSpan={4}
+                className="h-24 text-center text-muted-foreground"
+              >
+                No departments found.
+              </TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -107,12 +134,8 @@ export function DepartmentsTable({
                   <TableCell className="font-medium">
                     {department.name}
                   </TableCell>
-                  <TableCell>
-                    {new Date(department.createdAt).toLocaleDateString()}
-                  </TableCell>
-                  <TableCell>
-                    {new Date(department.updatedAt).toLocaleDateString()}
-                  </TableCell>
+                  <TableCell>{formatDate(department.createdAt)}</TableCell>
+                  <TableCell>{formatDate(department.updatedAt)}</TableCell>
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
