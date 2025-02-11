@@ -13,15 +13,23 @@ const departmentSchema = z.object({
 
 export async function GET(request: NextRequest) {
   try {
-    // Add basic error handling for database connection
-    if (!db) {
-      return NextResponse.json(
-        { error: "Database connection not available" },
-        { status: 500 }
-      );
+    const searchParams = request.nextUrl.searchParams;
+    const isDropdown = searchParams.get("dropdown") === "true";
+
+    // If it's a dropdown request, fetch all departments
+    if (isDropdown) {
+      const allDepartments = await db
+        .select({
+          id: departments.id,
+          name: departments.name,
+        })
+        .from(departments)
+        .orderBy(asc(departments.name));
+
+      return NextResponse.json({ data: allDepartments });
     }
 
-    const searchParams = request.nextUrl.searchParams;
+    // Regular paginated request for the table
     const page = parseInt(searchParams.get("page") || "1");
     const pageSize = parseInt(searchParams.get("pageSize") || "10");
     const sortBy = searchParams.get("sortBy") || "name";

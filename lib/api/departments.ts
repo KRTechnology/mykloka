@@ -78,6 +78,26 @@ export async function getAllDepartments(
   }
 }
 
+export async function getAllDepartmentsForDropdown(
+  baseUrl?: string
+): Promise<{ data: Department[] }> {
+  const url = new URL(
+    "/api/departments",
+    baseUrl || process.env.NEXT_PUBLIC_APP_URL || ""
+  );
+  url.searchParams.set("dropdown", "true");
+
+  const res = await fetch(url.toString(), {
+    next: { tags: ["departments"] },
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to fetch departments");
+  }
+
+  return res.json();
+}
+
 // export async function createDepartment(data: DepartmentData) {
 //   const res = await fetch(`${BASE_URL}/api/departments`, {
 //     method: "POST",

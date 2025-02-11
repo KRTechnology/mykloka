@@ -31,7 +31,7 @@ import { type SortingState } from "@/types/table";
 import { AnimatePresence, motion } from "framer-motion";
 import { MoreHorizontal, Pencil, Trash } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { DeleteUserDialog } from "./delete-user-dialog";
 import { EditUserDialog } from "./edit-user-dialog";
 
@@ -48,30 +48,42 @@ export function UsersTable({
   totalPages = 1,
   currentPage = 1,
 }: UsersTableProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [sorting, setSorting] = useState<SortingState<SortableField>>({
-    field: "firstName",
-    direction: "asc",
+    field: (searchParams.get("sortBy") as SortableField) || "firstName",
+    direction: (searchParams.get("sortDirection") as "asc" | "desc") || "asc",
   });
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [deletingUser, setDeletingUser] = useState<User | null>(null);
 
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
+  // Update URL and trigger new data fetch when sorting changes
+  const handleSort = useCallback(
+    (field: SortableField) => {
+      const direction =
+        sorting.field === field && sorting.direction === "asc" ? "desc" : "asc";
+
+      const params = new URLSearchParams(searchParams);
+      params.set("sortBy", field);
+      params.set("sortDirection", direction);
+
+      // Reset to first page when sorting changes
+      params.set("page", "1");
+
+      router.push(`${pathname}?${params.toString()}`);
+      router.refresh(); // This will trigger a new server request
+
+      setSorting({ field, direction });
+    },
+    [sorting, pathname, searchParams, router]
+  );
 
   const handlePageChange = (page: number) => {
     const params = new URLSearchParams(searchParams);
     params.set("page", page.toString());
     router.push(`${pathname}?${params.toString()}`);
   };
-
-  function toggleSort(field: SortableField) {
-    setSorting((current) => ({
-      field,
-      direction:
-        current.field === field && current.direction === "asc" ? "desc" : "asc",
-    }));
-  }
 
   // Generate pagination items
   const paginationItems = [];
@@ -118,14 +130,14 @@ export function UsersTable({
             <TableRow>
               <TableHead
                 className="cursor-pointer"
-                onClick={() => toggleSort("firstName")}
+                onClick={() => handleSort("firstName")}
               >
                 Name
                 <SortIcon field="firstName" sorting={sorting} />
               </TableHead>
               <TableHead
                 className="cursor-pointer"
-                onClick={() => toggleSort("email")}
+                onClick={() => handleSort("email")}
               >
                 Email
                 <SortIcon field="email" sorting={sorting} />
@@ -135,7 +147,7 @@ export function UsersTable({
               <TableHead>Status</TableHead>
               <TableHead
                 className="cursor-pointer"
-                onClick={() => toggleSort("createdAt")}
+                onClick={() => handleSort("createdAt")}
               >
                 Joined
                 <SortIcon field="createdAt" sorting={sorting} />

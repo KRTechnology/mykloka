@@ -106,9 +106,11 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    const [{ count }] = await totalPromise;
+
     query = query.limit(pageSize).offset(offset);
 
-    const [results, [{ count }]] = await Promise.all([query, totalPromise]);
+    const results = await query;
 
     const transformedResults = results.map((user) => ({
       ...user,
