@@ -12,13 +12,14 @@ const departmentSchema = z.object({
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
     const department = await db
       .select()
       .from(departments)
-      .where(eq(departments.id, params.id));
+      .where(eq(departments.id, id));
 
     if (!department[0]) {
       return NextResponse.json(
@@ -39,8 +40,9 @@ export async function GET(
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
     const hasPermission = await validatePermission("edit_departments");
     if (!hasPermission) {
@@ -53,7 +55,7 @@ export async function PATCH(
     const updatedDepartment = await db
       .update(departments)
       .set({ ...validatedData, updatedAt: new Date() })
-      .where(eq(departments.id, params.id))
+      .where(eq(departments.id, id))
       .returning();
 
     if (!updatedDepartment[0]) {
@@ -81,8 +83,9 @@ export async function PATCH(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
     const hasPermission = await validatePermission("delete_departments");
     if (!hasPermission) {
@@ -91,7 +94,7 @@ export async function DELETE(
 
     const deletedDepartment = await db
       .delete(departments)
-      .where(eq(departments.id, params.id))
+      .where(eq(departments.id, id))
       .returning();
 
     if (!deletedDepartment[0]) {
