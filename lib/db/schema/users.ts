@@ -17,10 +17,15 @@ export const users = pgTable("users", {
   firstName: varchar("first_name").notNull(),
   lastName: varchar("last_name").notNull(),
   phoneNumber: varchar("phone_number"),
-  managerId: uuid("manager_id").references((): AnyPgColumn => users.id),
-  roleId: uuid("role_id").references((): AnyPgColumn => roles.id),
+  managerId: uuid("manager_id").references((): AnyPgColumn => users.id, {
+    onDelete: "set null",
+  }),
+  roleId: uuid("role_id").references((): AnyPgColumn => roles.id, {
+    onDelete: "set null",
+  }),
   departmentId: uuid("department_id").references(
-    (): AnyPgColumn => departments.id
+    (): AnyPgColumn => departments.id,
+    { onDelete: "set null" }
   ),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),

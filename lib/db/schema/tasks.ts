@@ -23,13 +23,18 @@ export const tasks = pgTable("tasks", {
   title: varchar("title").notNull(),
   description: text("description"),
   createdById: uuid("created_by_id")
-    .references(() => users.id)
+    .references(() => users.id, { onDelete: "cascade" })
     .notNull(),
-  assignedToId: uuid("assigned_to_id").references(() => users.id),
-  approvedById: uuid("approved_by_id").references(() => users.id),
+  assignedToId: uuid("assigned_to_id").references(() => users.id, {
+    onDelete: "set null",
+  }),
+  approvedById: uuid("approved_by_id").references(() => users.id, {
+    onDelete: "set null",
+  }),
   approvalDate: timestamp("approval_date"),
   completionApprovedById: uuid("completion_approved_by_id").references(
-    () => users.id
+    () => users.id,
+    { onDelete: "set null" }
   ),
   completionApprovalDate: timestamp("completion_approval_date"),
   startTime: timestamp("start_time"),

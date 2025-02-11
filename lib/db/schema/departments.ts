@@ -5,7 +5,7 @@ import { users } from "./users";
 export const departments = pgTable("departments", {
   id: uuid("id").defaultRandom().primaryKey(),
   name: varchar("name").notNull().unique(),
-  headId: uuid("head_id").references(() => users.id),
+  headId: uuid("head_id").references(() => users.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });

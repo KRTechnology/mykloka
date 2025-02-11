@@ -38,7 +38,7 @@ async function seedSuperAdmin() {
   });
 
   console.log("Super admin created successfully!");
-  console.log("Email: admin@company.com");
+  console.log("Email: super-admin@kimberly-ryan.net");
   console.log("Password: Admin@123");
   console.log("Please change these credentials after first login!");
 }
