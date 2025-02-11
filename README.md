@@ -92,7 +92,7 @@ npm run dev
 # Todos
 
 - [  ] Forgot password and reset password.
-- [  ] Setup department management.
+- [  ] Setup department management
 - [  ] Edit/Update User Roles and Permissions
 - [  ] Edit/Update User Profile, Departments
 - [  ] Setup clock in/out
