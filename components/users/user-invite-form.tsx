@@ -192,7 +192,8 @@ export function UserInviteForm({ roles, departments }: UserInviteFormProps) {
             Cancel
           </Button>
           <Button type="submit" disabled={isPending}>
-            {isPending ? <LoadingSpinner /> : "Send Invitation"}
+            <span className="mr-2">Send Invitation</span>
+            {isPending && <LoadingSpinner />}
           </Button>
         </div>
       </form>

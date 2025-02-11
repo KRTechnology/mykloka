@@ -11,7 +11,20 @@ export const inviteUserSchema = z.object({
   phoneNumber: z.string().optional(),
 });
 
+export const updateUserSchema = z
+  .object({
+    firstName: z.string().min(1),
+    lastName: z.string().min(1),
+    email: z.string().email(),
+    roleId: z.string().uuid(),
+    departmentId: z.string().uuid().optional(),
+    managerId: z.string().uuid().optional(),
+    phoneNumber: z.string().optional(),
+  })
+  .partial(); // Makes all fields optional for updates
+
 export type InviteUserData = z.infer<typeof inviteUserSchema>;
+export type UpdateUserData = z.infer<typeof updateUserSchema>;
 
 export interface User {
   id: string;
@@ -28,6 +41,7 @@ export interface User {
     name: string;
   } | null;
   createdAt: string;
+  updatedAt?: string;
 }
 
 export interface PaginatedUsers {

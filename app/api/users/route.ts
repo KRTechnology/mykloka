@@ -114,7 +114,7 @@ export async function GET(request: NextRequest) {
 
     const transformedResults = results.map((user) => ({
       ...user,
-      department: user?.department?.id ? user.department.name : null,
+      department: user?.department?.id ? user.department : null,
       role: user?.role?.id ? user.role : null,
     }));
 

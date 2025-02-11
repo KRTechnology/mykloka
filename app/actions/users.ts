@@ -5,7 +5,11 @@ import { users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { revalidateTag } from "next/cache";
 import { validatePermission } from "@/lib/auth/auth";
-import { InviteUserData, inviteUserSchema } from "@/lib/api/users";
+import {
+  InviteUserData,
+  inviteUserSchema,
+  updateUserSchema,
+} from "@/lib/api/users";
 import { userService } from "@/lib/users/user.service";
 
 export async function inviteUserAction(data: InviteUserData) {
@@ -35,17 +39,15 @@ export async function inviteUserAction(data: InviteUserData) {
   }
 }
 
-export async function updateUserAction(
-  id: string,
-  data: Partial<InviteUserData>
-) {
+export async function updateUserAction(data: any) {
   try {
     const hasPermission = await validatePermission("edit_users");
     if (!hasPermission) {
       throw new Error("Unauthorized");
     }
 
-    const validatedData = inviteUserSchema.partial().parse(data);
+    const { id, ...updateData } = data;
+    const validatedData = updateUserSchema.parse(updateData);
 
     const updatedUser = await db
       .update(users)
@@ -58,7 +60,6 @@ export async function updateUserAction(
     }
 
     revalidateTag("users");
-
     return { success: true, data: updatedUser[0] };
   } catch (error) {
     console.error("Error updating user:", error);

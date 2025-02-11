@@ -63,6 +63,20 @@ export class UserService {
     const authToken = await authService.createAuthToken(userId);
     return authToken;
   }
+
+  async updateUser(id: string, data: any) {
+    const updatedUser = await this.db
+      .update(users)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(users.id, id))
+      .returning();
+
+    if (!updatedUser[0]) {
+      throw new Error("User not found");
+    }
+
+    return updatedUser[0];
+  }
 }
 
 // Create a singleton instance
