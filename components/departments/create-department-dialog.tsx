@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -15,28 +15,31 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
-import { createDepartment } from "@/lib/api/departments";
+import { createDepartmentAction } from "@/app/actions/departments";
 import { useRouter } from "next/navigation";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 export function CreateDepartmentDialog() {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [isPending, startTransition] = useTransition();
   const router = useRouter();
 
-  async function handleSubmit() {
-    try {
-      setIsLoading(true);
-      await createDepartment({ name });
-      setOpen(false);
-      setName("");
-      router.refresh();
-      toast.success("Department created successfully");
-    } catch (error: any) {
-      toast.error(error.message);
-    } finally {
-      setIsLoading(false);
-    }
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+
+    startTransition(async () => {
+      const result = await createDepartmentAction({ name });
+
+      if (result.success) {
+        toast.success("Department created successfully");
+        setOpen(false);
+        setName("");
+        router.refresh();
+      } else {
+        toast.error(result.error || "Failed to create department");
+      }
+    });
   }
 
   return (
@@ -48,35 +51,43 @@ export function CreateDepartmentDialog() {
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Create Department</DialogTitle>
-          <DialogDescription>
-            Add a new department to your organization.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="grid gap-2">
-            <Label htmlFor="name">Name</Label>
-            <Input
-              id="name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Enter department name"
-            />
+        <form onSubmit={handleSubmit}>
+          <DialogHeader>
+            <DialogTitle>Create Department</DialogTitle>
+            <DialogDescription>
+              Add a new department to your organization.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="name">Name</Label>
+              <Input
+                id="name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Enter department name"
+                disabled={isPending}
+              />
+            </div>
           </div>
-        </div>
-        <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={() => setOpen(false)}
-            disabled={isLoading}
-          >
-            Cancel
-          </Button>
-          <Button onClick={handleSubmit} disabled={!name || isLoading}>
-            {isLoading ? "Creating..." : "Create"}
-          </Button>
-        </DialogFooter>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setOpen(false)}
+              disabled={isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              disabled={!name || isPending}
+              className="min-w-[80px]"
+            >
+              {isPending ? <LoadingSpinner /> : "Create"}
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );
