@@ -1,9 +1,9 @@
-import { NextRequest, NextResponse } from "next/server";
+import { validatePermission } from "@/lib/auth/auth";
 import { db } from "@/lib/db/config";
 import { departments } from "@/lib/db/schema";
-import { validatePermission } from "@/lib/auth/auth";
-import { z } from "zod";
 import { eq } from "drizzle-orm";
+import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 
 const departmentSchema = z.object({
   name: z.string().min(1, "Department name is required"),

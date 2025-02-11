@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { createDepartmentAction } from "@/app/actions/departments";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -13,11 +13,11 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus } from "lucide-react";
-import { toast } from "sonner";
-import { createDepartmentAction } from "@/app/actions/departments";
-import { useRouter } from "next/navigation";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { Plus } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useState, useTransition } from "react";
+import { toast } from "sonner";
 
 export function CreateDepartmentDialog() {
   const [open, setOpen] = useState(false);

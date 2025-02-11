@@ -1,11 +1,11 @@
-import { NextRequest, NextResponse } from "next/server";
-import { userService } from "@/lib/users/user.service";
 import { validatePermission } from "@/lib/auth/auth";
-import { z } from "zod";
 import { db } from "@/lib/db/config";
-import { users, roles, departments } from "@/lib/db/schema";
-import { eq, sql, desc, asc } from "drizzle-orm";
+import { departments, roles, users } from "@/lib/db/schema";
+import { userService } from "@/lib/users/user.service";
+import { asc, desc, eq, sql } from "drizzle-orm";
 import { type PgColumn } from "drizzle-orm/pg-core";
+import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 
 const createUserSchema = z.object({
   email: z.string().email(),

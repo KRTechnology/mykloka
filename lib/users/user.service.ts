@@ -1,8 +1,8 @@
-import { eq } from "drizzle-orm";
+import { AuthService } from "@/lib/auth/auth.service";
 import { db as dbClient } from "@/lib/db/config";
 import { users } from "@/lib/db/schema";
-import { AuthService } from "@/lib/auth/auth.service";
 import { emailService } from "@/lib/email/email.service";
+import { eq } from "drizzle-orm";
 
 const authService = new AuthService(dbClient);
 

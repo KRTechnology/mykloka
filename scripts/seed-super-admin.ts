@@ -1,7 +1,7 @@
 import { db } from "@/lib/db/config";
 import { roles, users } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
 import { hash } from "argon2";
+import { eq } from "drizzle-orm";
 
 async function seedSuperAdmin() {
   // First check if any users exist

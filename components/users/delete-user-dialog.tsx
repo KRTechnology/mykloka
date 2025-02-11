@@ -1,6 +1,6 @@
 "use client";
 
-import { useTransition } from "react";
+import { deleteUserAction } from "@/app/actions/users";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -10,10 +10,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { toast } from "sonner";
-import { type User } from "@/lib/api/users";
-import { deleteUserAction } from "@/app/actions/users";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { type User } from "@/lib/api/users";
+import { useTransition } from "react";
+import { toast } from "sonner";
 
 interface DeleteUserDialogProps {
   user: User | null;

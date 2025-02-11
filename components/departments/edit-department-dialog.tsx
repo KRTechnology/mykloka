@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { updateDepartmentAction } from "@/app/actions/departments";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -12,11 +12,11 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { toast } from "sonner";
-import { type Department } from "@/lib/api/departments";
-import { updateDepartmentAction } from "@/app/actions/departments";
-import { useRouter } from "next/navigation";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { type Department } from "@/lib/api/departments";
+import { useRouter } from "next/navigation";
+import { useEffect, useState, useTransition } from "react";
+import { toast } from "sonner";
 
 interface EditDepartmentDialogProps {
   department: Department | null;

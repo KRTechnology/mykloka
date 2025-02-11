@@ -1,39 +1,39 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { updateUserAction } from "@/app/actions/users";
 import { Button } from "@/components/ui/button";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
+    Dialog,
+    DialogContent,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
 } from "@/components/ui/dialog";
 import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
+    Form,
+    FormControl,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
 } from "@/components/ui/select";
+import { type Department } from "@/lib/api/departments";
+import { type Role } from "@/lib/api/roles";
+import { type User, updateUserSchema } from "@/lib/api/users";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { type User, updateUserSchema } from "@/lib/api/users";
-import { type Role } from "@/lib/api/roles";
-import { type Department } from "@/lib/api/departments";
-import { updateUserAction } from "@/app/actions/users";
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
-import { useRouter } from "next/navigation";
 
 interface EditUserDialogProps {
   user: User | null;

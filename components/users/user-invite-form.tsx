@@ -1,10 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { toast } from "sonner";
+import { inviteUserAction } from "@/app/actions/users";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -15,6 +11,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import {
   Select,
   SelectContent,
@@ -22,11 +19,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { inviteUserSchema, type InviteUserData } from "@/lib/api/users";
-import { type Role } from "@/lib/api/roles";
 import { type Department } from "@/lib/api/departments";
-import { inviteUserAction } from "@/app/actions/users";
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { type Role } from "@/lib/api/roles";
+import { inviteUserSchema, type InviteUserData } from "@/lib/api/users";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 
 interface UserInviteFormProps {
   roles: Role[];

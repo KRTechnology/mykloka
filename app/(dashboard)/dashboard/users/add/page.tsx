@@ -1,10 +1,9 @@
-import { Suspense } from "react";
-import { Heading } from "@/components/ui/heading";
 import { UserInviteForm } from "@/components/users/user-invite-form";
 import { UserInviteFormSkeleton } from "@/components/users/user-invite-form-skeleton";
 import { getAllDepartmentsForDropdown } from "@/lib/api/departments";
-import { headers } from "next/headers";
 import { rolesAPI } from "@/lib/api/roles";
+import { headers } from "next/headers";
+import { Suspense } from "react";
 
 export default async function AddUserPage() {
   const headersList = await headers();

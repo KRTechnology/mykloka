@@ -10,22 +10,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import type { Department } from "@/lib/api/departments";
-import { AnimatePresence, motion } from "framer-motion";
-import { ArrowUpDown, MoreHorizontal, Pencil, Trash } from "lucide-react";
-import { useState } from "react";
-import { DeleteDepartmentDialog } from "./delete-department-dialog";
-import { EditDepartmentDialog } from "./edit-department-dialog";
-import { type SortingState } from "@/types/table";
-import { formatDate } from "@/lib/utils/format";
-import {
   Pagination,
   PaginationContent,
   PaginationEllipsis,
@@ -34,7 +18,23 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import type { Department } from "@/lib/api/departments";
+import { formatDate } from "@/lib/utils/format";
+import { type SortingState } from "@/types/table";
+import { AnimatePresence, motion } from "framer-motion";
+import { MoreHorizontal, Pencil, Trash } from "lucide-react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useState } from "react";
+import { DeleteDepartmentDialog } from "./delete-department-dialog";
+import { EditDepartmentDialog } from "./edit-department-dialog";
 
 interface DepartmentsTableProps {
   initialDepartments: Department[];

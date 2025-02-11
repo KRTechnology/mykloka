@@ -1,13 +1,13 @@
+import { relations } from "drizzle-orm";
 import {
-  pgTable,
-  uuid,
-  varchar,
-  text,
-  timestamp,
   boolean,
   pgEnum,
+  pgTable,
+  text,
+  timestamp,
+  uuid,
+  varchar,
 } from "drizzle-orm/pg-core";
-import { relations } from "drizzle-orm";
 import { users } from "./users";
 
 export const taskStatusEnum = pgEnum("task_status", [

@@ -31,7 +31,7 @@ import { type SortingState } from "@/types/table";
 import { AnimatePresence, motion } from "framer-motion";
 import { MoreHorizontal, Pencil, Trash } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useState, useCallback } from "react";
+import { useCallback, useState } from "react";
 import { DeleteUserDialog } from "./delete-user-dialog";
 import { EditUserDialog } from "./edit-user-dialog";
 

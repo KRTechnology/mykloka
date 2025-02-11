@@ -1,16 +1,16 @@
 "use server";
 
+import {
+    InviteUserData,
+    inviteUserSchema,
+    updateUserSchema,
+} from "@/lib/api/users";
+import { validatePermission } from "@/lib/auth/auth";
 import { db } from "@/lib/db/config";
 import { users } from "@/lib/db/schema";
+import { userService } from "@/lib/users/user.service";
 import { eq } from "drizzle-orm";
 import { revalidateTag } from "next/cache";
-import { validatePermission } from "@/lib/auth/auth";
-import {
-  InviteUserData,
-  inviteUserSchema,
-  updateUserSchema,
-} from "@/lib/api/users";
-import { userService } from "@/lib/users/user.service";
 
 export async function inviteUserAction(data: InviteUserData) {
   try {

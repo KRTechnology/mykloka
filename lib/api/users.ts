@@ -1,5 +1,5 @@
-import { z } from "zod";
 import { revalidateTag } from "next/cache";
+import { z } from "zod";
 
 export const inviteUserSchema = z.object({
   email: z.string().email(),

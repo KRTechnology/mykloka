@@ -1,7 +1,7 @@
 "use client";
 
-import { motion } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
+import { motion } from "framer-motion";
 
 export function UserInviteFormSkeleton() {
   return (

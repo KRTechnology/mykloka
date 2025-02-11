@@ -1,6 +1,6 @@
 "use client";
 
-import { useTransition } from "react";
+import { deleteDepartmentAction } from "@/app/actions/departments";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -10,11 +10,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { toast } from "sonner";
-import { type Department } from "@/lib/api/departments";
-import { deleteDepartmentAction } from "@/app/actions/departments";
-import { useRouter } from "next/navigation";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { type Department } from "@/lib/api/departments";
+import { useRouter } from "next/navigation";
+import { useTransition } from "react";
+import { toast } from "sonner";
 
 interface DeleteDepartmentDialogProps {
   department: Department | null;

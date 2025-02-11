@@ -1,13 +1,13 @@
-import { Suspense } from "react";
 import { DepartmentsTable } from "@/components/departments/departments-table";
+import { Button } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
 import { Separator } from "@/components/ui/separator";
-import { getAllDepartments } from "@/lib/api/departments";
-import { headers } from "next/headers";
 import { TableSkeleton } from "@/components/ui/table-skeleton";
-import { Button } from "@/components/ui/button";
+import { getAllDepartments } from "@/lib/api/departments";
 import { Plus } from "lucide-react";
+import { headers } from "next/headers";
 import Link from "next/link";
+import { Suspense } from "react";
 
 type SearchParams = {
   page?: string;

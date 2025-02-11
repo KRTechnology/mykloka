@@ -1,14 +1,14 @@
+import { relations } from "drizzle-orm";
 import {
+  boolean,
   pgTable,
+  timestamp,
   uuid,
   varchar,
-  timestamp,
-  boolean,
   type AnyPgColumn,
 } from "drizzle-orm/pg-core";
-import { relations } from "drizzle-orm";
-import { roles } from "./roles";
 import { departments } from "./departments";
+import { roles } from "./roles";
 
 export const users = pgTable("users", {
   id: uuid("id").defaultRandom().primaryKey(),
