@@ -1,7 +1,4 @@
 import { z } from "zod";
-import { revalidateTag } from "next/cache";
-import { PaginatedResponse, TableState } from "@/types/table";
-import { buildQueryString } from "@/lib/utils/query-builder";
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
@@ -22,11 +19,25 @@ export interface Department {
   updatedAt: string;
 }
 
-export async function getAllDepartments(baseUrl?: string) {
+interface GetDepartmentsOptions {
+  page?: number;
+  pageSize?: number;
+}
+
+export async function getAllDepartments(
+  baseUrl?: string,
+  options: GetDepartmentsOptions = {}
+) {
   try {
-    // For server-side requests
+    const { page = 1, pageSize = 10 } = options;
+
     if (baseUrl) {
-      const url = `${baseUrl}/api/departments`;
+      const queryParams = new URLSearchParams({
+        page: page.toString(),
+        pageSize: pageSize.toString(),
+      });
+
+      const url = `${baseUrl}/api/departments?${queryParams}`;
       const res = await fetch(url, {
         next: { tags: ["departments"] },
       });
@@ -36,8 +47,10 @@ export async function getAllDepartments(baseUrl?: string) {
       }
 
       const response = await res.json();
-      // Return the data array from the paginated response
-      return response.data || [];
+      return {
+        data: response.data || [],
+        totalPages: response.totalPages || 1,
+      };
     }
 
     // For client-side requests
@@ -55,10 +68,13 @@ export async function getAllDepartments(baseUrl?: string) {
 
     const response = await res.json();
     // Return the data array from the paginated response
-    return response.data || [];
+    return {
+      data: response.data || [],
+      totalPages: response.totalPages || 1,
+    };
   } catch (error) {
     console.error("Error fetching departments:", error);
-    return []; // Return empty array on error
+    return { data: [], totalPages: 1 };
   }
 }
 

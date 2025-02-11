@@ -25,16 +25,34 @@ import { DeleteDepartmentDialog } from "./delete-department-dialog";
 import { EditDepartmentDialog } from "./edit-department-dialog";
 import { type SortingState } from "@/types/table";
 import { formatDate } from "@/lib/utils/format";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 
 interface DepartmentsTableProps {
   initialDepartments: Department[];
+  totalPages: number;
+  currentPage: number;
 }
 
 type SortableField = "name" | "createdAt" | "userCount";
 
 export function DepartmentsTable({
   initialDepartments = [],
+  totalPages = 1,
+  currentPage = 1,
 }: DepartmentsTableProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
   const [sorting, setSorting] = useState<SortingState<SortableField>>({
     field: "name",
     direction: "asc",
@@ -71,6 +89,39 @@ export function DepartmentsTable({
       });
     }
   };
+
+  const handlePageChange = (page: number) => {
+    const params = new URLSearchParams(searchParams);
+    params.set("page", page.toString());
+    router.push(`${pathname}?${params.toString()}`);
+  };
+
+  // Generate pagination items
+  const paginationItems = [];
+  for (let i = 1; i <= totalPages; i++) {
+    if (
+      i === 1 ||
+      i === totalPages ||
+      (i >= currentPage - 1 && i <= currentPage + 1)
+    ) {
+      paginationItems.push(
+        <PaginationItem key={i}>
+          <PaginationLink
+            onClick={() => handlePageChange(i)}
+            isActive={currentPage === i}
+          >
+            {i}
+          </PaginationLink>
+        </PaginationItem>
+      );
+    } else if (i === currentPage - 2 || i === currentPage + 2) {
+      paginationItems.push(
+        <PaginationItem key={i}>
+          <PaginationEllipsis />
+        </PaginationItem>
+      );
+    }
+  }
 
   if (!initialDepartments.length) {
     return (
@@ -187,6 +238,28 @@ export function DepartmentsTable({
           </TableBody>
         </Table>
       </div>
+
+      {totalPages > 1 && (
+        <div className="mt-4">
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                />
+              </PaginationItem>
+              {paginationItems}
+              <PaginationItem>
+                <PaginationNext
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        </div>
+      )}
 
       <EditDepartmentDialog
         department={editingDepartment}

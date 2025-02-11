@@ -2,12 +2,12 @@ import { z } from "zod";
 import { revalidateTag } from "next/cache";
 
 export const inviteUserSchema = z.object({
-  email: z.string().email("Invalid email address"),
-  firstName: z.string().min(1, "First name is required"),
-  lastName: z.string().min(1, "Last name is required"),
-  roleId: z.string().uuid("Please select a role"),
-  departmentId: z.string().optional(),
-  managerId: z.string().optional(),
+  email: z.string().email(),
+  firstName: z.string().min(1),
+  lastName: z.string().min(1),
+  roleId: z.string().uuid(),
+  departmentId: z.string().uuid().optional(),
+  managerId: z.string().uuid().optional(),
   phoneNumber: z.string().optional(),
 });
 
@@ -15,22 +15,82 @@ export type InviteUserData = z.infer<typeof inviteUserSchema>;
 
 export interface User {
   id: string;
-  name: string;
+  firstName: string;
+  lastName: string;
   email: string;
-  role: string;
-  department: string;
   status: boolean;
-  joinedAt: string;
+  role: {
+    id: string;
+    name: string;
+  } | null;
+  department: {
+    id: string;
+    name: string;
+  } | null;
+  createdAt: string;
 }
 
-export async function getAllUsers() {
-  const res = await fetch("/api/users", {
-    next: { tags: ["users"] },
-  });
-  if (!res.ok) {
-    throw new Error("Failed to fetch users");
+export interface PaginatedUsers {
+  data: User[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
+export async function getUsers(
+  baseUrl?: string,
+  options: {
+    page?: number;
+    pageSize?: number;
+    search?: string;
+    sortBy?: string;
+    sortDirection?: "asc" | "desc";
+  } = {}
+) {
+  try {
+    const { page = 1, pageSize = 10, search, sortBy, sortDirection } = options;
+
+    if (baseUrl) {
+      const queryParams = new URLSearchParams({
+        page: page.toString(),
+        pageSize: pageSize.toString(),
+        ...(search && { search }),
+        ...(sortBy && { sortBy }),
+        ...(sortDirection && { sortDirection }),
+      });
+
+      const url = `${baseUrl}/api/users?${queryParams}`;
+      const res = await fetch(url, {
+        next: { tags: ["users"] },
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to fetch users");
+      }
+
+      return (await res.json()) as PaginatedUsers;
+    }
+
+    const res = await fetch("/api/users", {
+      next: { tags: ["users"] },
+    });
+
+    if (!res.ok) {
+      throw new Error("Failed to fetch users");
+    }
+
+    return (await res.json()) as PaginatedUsers;
+  } catch (error) {
+    console.error("Error fetching users:", error);
+    return {
+      data: [],
+      total: 0,
+      page: 1,
+      pageSize: 10,
+      totalPages: 0,
+    };
   }
-  return res.json() as Promise<User[]>;
 }
 
 export async function inviteUser(userData: InviteUserData) {

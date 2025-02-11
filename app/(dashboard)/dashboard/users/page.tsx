@@ -1,88 +1,81 @@
-"use client";
-
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
-import { Plus, Search } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Suspense } from "react";
 import { UsersTable } from "@/components/users/users-table";
-import { UserFilters } from "@/components/users/user-filters";
+import { Heading } from "@/components/ui/heading";
+import { Separator } from "@/components/ui/separator";
+import { getUsers } from "@/lib/api/users";
+import { headers } from "next/headers";
+import { TableSkeleton } from "@/components/ui/table-skeleton";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
+import Link from "next/link";
 
-// Temporary mock data
-const mockUsers = [
-  {
-    id: "1",
-    name: "John Doe",
-    email: "john@example.com",
-    role: "Employee",
-    department: "Engineering",
-    status: "Active",
-    joinedAt: "2024-01-15",
-  },
-  {
-    id: "2",
-    name: "Jane Smith",
-    email: "jane@example.com",
-    role: "Manager",
-    department: "Design",
-    status: "Pending",
-    joinedAt: "2024-02-01",
-  },
-  // Add more mock users as needed
-];
+interface PageProps {
+  searchParams?: {
+    page?: string;
+    per_page?: string;
+  };
+}
 
-export default function UsersPage() {
-  const [search, setSearch] = useState("");
-  const router = useRouter();
+export default async function UsersPage({ searchParams = {} }: PageProps) {
+  try {
+    const headersList = await headers();
+    const protocol = headersList.get("x-forwarded-proto") || "http";
+    const host = headersList.get("host");
+    const baseUrl = `${protocol}://${host}`;
 
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="space-y-6"
-    >
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-3xl font-semibold tracking-tight">Users</h2>
-          <p className="text-muted-foreground">
-            Manage user accounts and permissions.
-          </p>
-        </div>
-        <Button
-          onClick={() => router.push("/dashboard/users/add")}
-          className="bg-kr-orange hover:bg-kr-orange/90"
-        >
-          <Plus className="mr-2 h-4 w-4" />
-          Add User
-        </Button>
-      </div>
+    const params = await searchParams;
+    const currentPage = Number(params?.page) || 1;
+    const pageSize = Number(params?.per_page) || 10;
 
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-        className="flex items-center justify-between gap-4"
-      >
-        <div className="flex-1 relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search users..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-9"
+    const { data: users = [], totalPages = 1 } = await getUsers(baseUrl, {
+      page: currentPage,
+      pageSize,
+    });
+
+    return (
+      <div className="flex-1 space-y-4 p-8 pt-6">
+        <div className="flex items-center justify-between">
+          <Heading
+            title="Users"
+            description={
+              users?.length
+                ? "Manage your organization's users"
+                : "Get started by inviting your first user"
+            }
           />
+          <Link href="/dashboard/users/add">
+            <Button className="bg-kr-orange hover:bg-kr-orange/90">
+              <Plus className="mr-2 h-4 w-4" />
+              Add User
+            </Button>
+          </Link>
         </div>
-        <UserFilters />
-      </motion.div>
-
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-      >
-        <UsersTable data={mockUsers} />
-      </motion.div>
-    </motion.div>
-  );
+        <Separator />
+        <Suspense fallback={<TableSkeleton />}>
+          <UsersTable
+            initialUsers={users}
+            totalPages={totalPages}
+            currentPage={currentPage}
+          />
+        </Suspense>
+      </div>
+    );
+  } catch (error) {
+    console.error("Error in UsersPage:", error);
+    return (
+      <div className="flex-1 p-8 pt-6">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-red-600">Error</h2>
+          <p className="text-gray-600">Failed to load users</p>
+          <Button
+            variant="outline"
+            className="mt-4"
+            onClick={() => window.location.reload()}
+          >
+            Try Again
+          </Button>
+        </div>
+      </div>
+    );
+  }
 }

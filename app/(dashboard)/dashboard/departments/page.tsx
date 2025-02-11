@@ -8,14 +8,33 @@ import { headers } from "next/headers";
 import { Button } from "@/components/ui/button";
 import { TableSkeleton } from "@/components/ui/table-skeleton";
 
-export default async function DepartmentsPage() {
+interface PageProps {
+  searchParams?: {
+    page?: string;
+    per_page?: string;
+  };
+}
+
+export default async function DepartmentsPage({
+  searchParams = {},
+}: PageProps) {
   try {
     const headersList = await headers();
     const protocol = headersList.get("x-forwarded-proto") || "http";
     const host = headersList.get("host");
     const baseUrl = `${protocol}://${host}`;
 
-    const departments = await getAllDepartments(baseUrl);
+    const params = await searchParams;
+    const currentPage = Number(params?.page) || 1;
+    const pageSize = Number(params?.per_page) || 10;
+
+    const { data: departments = [], totalPages = 1 } = await getAllDepartments(
+      baseUrl,
+      {
+        page: currentPage,
+        pageSize,
+      }
+    );
 
     return (
       <div className="flex-1 space-y-4 p-8 pt-6">
@@ -23,7 +42,7 @@ export default async function DepartmentsPage() {
           <Heading
             title="Departments"
             description={
-              departments.length
+              departments?.length
                 ? "Manage your organization's departments"
                 : "Get started by adding your first department"
             }
@@ -32,7 +51,11 @@ export default async function DepartmentsPage() {
         </div>
         <Separator />
         <Suspense fallback={<TableSkeleton />}>
-          <DepartmentsTable initialDepartments={departments} />
+          <DepartmentsTable
+            initialDepartments={departments}
+            totalPages={totalPages}
+            currentPage={currentPage}
+          />
         </Suspense>
       </div>
     );

@@ -26,7 +26,7 @@ export class UserService {
       throw new Error("User with this email already exists");
     }
 
-    // Create user with temporary password
+    // Create user without password
     const [user] = await this.db
       .insert(users)
       .values({
