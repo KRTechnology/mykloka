@@ -92,7 +92,7 @@ export function Sidebar({ user }: SidebarProps) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
-            <img src="/images/kr-logo.png" alt="Logo" className="h-8" />
+            <img src="/images/kr_logo.png" alt="Logo" className="h-8" />
           </motion.div>
         )}
         <button
