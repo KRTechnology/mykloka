@@ -24,7 +24,7 @@ export default async function LoginPage({
               src="/images/kr-logo-and-tagline.png"
               alt="Kimberly Ryan"
               width={200}
-              height={45}
+              height={50}
               priority
               className="w-auto h-auto"
             />
