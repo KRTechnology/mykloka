@@ -24,9 +24,9 @@ export default async function LoginPage({
               src="/images/kr-logo-and-tagline.png"
               alt="Kimberly Ryan"
               width={200}
-              height={90}
+              height={45}
               priority
-              className=""
+              className="w-auto h-auto"
             />
           </div>
           <LoginForm from={from} />
