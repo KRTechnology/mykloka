@@ -21,7 +21,7 @@ export default async function LoginPage({
         <div className="w-full space-y-8">
           <div className="flex flex-col items-center">
             <Image
-              src="/images/kr-logo-and-tagline.png"
+              src="/images/kr_logo_and_tagline.png"
               alt="Kimberly Ryan"
               width={200}
               height={50}
