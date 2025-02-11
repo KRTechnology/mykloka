@@ -60,7 +60,7 @@ export async function validateUserAccess(targetUserId: string) {
   if (session.permissions.includes("view_all_departments")) return true;
 
   // Department managers can access users in their department
-  if (session.permissions.includes("view_department_reports")) {
+  if (session.permissions.includes("view_department")) {
     const user = await getUserDepartment(targetUserId);
     return user?.departmentId === session.departmentId;
   }
