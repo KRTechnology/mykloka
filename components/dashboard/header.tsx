@@ -1,5 +1,7 @@
 "use client";
 
+import { checkAttendanceStatusAction } from "@/app/actions/attendance";
+import { AttendanceDialog } from "@/components/attendance/attendance-dialog";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -12,21 +14,62 @@ import {
 import { Icons } from "@/components/ui/icons";
 import { authAPI } from "@/lib/api/auth";
 import { UserJWTPayload } from "@/lib/auth/auth.service";
+import { AnimatePresence, motion } from "framer-motion";
 import { Bell, User } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { AttendanceDialog } from "@/components/attendance/attendance-dialog";
+import { LoadingSpinner } from "../ui/loading-spinner";
 
 interface HeaderProps {
   user: UserJWTPayload & { userId: string };
 }
 
+interface AttendanceStatus {
+  isClockedIn: boolean;
+  attendanceId?: string;
+}
+
 export function Header({ user }: HeaderProps) {
   const [isClockedIn, setIsClockedIn] = useState(false);
+  const [attendanceId, setAttendanceId] = useState<string>();
   const [showAttendanceDialog, setShowAttendanceDialog] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [isCheckingStatus, setIsCheckingStatus] = useState(true);
   const router = useRouter();
+
+  const checkStatus = async () => {
+    try {
+      setIsCheckingStatus(true);
+      const result = await checkAttendanceStatusAction(user.userId);
+
+      if (result.success && result.data) {
+        const status: AttendanceStatus = {
+          isClockedIn: result.data.isClockedIn ?? false,
+          attendanceId: result.data.attendanceId,
+        };
+        setIsClockedIn(status.isClockedIn);
+        setAttendanceId(status.attendanceId);
+      } else {
+        // Reset to default state if no data
+        setIsClockedIn(false);
+        setAttendanceId(undefined);
+      }
+    } catch (error) {
+      console.error("Error checking attendance status:", error);
+      toast.error("Failed to check attendance status");
+      // Reset to default state on error
+      setIsClockedIn(false);
+      setAttendanceId(undefined);
+    } finally {
+      setIsCheckingStatus(false);
+    }
+  };
+
+  // Check status on mount
+  useEffect(() => {
+    checkStatus();
+  }, [user.userId]);
 
   const handleClockInOut = () => {
     if (!user.userId) {
@@ -60,13 +103,31 @@ export function Header({ user }: HeaderProps) {
           <h1 className="text-2xl font-semibold text-foreground">Dashboard</h1>
 
           <div className="flex items-center space-x-4">
-            <Button
-              variant={isClockedIn ? "destructive" : "default"}
-              onClick={handleClockInOut}
-              className="bg-kr-orange hover:bg-kr-orange/90"
-            >
-              {isClockedIn ? "Clock Out" : "Clock In"}
-            </Button>
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={isClockedIn ? "out" : "in"}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+              >
+                <Button
+                  variant={isClockedIn ? "destructive" : "default"}
+                  onClick={handleClockInOut}
+                  className={
+                    isClockedIn
+                      ? "bg-destructive hover:bg-destructive/90"
+                      : "bg-kr-orange hover:bg-kr-orange/90"
+                  }
+                  disabled={isCheckingStatus}
+                >
+                  {isCheckingStatus ? (
+                    <LoadingSpinner />
+                  ) : (
+                    <>{isClockedIn ? "Clock Out" : "Clock In"}</>
+                  )}
+                </Button>
+              </motion.div>
+            </AnimatePresence>
 
             <button className="p-2 rounded-lg hover:bg-accent relative">
               <Bell className="h-5 w-5" />
@@ -113,9 +174,13 @@ export function Header({ user }: HeaderProps) {
       {user.userId && (
         <AttendanceDialog
           isOpen={showAttendanceDialog}
-          onClose={() => setShowAttendanceDialog(false)}
+          onClose={() => {
+            setShowAttendanceDialog(false);
+            checkStatus();
+          }}
           userId={user.userId}
           mode={isClockedIn ? "out" : "in"}
+          attendanceId={attendanceId}
         />
       )}
     </>

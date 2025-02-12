@@ -108,6 +108,7 @@ export function AttendanceDialog({
         );
         onClose();
       } else {
+        console.error("Error in attendance operation:", result.error);
         toast.error(result.error || `Failed to clock ${mode}`);
       }
     } catch (error) {

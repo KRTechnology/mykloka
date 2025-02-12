@@ -1,7 +1,6 @@
 import { db } from "@/lib/db/config";
 import { attendance } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
-// import { point } from "@/lib/db/schema/attendance";
+import { eq, and, isNull, sql } from "drizzle-orm";
 
 class AttendanceService {
   private db;
@@ -66,6 +65,27 @@ class AttendanceService {
       .select()
       .from(attendance)
       .where(eq(attendance.userId, userId))
+      .orderBy(attendance.createdAt)
+      .limit(1);
+
+    return record[0];
+  }
+
+  async getCurrentDayAttendance(userId: string) {
+    // Get today's date at midnight in UTC
+    const today = new Date();
+    today.setUTCHours(0, 0, 0, 0);
+
+    const record = await this.db
+      .select()
+      .from(attendance)
+      .where(
+        and(
+          eq(attendance.userId, userId),
+          sql`DATE(clock_in_time) = ${today.toISOString().split("T")[0]}`,
+          isNull(attendance.clockOutTime)
+        )
+      )
       .orderBy(attendance.createdAt)
       .limit(1);
 
