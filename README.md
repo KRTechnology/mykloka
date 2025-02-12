@@ -103,5 +103,5 @@ npm run dev
 - [x] Setup role management.
 - [  ] Setup permission management.
 - [  ] Setup dashboard.
-- [  ] Setup static page for Tasks
+- [  ] Setup static page for Tasks.
 - [  ] Implement 404 Not Found page.
