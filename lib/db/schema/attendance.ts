@@ -1,6 +1,21 @@
 import { relations } from "drizzle-orm";
-import { pgTable, point, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  point,
+  timestamp,
+  uuid,
+  varchar,
+  text,
+  pgEnum,
+} from "drizzle-orm/pg-core";
 import { users } from "./users";
+
+// Create an enum for attendance status
+export const attendanceStatusEnum = pgEnum("attendance_status", [
+  "present",
+  "late",
+  "absent",
+]);
 
 export const attendance = pgTable("attendance", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -9,10 +24,11 @@ export const attendance = pgTable("attendance", {
     .notNull(),
   clockInTime: timestamp("clock_in_time").notNull(),
   clockOutTime: timestamp("clock_out_time"),
-  clockInLocation: point("clock_in_location"),
+  clockInLocation: point("clock_in_location").notNull(),
   clockOutLocation: point("clock_out_location"),
-  clockInAddress: varchar("clock_in_address"),
-  clockOutAddress: varchar("clock_out_address"),
+  clockInAddress: text("clock_in_address").notNull(),
+  clockOutAddress: text("clock_out_address"),
+  status: attendanceStatusEnum("status").notNull().default("present"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
