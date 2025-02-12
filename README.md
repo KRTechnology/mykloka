@@ -100,7 +100,7 @@ npm run dev
 - [  ] Edit/Update User Profile, Departments.
 - [x] Setup clock in/out.
 - [  ] Setup task management.
-- [x] Setup role management
+- [x] Setup role management.
 - [  ] Setup permission management.
 - [  ] Setup dashboard.
 - [  ] Setup static page for Tasks
