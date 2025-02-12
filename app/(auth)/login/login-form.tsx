@@ -1,7 +1,6 @@
 "use client";
 
-import { AuthCard } from "../../../components/ui/auth-card";
-import { Button } from "../../../components/ui/button";
+import { AuthCard } from "@/components/ui/auth-card";
 import {
   Form,
   FormControl,
@@ -10,12 +9,13 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Icons } from "../../../components/ui/icons";
-import { Input } from "../../../components/ui/input";
+import { Icons } from "@/components/ui/icons";
+import { Input } from "@/components/ui/input";
 import { authAPI } from "@/lib/api/auth";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { Button } from "react-day-picker";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import * as z from "zod";
