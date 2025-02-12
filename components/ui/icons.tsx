@@ -1,5 +1,6 @@
 import {
   Loader2,
+  MapPin,
   Moon,
   SunMedium,
   type Icon as LucideIcon,
@@ -11,4 +12,5 @@ export const Icons = {
   sun: SunMedium,
   moon: Moon,
   spinner: Loader2,
+  mapPin: MapPin,
 } satisfies Record<string, Icon>;

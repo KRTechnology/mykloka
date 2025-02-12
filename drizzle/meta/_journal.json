@@ -29,6 +29,13 @@
       "when": 1739274190732,
       "tag": "0003_round_silver_sable",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1739331557993,
+      "tag": "0004_even_lucky_pierre",
+      "breakpoints": true
     }
   ]
 }
