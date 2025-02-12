@@ -29,6 +29,7 @@ async function seedRoles() {
 
         // Attendance Management
         "view_all_attendance",
+        "view_own_attendance",
         "create_attendance",
         "view_attendance_reports",
 
@@ -64,6 +65,7 @@ async function seedRoles() {
 
         // Attendance Management
         "view_all_attendance",
+        "view_own_attendance",
         "create_attendance",
         "view_attendance_reports",
 
