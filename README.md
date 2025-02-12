@@ -94,12 +94,12 @@ npm run dev
 
 - [  ] Forgot password and reset password.
 - [  ] Create single user page.
-- [  ] Add an isLate flag to the attendance table.
+- [x] Add an isLate flag to the attendance table.
 - [  ] Get all late attendance for a duration of time.
 - [  ] Edit/Update User Roles and Permissions
 - [  ] Edit/Update User Profile, Departments
-- [  ] Setup clock in/out
+- [x] Setup clock in/out
 - [  ] Setup task management
-- [  ] Setup role management
+- [x] Setup role management
 - [  ] Setup permission management
 - [  ] Setup dashboard
