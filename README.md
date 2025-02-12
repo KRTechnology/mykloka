@@ -91,12 +91,11 @@ npm run dev
 
 # Todos
 
-- [ x ] Add Favicon
+
 - [  ] Forgot password and reset password.
-- [ x ] Show list of users in user page.
 - [  ] Create single user page.
-- [ x ] Setup department management. Full CRUD.
-- [ x ] Show list of departments in department page
+- [  ] Add an isLate flag to the attendance table.
+- [  ] Get all late attendance for a duration of time.
 - [  ] Edit/Update User Roles and Permissions
 - [  ] Edit/Update User Profile, Departments
 - [  ] Setup clock in/out

@@ -1,0 +1,76 @@
+import { db } from "@/lib/db/config";
+import { attendance } from "@/lib/db/schema";
+import { eq } from "drizzle-orm";
+// import { point } from "@/lib/db/schema/attendance";
+
+class AttendanceService {
+  private db;
+
+  constructor() {
+    this.db = db;
+  }
+
+  async clockIn(data: {
+    userId: string;
+    clockInTime: Date;
+    clockInLocation: { x: number; y: number };
+    clockInAddress: string;
+  }) {
+    if (!data.userId) {
+      throw new Error("User ID is required");
+    }
+
+    const { clockInLocation, ...rest } = data;
+
+    const [record] = await this.db
+      .insert(attendance)
+      .values({
+        ...rest,
+        clockInLocation: [clockInLocation.x, clockInLocation.y] as [
+          number,
+          number,
+        ],
+      })
+      .returning();
+
+    return record;
+  }
+
+  async clockOut(
+    attendanceId: string,
+    data: {
+      clockOutTime: Date;
+      clockOutLocation: { x: number; y: number };
+      clockOutAddress: string;
+    }
+  ) {
+    const { clockOutLocation, ...rest } = data;
+
+    const [record] = await this.db
+      .update(attendance)
+      .set({
+        ...rest,
+        clockOutLocation: [clockOutLocation.x, clockOutLocation.y] as [
+          number,
+          number,
+        ],
+      })
+      .where(eq(attendance.id, attendanceId))
+      .returning();
+
+    return record;
+  }
+
+  async getCurrentAttendance(userId: string) {
+    const record = await this.db
+      .select()
+      .from(attendance)
+      .where(eq(attendance.userId, userId))
+      .orderBy(attendance.createdAt)
+      .limit(1);
+
+    return record[0];
+  }
+}
+
+export const attendanceService = new AttendanceService();

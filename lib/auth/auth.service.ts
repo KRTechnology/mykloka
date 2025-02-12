@@ -7,11 +7,15 @@ import { roles, users } from "../db/schema";
 import { emailVerificationTokens } from "../db/schema/email-verification";
 import { db as dbClient } from "../db/config";
 
-export interface UserJWTPayload extends JWTPayload {
-  sub: string;
-  email: string;
+export interface UserJWTPayload {
+  userId: string;
   firstName: string;
   lastName: string;
+  email: string;
+  role: {
+    id: string;
+    name: string;
+  };
   roleId: string;
   roleName: string;
   permissions: Permission[];
@@ -129,10 +133,14 @@ export class AuthService {
     if (!user.role) throw new Error("User role not found");
 
     const payload: UserJWTPayload = {
-      sub: user.id,
-      email: user.email,
+      userId: user.id,
       firstName: user.firstName,
       lastName: user.lastName,
+      email: user.email,
+      role: {
+        id: user.roleId!,
+        name: user.role.name,
+      },
       roleId: user.roleId!,
       roleName: user.role.name,
       permissions: user.role.permissions as Permission[],
