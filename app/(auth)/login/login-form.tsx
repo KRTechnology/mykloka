@@ -15,7 +15,7 @@ import { authAPI } from "@/lib/api/auth";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Button } from "react-day-picker";
+import { Button } from "@/components/ui/button";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import * as z from "zod";
