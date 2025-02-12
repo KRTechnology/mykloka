@@ -98,7 +98,7 @@ npm run dev
 - [  ] Get all late attendance for a duration of time.
 - [  ] Edit/Update User Roles and Permissions.
 - [  ] Edit/Update User Profile, Departments.
-- [x] Setup clock in/out
+- [x] Setup clock in/out.
 - [  ] Setup task management
 - [x] Setup role management
 - [  ] Setup permission management
