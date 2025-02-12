@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Card,
@@ -18,6 +18,11 @@ import {
 } from "@/components/ui/select";
 import { AttendanceFilter } from "./attendance-filter";
 import { AttendanceList } from "./attendance-list";
+import { getDailyStatsAction } from "@/app/actions/attendance/get-stats";
+import { format } from "date-fns";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Clock, UserCheck, UserX, AlertTriangle } from "lucide-react";
+import { toast } from "sonner";
 
 interface AttendanceOverviewProps {
   canViewDepartment: boolean;
@@ -31,7 +36,37 @@ export function AttendanceOverview({
   const [viewMode, setViewMode] = useState<"personal" | "department" | "all">(
     "personal"
   );
-  const [selectedDepartment, setSelectedDepartment] = useState<string>();
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [isLoading, setIsLoading] = useState(true);
+  const [stats, setStats] = useState<{
+    present: number;
+    late: number;
+    absent: number;
+    total: number;
+  } | null>(null);
+
+  //   const { toast } = useToast();
+
+  useEffect(() => {
+    async function fetchStats() {
+      setIsLoading(true);
+      try {
+        const response = await getDailyStatsAction(selectedDate);
+        if (!response.success || !response.data) {
+          throw new Error(response.error || "Failed to load stats");
+        }
+        setStats(response.data);
+      } catch (error) {
+        toast.error(
+          error instanceof Error ? error.message : "Failed to load stats"
+        );
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchStats();
+  }, [selectedDate, viewMode]);
 
   return (
     <motion.div
@@ -45,7 +80,7 @@ export function AttendanceOverview({
             Attendance Overview
           </h2>
           <p className="text-sm text-muted-foreground">
-            View and manage attendance records
+            {format(selectedDate, "PPPP")}
           </p>
         </div>
 
@@ -72,21 +107,48 @@ export function AttendanceOverview({
             </Select>
           )}
 
-          <AttendanceFilter />
+          <AttendanceFilter
+            date={selectedDate}
+            onDateChange={setSelectedDate}
+          />
         </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Present Today</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-kr-orange">89%</div>
-            <p className="text-xs text-muted-foreground">+2% from last week</p>
-          </CardContent>
-        </Card>
-        {/* Add more stat cards */}
+        <StatsCard
+          title="Present Today"
+          value={stats?.present || 0}
+          total={stats?.total || 0}
+          icon={UserCheck}
+          isLoading={isLoading}
+          className="border-green-100 dark:border-green-900"
+          valueClassName="text-kr-green"
+        />
+        <StatsCard
+          title="Late Today"
+          value={stats?.late || 0}
+          total={stats?.total || 0}
+          icon={Clock}
+          isLoading={isLoading}
+          className="border-yellow-100 dark:border-yellow-900"
+          valueClassName="text-yellow-500"
+        />
+        <StatsCard
+          title="Absent Today"
+          value={stats?.absent || 0}
+          total={stats?.total || 0}
+          icon={UserX}
+          isLoading={isLoading}
+          className="border-red-100 dark:border-red-900"
+          valueClassName="text-destructive"
+        />
+        <StatsCard
+          title="Total Employees"
+          value={stats?.total || 0}
+          total={stats?.total || 0}
+          icon={AlertTriangle}
+          isLoading={isLoading}
+        />
       </div>
 
       <Card>
@@ -102,12 +164,54 @@ export function AttendanceOverview({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <AttendanceList
-            viewMode={viewMode}
-            departmentId={selectedDepartment}
-          />
+          <AttendanceList viewMode={viewMode} date={selectedDate} />
         </CardContent>
       </Card>
     </motion.div>
+  );
+}
+
+interface StatsCardProps {
+  title: string;
+  value: number;
+  total: number;
+  icon: any;
+  isLoading?: boolean;
+  className?: string;
+  valueClassName?: string;
+}
+
+function StatsCard({
+  title,
+  value,
+  total,
+  icon: Icon,
+  isLoading,
+  className,
+  valueClassName,
+}: StatsCardProps) {
+  const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
+
+  return (
+    <Card className={className}>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-sm font-medium">{title}</CardTitle>
+        <Icon className="h-4 w-4 text-muted-foreground" />
+      </CardHeader>
+      <CardContent>
+        {isLoading ? (
+          <Skeleton className="h-7 w-[100px]" />
+        ) : (
+          <>
+            <div className={`text-2xl font-bold ${valueClassName}`}>
+              {value}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {percentage}% of total
+            </p>
+          </>
+        )}
+      </CardContent>
+    </Card>
   );
 }

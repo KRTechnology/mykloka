@@ -1,8 +1,8 @@
 import { db } from "@/lib/db/config";
 import { attendance } from "@/lib/db/schema";
-import { eq, and, isNull, sql, between, desc } from "drizzle-orm";
-import { addDays, startOfDay, endOfDay } from "date-fns";
 import { users } from "@/lib/db/schema/users";
+import { addDays, endOfDay, format, startOfDay } from "date-fns";
+import { and, between, desc, eq, isNotNull, sql } from "drizzle-orm";
 
 // Define return type for getCurrentDayAttendance
 type AttendanceStatus =
@@ -250,6 +250,201 @@ class AttendanceService {
       date: record.attendance.clockInTime,
       status: record.attendance.status,
     }));
+  }
+
+  async getAttendanceStreak(userId: string) {
+    try {
+      const today = new Date();
+      const thirtyDaysAgo = new Date(today);
+      thirtyDaysAgo.setDate(today.getDate() - 30);
+
+      // Get all attendance records for the last 30 days
+      const records = await this.db
+        .select({
+          date: sql<string>`DATE(${attendance.clockInTime})`,
+          status: attendance.status,
+        })
+        .from(attendance)
+        .where(
+          and(
+            eq(attendance.userId, userId),
+            between(attendance.clockInTime, thirtyDaysAgo, today)
+          )
+        )
+        .orderBy(desc(attendance.clockInTime));
+
+      // Calculate current streak
+      let currentStreak = 0;
+      let longestStreak = 0;
+      let currentDate = new Date();
+      let lastPerfectWeek: string | null = null;
+
+      // Group records by date
+      const attendanceByDate = new Map<string, string>();
+      records.forEach((record) => {
+        attendanceByDate.set(record.date, record.status);
+      });
+
+      // Calculate current streak
+      while (true) {
+        const dateStr = currentDate.toISOString().split("T")[0];
+        const status = attendanceByDate.get(dateStr);
+
+        // Skip weekends
+        if (currentDate.getDay() === 0 || currentDate.getDay() === 6) {
+          currentDate.setDate(currentDate.getDate() - 1);
+          continue;
+        }
+
+        // Break if no record or absent
+        if (!status || status === "absent") break;
+
+        currentStreak++;
+        currentDate.setDate(currentDate.getDate() - 1);
+      }
+
+      // Calculate longest streak and last perfect week
+      let tempStreak = 0;
+      let perfectWeekStart = null;
+      let currentWeekPerfect = true;
+      let weekdayCount = 0;
+
+      records.forEach((record, index) => {
+        const recordDate = new Date(record.date);
+
+        // Skip weekends
+        if (recordDate.getDay() === 0 || recordDate.getDay() === 6) return;
+
+        if (record.status !== "absent") {
+          tempStreak++;
+          if (tempStreak > longestStreak) {
+            longestStreak = tempStreak;
+          }
+
+          // Track perfect weeks
+          if (currentWeekPerfect) {
+            weekdayCount++;
+            if (weekdayCount === 5) {
+              lastPerfectWeek = recordDate.toISOString().split("T")[0];
+            }
+          }
+        } else {
+          tempStreak = 0;
+          currentWeekPerfect = false;
+          weekdayCount = 0;
+        }
+
+        // Reset week tracking on Mondays
+        if (recordDate.getDay() === 1) {
+          currentWeekPerfect = true;
+          weekdayCount = record.status !== "absent" ? 1 : 0;
+        }
+      });
+
+      return {
+        current: currentStreak,
+        longest: longestStreak,
+        lastPerfectWeek,
+      };
+    } catch (error) {
+      console.error("Error calculating attendance streak:", error);
+      throw error;
+    }
+  }
+
+  async getAverageTimings(userId: string) {
+    try {
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+      // Get all attendance records for the last 30 days
+      const records = await this.db
+        .select({
+          clockInTime: attendance.clockInTime,
+          clockOutTime: attendance.clockOutTime,
+          status: attendance.status,
+        })
+        .from(attendance)
+        .where(
+          and(
+            eq(attendance.userId, userId),
+            between(attendance.clockInTime, thirtyDaysAgo, new Date()),
+            isNotNull(attendance.clockOutTime)
+          )
+        );
+
+      if (records.length === 0) {
+        return {
+          clockIn: "N/A",
+          clockOut: "N/A",
+          workHours: 0,
+          lateCount: 0,
+          earlyLeaveCount: 0,
+        };
+      }
+
+      // Calculate averages
+      let totalClockInMinutes = 0;
+      let totalClockOutMinutes = 0;
+      let totalWorkHours = 0;
+      let lateCount = 0;
+      let earlyLeaveCount = 0;
+
+      records.forEach((record) => {
+        const clockIn = new Date(record.clockInTime);
+        const clockOut = new Date(record.clockOutTime!);
+
+        // Add to totals for averaging
+        totalClockInMinutes += clockIn.getHours() * 60 + clockIn.getMinutes();
+        totalClockOutMinutes +=
+          clockOut.getHours() * 60 + clockOut.getMinutes();
+
+        // Calculate work hours
+        const workHours =
+          (clockOut.getTime() - clockIn.getTime()) / (1000 * 60 * 60);
+        totalWorkHours += workHours;
+
+        // Count late arrivals
+        if (record.status === "late") {
+          lateCount++;
+        }
+
+        // Count early leaves (before 5 PM)
+        if (clockOut.getHours() < 17) {
+          earlyLeaveCount++;
+        }
+      });
+
+      // Calculate averages
+      const avgClockInMinutes = Math.round(
+        totalClockInMinutes / records.length
+      );
+      const avgClockOutMinutes = Math.round(
+        totalClockOutMinutes / records.length
+      );
+
+      // Convert minutes to time strings
+      const avgClockInHours = Math.floor(avgClockInMinutes / 60);
+      const avgClockInMins = avgClockInMinutes % 60;
+      const avgClockOutHours = Math.floor(avgClockOutMinutes / 60);
+      const avgClockOutMins = avgClockOutMinutes % 60;
+
+      const clockIn = new Date();
+      clockIn.setHours(avgClockInHours, avgClockInMins, 0);
+      const clockOut = new Date();
+      clockOut.setHours(avgClockOutHours, avgClockOutMins, 0);
+
+      return {
+        clockIn: format(clockIn, "hh:mm a"),
+        clockOut: format(clockOut, "hh:mm a"),
+        workHours: +(totalWorkHours / records.length).toFixed(2),
+        lateCount,
+        earlyLeaveCount,
+      };
+    } catch (error) {
+      console.error("Error calculating average timings:", error);
+      throw error;
+    }
   }
 }
 

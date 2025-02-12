@@ -12,31 +12,65 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { Skeleton } from "@/components/ui/skeleton";
+import { getAttendanceRecordsAction } from "@/app/actions/attendance/get-records";
+import { toast } from "sonner";
+import { startOfDay, endOfDay } from "date-fns";
 
 interface AttendanceListProps {
   viewMode: "personal" | "department" | "all";
-  departmentId?: string;
+  date: Date;
 }
 
-export function AttendanceList({
-  viewMode,
-  departmentId,
-}: AttendanceListProps) {
+type AttendanceRecord = {
+  attendance: {
+    id: string;
+    clockInTime: Date;
+    clockOutTime: Date | null;
+    status: "present" | "late" | "absent";
+  };
+  user: {
+    firstName: string;
+    lastName: string;
+    departmentId: string | null;
+  };
+};
+
+export function AttendanceList({ viewMode, date }: AttendanceListProps) {
   const [isLoading, setIsLoading] = useState(true);
-  const [data, setData] = useState<any[]>([]);
+  const [data, setData] = useState<AttendanceRecord[]>([]);
 
   useEffect(() => {
-    // Fetch attendance data based on viewMode and departmentId
-    // This will be implemented in the next step
-  }, [viewMode, departmentId]);
+    async function fetchRecords() {
+      setIsLoading(true);
+      try {
+        const response = await getAttendanceRecordsAction(
+          startOfDay(date),
+          endOfDay(date),
+          viewMode
+        );
+        if (!response.success || !response.data) {
+          throw new Error(
+            response.error || "Failed to load attendance records"
+          );
+        }
+        setData(response.data as AttendanceRecord[]);
+      } catch (error) {
+        toast.error(
+          error instanceof Error
+            ? error.message
+            : "Failed to load attendance records"
+        );
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchRecords();
+  }, [date, viewMode]);
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-8">
-        <LoadingSpinner />
-      </div>
-    );
+    return <LoadingSkeleton />;
   }
 
   return (
@@ -45,7 +79,6 @@ export function AttendanceList({
         <TableHeader>
           <TableRow>
             <TableHead>Employee</TableHead>
-            <TableHead>Department</TableHead>
             <TableHead>Clock In</TableHead>
             <TableHead>Clock Out</TableHead>
             <TableHead>Duration</TableHead>
@@ -53,43 +86,92 @@ export function AttendanceList({
           </TableRow>
         </TableHeader>
         <TableBody>
-          <AnimatePresence mode="wait">
-            {data.map((record) => (
-              <motion.tr
-                key={record.id}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
+          {data.length === 0 ? (
+            <TableRow>
+              <TableCell
+                colSpan={5}
+                className="text-center text-muted-foreground"
               >
-                <TableCell>{record.employeeName}</TableCell>
-                <TableCell>{record.department}</TableCell>
-                <TableCell>
-                  {format(new Date(record.clockInTime), "hh:mm a")}
-                </TableCell>
-                <TableCell>
-                  {record.clockOutTime
-                    ? format(new Date(record.clockOutTime), "hh:mm a")
-                    : "---"}
-                </TableCell>
-                <TableCell>{record.duration || "---"}</TableCell>
-                <TableCell>
-                  <Badge
-                    variant={
-                      record.status === "present"
-                        ? "success"
-                        : record.status === "late"
-                          ? "warning"
-                          : "destructive"
-                    }
-                  >
-                    {record.status}
-                  </Badge>
-                </TableCell>
-              </motion.tr>
-            ))}
-          </AnimatePresence>
+                No attendance records found
+              </TableCell>
+            </TableRow>
+          ) : (
+            <AnimatePresence mode="wait">
+              {data.map((record) => (
+                <motion.tr
+                  key={record.attendance.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <TableCell>
+                    {record.user.firstName} {record.user.lastName}
+                  </TableCell>
+                  <TableCell>
+                    {format(new Date(record.attendance.clockInTime), "hh:mm a")}
+                  </TableCell>
+                  <TableCell>
+                    {record.attendance.clockOutTime
+                      ? format(
+                          new Date(record.attendance.clockOutTime),
+                          "hh:mm a"
+                        )
+                      : "---"}
+                  </TableCell>
+                  <TableCell>
+                    {record.attendance.clockOutTime
+                      ? calculateDuration(
+                          record.attendance.clockInTime,
+                          record.attendance.clockOutTime
+                        )
+                      : "---"}
+                  </TableCell>
+                  <TableCell>
+                    <Badge
+                      variant={
+                        record.attendance.status === "present"
+                          ? "success"
+                          : record.attendance.status === "late"
+                            ? "warning"
+                            : "destructive"
+                      }
+                    >
+                      {record.attendance.status}
+                    </Badge>
+                  </TableCell>
+                </motion.tr>
+              ))}
+            </AnimatePresence>
+          )}
         </TableBody>
       </Table>
     </div>
   );
+}
+
+function LoadingSkeleton() {
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center space-x-4">
+        {[...Array(5)].map((_, i) => (
+          <Skeleton key={i} className="h-4 w-[100px]" />
+        ))}
+      </div>
+      {[...Array(5)].map((_, i) => (
+        <div key={i} className="flex items-center space-x-4">
+          {[...Array(5)].map((_, j) => (
+            <Skeleton key={j} className="h-4 w-[100px]" />
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function calculateDuration(start: Date, end: Date): string {
+  const diff = new Date(end).getTime() - new Date(start).getTime();
+  const hours = Math.floor(diff / (1000 * 60 * 60));
+  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+  return `${hours}h ${minutes}m`;
 }

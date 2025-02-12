@@ -18,8 +18,10 @@ export default async function AttendancePage() {
   const canViewDepartment = await validatePermission(
     "view_department_attendance"
   );
+
   const canViewAll = await validatePermission("view_all_attendance");
 
+  console.log({ canViewDepartment, canViewAll });
   return (
     <div className="flex-1 space-y-6 p-8 pt-6">
       <div className="flex items-center justify-between">
