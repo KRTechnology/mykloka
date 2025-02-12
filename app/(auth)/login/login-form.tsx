@@ -1,7 +1,7 @@
 "use client";
 
-import { AuthCard } from "@/components/ui/auth-card";
-import { Button } from "@/components/ui/button";
+import { AuthCard } from "../../../components/ui/auth-card";
+import { Button } from "../../../components/ui/button";
 import {
   Form,
   FormControl,
@@ -10,8 +10,8 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Icons } from "@/components/ui/icons";
-import { Input } from "@/components/ui/input";
+import { Icons } from "../../../components/ui/icons";
+import { Input } from "../../../components/ui/input";
 import { authAPI } from "@/lib/api/auth";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
