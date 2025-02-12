@@ -27,11 +27,13 @@ interface HeaderProps {
 
 interface AttendanceStatus {
   isClockedIn: boolean;
+  isCompleted: boolean;
   attendanceId?: string;
 }
 
 export function Header({ user }: HeaderProps) {
   const [isClockedIn, setIsClockedIn] = useState(false);
+  const [isCompleted, setIsCompleted] = useState(false);
   const [attendanceId, setAttendanceId] = useState<string>();
   const [showAttendanceDialog, setShowAttendanceDialog] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -46,20 +48,22 @@ export function Header({ user }: HeaderProps) {
       if (result.success && result.data) {
         const status: AttendanceStatus = {
           isClockedIn: result.data.isClockedIn ?? false,
+          isCompleted: result.data.isCompleted ?? false,
           attendanceId: result.data.attendanceId,
         };
         setIsClockedIn(status.isClockedIn);
+        setIsCompleted(status.isCompleted);
         setAttendanceId(status.attendanceId);
       } else {
-        // Reset to default state if no data
         setIsClockedIn(false);
+        setIsCompleted(false);
         setAttendanceId(undefined);
       }
     } catch (error) {
       console.error("Error checking attendance status:", error);
       toast.error("Failed to check attendance status");
-      // Reset to default state on error
       setIsClockedIn(false);
+      setIsCompleted(false);
       setAttendanceId(undefined);
     } finally {
       setIsCheckingStatus(false);
@@ -74,6 +78,10 @@ export function Header({ user }: HeaderProps) {
   const handleClockInOut = () => {
     if (!user.userId) {
       toast.error("User ID not found");
+      return;
+    }
+    if (isCompleted) {
+      toast.error("You have already completed your attendance for today");
       return;
     }
     setShowAttendanceDialog(true);
@@ -105,23 +113,33 @@ export function Header({ user }: HeaderProps) {
           <div className="flex items-center space-x-4">
             <AnimatePresence mode="wait">
               <motion.div
-                key={isClockedIn ? "out" : "in"}
+                key={isCompleted ? "completed" : isClockedIn ? "out" : "in"}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
               >
                 <Button
-                  variant={isClockedIn ? "destructive" : "default"}
+                  variant={
+                    isCompleted
+                      ? "secondary"
+                      : isClockedIn
+                        ? "destructive"
+                        : "default"
+                  }
                   onClick={handleClockInOut}
                   className={
-                    isClockedIn
-                      ? "bg-destructive hover:bg-destructive/90"
-                      : "bg-kr-orange hover:bg-kr-orange/90"
+                    isCompleted
+                      ? "bg-muted hover:bg-muted/90 cursor-not-allowed"
+                      : isClockedIn
+                        ? "bg-destructive hover:bg-destructive/90"
+                        : "bg-kr-orange hover:bg-kr-orange/90"
                   }
-                  disabled={isCheckingStatus}
+                  disabled={isCheckingStatus || isCompleted}
                 >
                   {isCheckingStatus ? (
                     <LoadingSpinner />
+                  ) : isCompleted ? (
+                    "Attendance Completed"
                   ) : (
                     <>{isClockedIn ? "Clock Out" : "Clock In"}</>
                   )}

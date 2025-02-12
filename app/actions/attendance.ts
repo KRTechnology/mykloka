@@ -58,14 +58,15 @@ export async function clockOutAction(data: {
 
 export async function checkAttendanceStatusAction(userId: string) {
   try {
-    const currentAttendance =
-      await attendanceService.getCurrentDayAttendance(userId);
+    const attendance = await attendanceService.getCurrentDayAttendance(userId);
 
     return {
       success: true,
       data: {
-        isClockedIn: !!currentAttendance,
-        attendanceId: currentAttendance?.id,
+        isClockedIn: attendance.status === "in_progress",
+        isCompleted: attendance.status === "completed",
+        attendanceId:
+          attendance.status !== "not_started" ? attendance.data?.id : undefined,
       },
     };
   } catch (error) {

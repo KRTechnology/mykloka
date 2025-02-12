@@ -2,6 +2,12 @@ import { db } from "@/lib/db/config";
 import { attendance } from "@/lib/db/schema";
 import { eq, and, isNull, sql } from "drizzle-orm";
 
+// Define return type for getCurrentDayAttendance
+type AttendanceStatus =
+  | { status: "not_started" }
+  | { status: "completed"; data: typeof attendance.$inferSelect }
+  | { status: "in_progress"; data: typeof attendance.$inferSelect };
+
 class AttendanceService {
   private db;
 
@@ -71,25 +77,39 @@ class AttendanceService {
     return record[0];
   }
 
-  async getCurrentDayAttendance(userId: string) {
-    // Get today's date at midnight in UTC
+  async getCurrentDayAttendance(userId: string): Promise<AttendanceStatus> {
     const today = new Date();
     today.setUTCHours(0, 0, 0, 0);
 
-    const record = await this.db
+    const records = await this.db
       .select()
       .from(attendance)
       .where(
         and(
           eq(attendance.userId, userId),
-          sql`DATE(clock_in_time) = ${today.toISOString().split("T")[0]}`,
-          isNull(attendance.clockOutTime)
+          sql`DATE(clock_in_time) = ${today.toISOString().split("T")[0]}`
         )
       )
       .orderBy(attendance.createdAt)
       .limit(1);
 
-    return record[0];
+    const currentAttendance = records[0];
+
+    if (!currentAttendance) {
+      return { status: "not_started" };
+    }
+
+    if (currentAttendance.clockOutTime) {
+      return {
+        status: "completed",
+        data: currentAttendance,
+      };
+    }
+
+    return {
+      status: "in_progress",
+      data: currentAttendance,
+    };
   }
 }
 
