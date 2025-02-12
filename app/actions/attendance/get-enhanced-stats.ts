@@ -2,6 +2,7 @@
 
 import { attendanceService } from "@/lib/attendance/attendance.service";
 import { getServerSession } from "@/lib/auth/auth";
+import { AttendanceStreak, AverageTimings } from "@/lib/attendance/types";
 
 export async function getAttendanceStreakAction() {
   try {
@@ -9,7 +10,7 @@ export async function getAttendanceStreakAction() {
     if (!session) throw new Error("Unauthorized");
 
     const streak = await attendanceService.getAttendanceStreak(session.userId);
-    return { success: true, data: streak };
+    return { success: true, data: streak as AttendanceStreak };
   } catch (error) {
     console.error("Error getting attendance streak:", error);
     return {
@@ -25,7 +26,7 @@ export async function getAverageTimingsAction() {
     if (!session) throw new Error("Unauthorized");
 
     const averages = await attendanceService.getAverageTimings(session.userId);
-    return { success: true, data: averages };
+    return { success: true, data: averages as AverageTimings };
   } catch (error) {
     console.error("Error getting average timings:", error);
     return {

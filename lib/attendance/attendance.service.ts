@@ -3,6 +3,8 @@ import { attendance } from "@/lib/db/schema";
 import { users } from "@/lib/db/schema/users";
 import { addDays, endOfDay, format, startOfDay } from "date-fns";
 import { and, between, desc, eq, isNotNull, sql } from "drizzle-orm";
+import { cache } from "@/lib/cache";
+import { AttendanceStats, AttendanceStreak, AverageTimings } from "./types";
 
 // Define return type for getCurrentDayAttendance
 type AttendanceStatus =
@@ -11,13 +13,6 @@ type AttendanceStatus =
   | { status: "in_progress"; data: typeof attendance.$inferSelect };
 
 export type AttendanceRecord = typeof attendance.$inferSelect;
-
-interface AttendanceStats {
-  present: number;
-  late: number;
-  absent: number;
-  total: number;
-}
 
 const EARLIEST_CLOCK_IN = 6; // 6:00 AM
 const LATE_AFTER = 8.5; // 8:30 AM
@@ -179,6 +174,21 @@ class AttendanceService {
       departmentId?: string;
     }
   ): Promise<AttendanceStats> {
+    const cacheKey = `daily-stats-${date.toISOString()}-${options.userId || ""}-${
+      options.departmentId || ""
+    }`;
+    const cachedData = cache.get<AttendanceStats>(cacheKey);
+    if (cachedData) return cachedData;
+
+    const result = await this._getDailyStats(date, options);
+    cache.set<AttendanceStats>(cacheKey, result, 5 * 60 * 1000);
+    return result;
+  }
+
+  private async _getDailyStats(
+    date: Date,
+    options: { userId?: string; departmentId?: string }
+  ) {
     const startOfDayDate = startOfDay(date);
     const endOfDayDate = endOfDay(date);
 
@@ -253,6 +263,10 @@ class AttendanceService {
   }
 
   async getAttendanceStreak(userId: string) {
+    const cacheKey = `attendance-streak-${userId}`;
+    const cachedData = cache.get<AttendanceStreak>(cacheKey);
+    if (cachedData) return cachedData;
+
     try {
       const today = new Date();
       const thirtyDaysAgo = new Date(today);
@@ -341,11 +355,14 @@ class AttendanceService {
         }
       });
 
-      return {
+      const result: AttendanceStreak = {
         current: currentStreak,
         longest: longestStreak,
         lastPerfectWeek,
       };
+
+      cache.set<AttendanceStreak>(cacheKey, result, 30 * 60 * 1000);
+      return result;
     } catch (error) {
       console.error("Error calculating attendance streak:", error);
       throw error;
@@ -353,6 +370,10 @@ class AttendanceService {
   }
 
   async getAverageTimings(userId: string) {
+    const cacheKey = `average-timings-${userId}`;
+    const cachedData = cache.get<AverageTimings>(cacheKey);
+    if (cachedData) return cachedData;
+
     try {
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
@@ -434,13 +455,16 @@ class AttendanceService {
       const clockOut = new Date();
       clockOut.setHours(avgClockOutHours, avgClockOutMins, 0);
 
-      return {
+      const result: AverageTimings = {
         clockIn: format(clockIn, "hh:mm a"),
         clockOut: format(clockOut, "hh:mm a"),
         workHours: +(totalWorkHours / records.length).toFixed(2),
         lateCount,
         earlyLeaveCount,
       };
+
+      cache.set<AverageTimings>(cacheKey, result, 30 * 60 * 1000);
+      return result;
     } catch (error) {
       console.error("Error calculating average timings:", error);
       throw error;

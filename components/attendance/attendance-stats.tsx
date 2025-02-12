@@ -22,6 +22,11 @@ import {
   getAttendanceStreakAction,
   getAverageTimingsAction,
 } from "@/app/actions/attendance/get-enhanced-stats";
+import type {
+  AttendanceStats,
+  AttendanceStreak,
+  AverageTimings,
+} from "@/lib/attendance/types";
 
 interface AttendanceStatsProps {
   canViewDepartment: boolean;
@@ -30,26 +35,7 @@ interface AttendanceStatsProps {
 
 type WeeklyStats = {
   name: string;
-  present: number;
-  late: number;
-  absent: number;
-  total: number;
-};
-
-// Add new types for enhanced stats
-interface AttendanceStreak {
-  current: number;
-  longest: number;
-  lastPerfectWeek: string | null;
-}
-
-interface AverageTimings {
-  clockIn: string;
-  clockOut: string;
-  workHours: number;
-  lateCount: number;
-  earlyLeaveCount: number;
-}
+} & AttendanceStats;
 
 export function AttendanceStats({
   canViewDepartment,
@@ -92,10 +78,10 @@ export function AttendanceStats({
         ]);
 
         if (streakResponse.success && streakResponse.data) {
-          setStreak(streakResponse.data);
+          setStreak(streakResponse.data as AttendanceStreak);
         }
         if (averagesResponse.success && averagesResponse.data) {
-          setAverages(averagesResponse.data);
+          setAverages(averagesResponse.data as AverageTimings);
         }
       } catch (error) {
         toast.error("Failed to load enhanced statistics");
@@ -171,25 +157,34 @@ export function AttendanceStats({
                   >
                     <XAxis dataKey="name" />
                     <YAxis />
-                    <Tooltip />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "hsl(var(--background))",
+                        border: "1px solid hsl(var(--border))",
+                      }}
+                      cursor={{ fill: "hsl(var(--muted))" }}
+                    />
                     <Legend />
                     <Bar
                       name="Present"
                       dataKey="present"
                       fill="var(--kr-green)"
                       radius={[4, 4, 0, 0]}
+                      stackId="a"
                     />
                     <Bar
                       name="Late"
                       dataKey="late"
                       fill="var(--yellow-500)"
                       radius={[4, 4, 0, 0]}
+                      stackId="a"
                     />
                     <Bar
                       name="Absent"
                       dataKey="absent"
                       fill="var(--destructive)"
                       radius={[4, 4, 0, 0]}
+                      stackId="a"
                     />
                   </BarChart>
                 </ResponsiveContainer>
