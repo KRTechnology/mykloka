@@ -1,18 +1,11 @@
-import nodemailer from "nodemailer";
-import { render } from "@react-email/render";
+import { Resend } from "resend";
 import { UserInvitationEmail } from "./email-templates/user-invitation";
 
 export class EmailService {
-  private transporter: nodemailer.Transporter;
+  private resend: Resend;
 
   constructor() {
-    this.transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.GMAIL_USER,
-        pass: process.env.GMAIL_APP_PASSWORD,
-      },
-    });
+    this.resend = new Resend(process.env.RESEND_API_KEY);
   }
 
   async sendUserInvitation(params: {
@@ -22,20 +15,28 @@ export class EmailService {
   }) {
     const { email, verificationLink, companyName } = params;
 
-    const emailHtml = await render(
-      UserInvitationEmail({
-        userEmail: email,
-        verificationLink,
-        companyName,
-      })
-    );
+    try {
+      const { data, error } = await this.resend.emails.send({
+        from: `${companyName} <${process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev"}>`,
+        to: email,
+        subject: `Welcome to ${companyName}`,
+        react: UserInvitationEmail({
+          userEmail: email,
+          verificationLink,
+          companyName,
+        }),
+      });
 
-    await this.transporter.sendMail({
-      from: `"${companyName}" <${process.env.GMAIL_USER}>`,
-      to: email,
-      subject: `Welcome to ${companyName}`,
-      html: emailHtml,
-    });
+      if (error) {
+        throw error;
+      }
+
+      return data;
+    } catch (error) {
+      // You might want to handle this error according to your needs
+      console.error("Failed to send email:", error);
+      throw error;
+    }
   }
 }
 
