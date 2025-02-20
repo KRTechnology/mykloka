@@ -8,6 +8,7 @@ import { Plus } from "lucide-react";
 import { headers } from "next/headers";
 import Link from "next/link";
 import { Suspense } from "react";
+import { unstable_noStore as noStore } from "next/cache";
 
 type SearchParams = {
   page?: string;
@@ -22,6 +23,8 @@ interface PageProps {
 }
 
 export default async function UsersPage({ searchParams }: PageProps) {
+  noStore(); // Disable page caching
+
   try {
     const headersList = await headers();
     const protocol = headersList.get("x-forwarded-proto") || "http";

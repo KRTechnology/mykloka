@@ -6,6 +6,7 @@ import { asc, desc, eq, sql } from "drizzle-orm";
 import { type PgColumn } from "drizzle-orm/pg-core";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { unstable_noStore as noStore } from "next/cache";
 
 const createUserSchema = z.object({
   email: z.string().email(),
@@ -47,6 +48,7 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
+  noStore();
   try {
     if (!db) {
       return NextResponse.json(

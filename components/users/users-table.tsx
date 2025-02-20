@@ -31,7 +31,7 @@ import { type SortingState } from "@/types/table";
 import { AnimatePresence, motion } from "framer-motion";
 import { MoreHorizontal, Pencil, Trash } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { DeleteUserDialog } from "./delete-user-dialog";
 import { EditUserDialog } from "./edit-user-dialog";
 
@@ -51,6 +51,13 @@ export function UsersTable({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const [users, setUsers] = useState(initialUsers);
+
+  // Update local state when props change
+  useEffect(() => {
+    setUsers(initialUsers);
+  }, [initialUsers]);
+
   const [sorting, setSorting] = useState<SortingState<SortableField>>({
     field: (searchParams.get("sortBy") as SortableField) || "firstName",
     direction: (searchParams.get("sortDirection") as "asc" | "desc") || "asc",
@@ -112,6 +119,17 @@ export function UsersTable({
     }
   }
 
+  // Add a refresh function
+  const refreshData = useCallback(() => {
+    router.refresh();
+  }, [router]);
+
+  // Refresh data periodically
+  useEffect(() => {
+    const interval = setInterval(refreshData, 10000); // Refresh every 10 seconds
+    return () => clearInterval(interval);
+  }, [refreshData]);
+
   if (!initialUsers.length) {
     return (
       <div className="rounded-md border">
@@ -157,7 +175,7 @@ export function UsersTable({
           </TableHeader>
           <TableBody>
             <AnimatePresence mode="popLayout">
-              {initialUsers.map((user) => (
+              {users.map((user) => (
                 <motion.tr
                   key={user.id}
                   initial={{ opacity: 0, y: 20 }}
