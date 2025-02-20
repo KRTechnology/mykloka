@@ -118,11 +118,11 @@ export function AttendanceCalendar({
   const getStatusColor = (status?: "present" | "late" | "absent") => {
     switch (status) {
       case "present":
-        return "bg-kr-green/10 text-kr-green";
+        return "bg-kr-green/20 text-kr-green font-semibold";
       case "late":
-        return "bg-kr-yellow/10 text-kr-yellow";
+        return "bg-kr-yellow/20 text-kr-yellow font-semibold";
       case "absent":
-        return "bg-kr-red/10 text-kr-red";
+        return "bg-kr-red/20 text-kr-red font-semibold";
       default:
         return "bg-muted text-muted-foreground";
     }
@@ -163,7 +163,7 @@ export function AttendanceCalendar({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               className={cn(
-                "px-3 py-1.5 text-sm rounded-full font-medium",
+                "px-3 py-1.5 text-sm rounded-full",
                 getStatusColor(selectedDay.status)
               )}
             >
