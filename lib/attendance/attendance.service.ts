@@ -208,10 +208,24 @@ class AttendanceService {
     date: Date,
     options: { userId?: string; departmentId?: string }
   ) {
-    const startOfDay = new Date(date.setHours(0, 0, 0, 0));
-    const endOfDay = new Date(date.setHours(23, 59, 59, 999));
+    const startOfDay = new Date(date);
+    startOfDay.setHours(0, 0, 0, 0);
 
-    return this.getDateRangeStats(startOfDay, endOfDay, options);
+    const endOfDay = new Date(date);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    const records = await this.getAttendanceByDateRange(
+      startOfDay,
+      endOfDay,
+      options
+    );
+
+    return {
+      present: records.filter((r) => r.attendance.status === "present").length,
+      late: records.filter((r) => r.attendance.status === "late").length,
+      absent: records.filter((r) => r.attendance.status === "absent").length,
+      total: records.length || 0,
+    };
   }
 
   async getWeeklyStats(

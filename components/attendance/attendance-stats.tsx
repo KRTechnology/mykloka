@@ -41,6 +41,13 @@ type WeeklyStats = {
   total: number;
 };
 
+// Add color constants at the top
+const CHART_COLORS = {
+  present: "var(--kr-green)",
+  late: "var(--kr-yellow)",
+  absent: "var(--kr-red)",
+} as const;
+
 export function AttendanceStats({
   canViewDepartment,
   canViewAll,
@@ -171,21 +178,21 @@ export function AttendanceStats({
                     <Bar
                       name="Present"
                       dataKey="present"
-                      fill="var(--kr-green)"
+                      fill={CHART_COLORS.present}
                       radius={[4, 4, 0, 0]}
                       stackId="a"
                     />
                     <Bar
                       name="Late"
                       dataKey="late"
-                      fill="var(--yellow-500)"
+                      fill={CHART_COLORS.late}
                       radius={[4, 4, 0, 0]}
                       stackId="a"
                     />
                     <Bar
                       name="Absent"
                       dataKey="absent"
-                      fill="var(--destructive)"
+                      fill={CHART_COLORS.absent}
                       radius={[4, 4, 0, 0]}
                       stackId="a"
                     />
@@ -224,14 +231,21 @@ export function AttendanceStats({
                     type="monotone"
                     name="Present"
                     dataKey="present"
-                    stroke="var(--kr-green)"
+                    stroke={CHART_COLORS.present}
                     strokeWidth={2}
                   />
                   <Line
                     type="monotone"
                     name="Late"
                     dataKey="late"
-                    stroke="var(--yellow-500)"
+                    stroke={CHART_COLORS.late}
+                    strokeWidth={2}
+                  />
+                  <Line
+                    type="monotone"
+                    name="Absent"
+                    dataKey="absent"
+                    stroke={CHART_COLORS.absent}
                     strokeWidth={2}
                   />
                 </LineChart>
