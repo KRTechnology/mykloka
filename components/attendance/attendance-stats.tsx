@@ -27,6 +27,14 @@ import type {
   AttendanceStreak,
   AverageTimings,
 } from "@/lib/attendance/types";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Users2 } from "lucide-react";
 
 interface AttendanceStatsProps {
   canViewDepartment: boolean;
@@ -48,14 +56,17 @@ const CHART_COLORS = {
   absent: "var(--kr-red)",
 } as const;
 
+// Add viewMode type
+type ViewMode = "personal" | "department" | "all";
+
 export function AttendanceStats({
   canViewDepartment,
   canViewAll,
 }: AttendanceStatsProps) {
-  // Initialize with the start of the current week
+  const [viewMode, setViewMode] = useState<ViewMode>("personal");
   const [date] = useState<Date>(() => {
     const now = new Date();
-    return startOfWeek(now, { weekStartsOn: 1 }); // Start week on Monday
+    return startOfWeek(now, { weekStartsOn: 1 });
   });
   const [isLoading, setIsLoading] = useState(true);
   const [weeklyStats, setWeeklyStats] = useState<WeeklyStats[]>([]);
@@ -69,9 +80,9 @@ export function AttendanceStats({
       setIsLoading(true);
       try {
         console.log("Fetching stats for date:", date);
-        const response = await getWeeklyStatsAction(date);
+        const response = await getWeeklyStatsAction(date, viewMode);
         console.log("Weekly stats response:", response);
-        
+
         if (!response.success || !response.data) {
           throw new Error(response.error || "Failed to load statistics");
         }
@@ -87,7 +98,7 @@ export function AttendanceStats({
     }
 
     fetchStats();
-  }, [date]);
+  }, [date, viewMode]);
 
   // Update the enhanced stats fetch
   useEffect(() => {
@@ -132,6 +143,43 @@ export function AttendanceStats({
       animate={{ opacity: 1, y: 0 }}
       className="space-y-4"
     >
+      {/* Add view mode selector */}
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold tracking-tight">Statistics</h2>
+        <Select
+          value={viewMode}
+          onValueChange={(value: ViewMode) => setViewMode(value)}
+        >
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Select view" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="personal">
+              <div className="flex items-center">
+                <Users2 className="mr-2 h-4 w-4" />
+                Personal
+              </div>
+            </SelectItem>
+            {canViewDepartment && (
+              <SelectItem value="department">
+                <div className="flex items-center">
+                  <Users2 className="mr-2 h-4 w-4" />
+                  Department
+                </div>
+              </SelectItem>
+            )}
+            {canViewAll && (
+              <SelectItem value="all">
+                <div className="flex items-center">
+                  <Users2 className="mr-2 h-4 w-4" />
+                  All Employees
+                </div>
+              </SelectItem>
+            )}
+          </SelectContent>
+        </Select>
+      </div>
+
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <Card>
           <CardHeader>

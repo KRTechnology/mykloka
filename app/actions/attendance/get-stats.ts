@@ -67,28 +67,41 @@ export async function getDailyStatsAction(date: Date) {
   return getStatsAction({ startDate: date, endDate: date, type: "daily" });
 }
 
-export async function getWeeklyStatsAction(date: Date) {
+export async function getWeeklyStatsAction(date: Date, viewMode: "personal" | "department" | "all" = "personal") {
   try {
     const session = await getServerSession();
     if (!session) throw new Error("Unauthorized");
 
+    // Check permissions
+    const canViewAll = await validatePermission("view_all_attendance");
+    const canViewDepartment = await validatePermission("view_department_attendance");
+
+    // Validate view mode access
+    if (viewMode === "all" && !canViewAll) {
+      throw new Error("Unauthorized to view all attendance");
+    }
+    if (viewMode === "department" && !canViewDepartment) {
+      throw new Error("Unauthorized to view department attendance");
+    }
+
     const weekStart = startOfWeek(date, { weekStartsOn: 1 });
     const weekEnd = endOfWeek(date, { weekStartsOn: 1 });
-
-    console.log("Getting weekly stats for:", {
-      weekStart: weekStart.toISOString(),
-      weekEnd: weekEnd.toISOString()
-    });
 
     // Get stats for each day of the week
     const weekDays = [];
     let currentDay = new Date(weekStart);
 
+    // Determine options based on view mode
+    let options: { userId?: string; departmentId?: string } = {};
+    if (viewMode === "personal") {
+      options.userId = session.userId;
+    } else if (viewMode === "department" && session.departmentId) {
+      options.departmentId = session.departmentId;
+    }
+
     while (currentDay <= weekEnd) {
       const dayToCheck = new Date(currentDay);
-      const stats = await attendanceService.getDailyStats(dayToCheck, {
-        userId: session.userId,
-      });
+      const stats = await attendanceService.getDailyStats(dayToCheck, options);
 
       weekDays.push({
         name: format(dayToCheck, "EEE"),
@@ -98,7 +111,6 @@ export async function getWeeklyStatsAction(date: Date) {
       currentDay.setDate(currentDay.getDate() + 1);
     }
 
-    console.log("Weekly stats result:", weekDays);
     return { success: true, data: weekDays };
   } catch (error) {
     console.error("Error getting weekly stats:", error);
