@@ -7,13 +7,17 @@ export async function getAttendanceRecordsAction(
   startDate: Date,
   endDate: Date,
   viewMode: "personal" | "department" | "all",
-  statusFilters: string[] = []
+  statusFilters: ("present" | "late" | "absent")[] = []
 ) {
   try {
     const session = await getServerSession();
     if (!session) throw new Error("Unauthorized");
 
-    let options: { userId?: string; departmentId?: string } = {};
+    let options: {
+      userId?: string;
+      departmentId?: string;
+      statusFilters?: ("present" | "late" | "absent")[];
+    } = {};
 
     if (viewMode === "personal") {
       options.userId = session.userId;
@@ -21,11 +25,15 @@ export async function getAttendanceRecordsAction(
       options.departmentId = session.departmentId;
     }
 
+    // Add status filters to options
+    if (statusFilters.length > 0) {
+      options.statusFilters = statusFilters;
+    }
+
     const records = await attendanceService.getAttendanceByDateRange(
       startDate,
       endDate,
-      options,
-      statusFilters
+      options
     );
 
     return { success: true, data: records };

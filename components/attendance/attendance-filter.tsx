@@ -45,9 +45,6 @@ interface AttendanceFilterProps {
   canViewAll?: boolean;
 }
 
-// Add type for status values
-type AttendanceStatus = "present" | "late" | "absent";
-
 const presetRanges = [
   {
     label: "Today",
@@ -70,21 +67,9 @@ const presetRanges = [
 ];
 
 const statusOptions = [
-  {
-    label: "Present",
-    value: "present" as AttendanceStatus,
-    color: "text-kr-green",
-  },
-  {
-    label: "Late",
-    value: "late" as AttendanceStatus,
-    color: "text-yellow-500",
-  },
-  {
-    label: "Absent",
-    value: "absent" as AttendanceStatus,
-    color: "text-destructive",
-  },
+  { label: "Present", value: "present" as const, color: "text-kr-green" },
+  { label: "Late", value: "late" as const, color: "text-yellow-500" },
+  { label: "Absent", value: "absent" as const, color: "text-destructive" },
 ] as const;
 
 export function AttendanceFilter({
@@ -98,9 +83,9 @@ export function AttendanceFilter({
 }: AttendanceFilterProps) {
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [selectedStatuses, setSelectedStatuses] = useState<AttendanceStatus[]>(
-    []
-  );
+  const [selectedStatuses, setSelectedStatuses] = useState<
+    ("present" | "late" | "absent")[]
+  >([]);
   const [selectedRange, setSelectedRange] = useState<{
     from: Date;
     to: Date;
@@ -127,13 +112,16 @@ export function AttendanceFilter({
     }
   }, [canViewDepartment, canViewAll]);
 
-  const handleStatusToggle = useCallback((status: AttendanceStatus) => {
-    setSelectedStatuses((current) =>
-      current.includes(status)
-        ? current.filter((s) => s !== status)
-        : [...current, status]
-    );
-  }, []);
+  const handleStatusToggle = useCallback(
+    (status: "present" | "late" | "absent") => {
+      setSelectedStatuses((current) =>
+        current.includes(status)
+          ? current.filter((s) => s !== status)
+          : [...current, status]
+      );
+    },
+    []
+  );
 
   useEffect(() => {
     onStatusFilter?.(selectedStatuses);
@@ -293,14 +281,16 @@ export function AttendanceFilter({
                   <CommandItem
                     key={status.value}
                     onSelect={() =>
-                      handleStatusToggle(status.value as AttendanceStatus)
+                      handleStatusToggle(
+                        status.value as "present" | "late" | "absent"
+                      )
                     }
                   >
                     <div
                       className={cn(
                         "mr-2",
                         selectedStatuses.includes(
-                          status.value as AttendanceStatus
+                          status.value as "present" | "late" | "absent"
                         )
                           ? "opacity-100"
                           : "opacity-0"
@@ -348,7 +338,9 @@ export function AttendanceFilter({
                 key={status}
                 variant="secondary"
                 className="text-xs"
-                onClick={() => handleStatusToggle(status as AttendanceStatus)}
+                onClick={() =>
+                  handleStatusToggle(status as "present" | "late" | "absent")
+                }
               >
                 {status}
                 <X className="ml-1 h-3 w-3 cursor-pointer" />

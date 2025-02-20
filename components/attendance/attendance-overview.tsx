@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { getStatsAction } from "@/app/actions/attendance/get-stats";
 import {
   Card,
   CardContent,
@@ -16,13 +15,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
+import { differenceInDays, format } from "date-fns";
+import { motion } from "framer-motion";
+import { AlertTriangle, Clock, UserCheck, UserX } from "lucide-react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { AttendanceFilter } from "./attendance-filter";
 import { AttendanceList } from "./attendance-list";
-import { getStatsAction } from "@/app/actions/attendance/get-stats";
-import { format, differenceInDays } from "date-fns";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Clock, UserCheck, UserX, AlertTriangle } from "lucide-react";
-import { toast } from "sonner";
 
 interface AttendanceOverviewProps {
   canViewDepartment: boolean;
@@ -40,6 +40,9 @@ export function AttendanceOverview({
   const [dateRange, setDateRange] = useState<{ from: Date; to: Date } | null>(
     null
   );
+  const [statusFilters, setStatusFilters] = useState<
+    ("present" | "late" | "absent")[]
+  >([]);
   const [isLoading, setIsLoading] = useState(true);
   const [stats, setStats] = useState<{
     present: number;
@@ -47,7 +50,6 @@ export function AttendanceOverview({
     absent: number;
     total: number;
   } | null>(null);
-  const [statusFilters, setStatusFilters] = useState<string[]>([]);
 
   //   const { toast } = useToast();
 

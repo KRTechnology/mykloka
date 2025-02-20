@@ -21,7 +21,7 @@ interface AttendanceListProps {
   viewMode: "personal" | "department" | "all";
   date: Date;
   dateRange?: { from: Date; to: Date } | null;
-  statusFilters?: string[];
+  statusFilters?: ("present" | "late" | "absent")[];
 }
 
 type AttendanceRecord = {
@@ -38,11 +38,11 @@ type AttendanceRecord = {
   };
 };
 
-export function AttendanceList({ 
-  viewMode, 
-  date, 
+export function AttendanceList({
+  viewMode,
+  date,
   dateRange,
-  statusFilters = []
+  statusFilters = [],
 }: AttendanceListProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [data, setData] = useState<AttendanceRecord[]>([]);
@@ -60,6 +60,7 @@ export function AttendanceList({
           viewMode,
           statusFilters
         );
+
         if (!response.success || !response.data) {
           throw new Error(
             response.error || "Failed to load attendance records"
