@@ -1,13 +1,11 @@
+import { AccountSettings } from "@/components/settings/account-settings";
+import { DisplaySettings } from "@/components/settings/display-settings";
+import { NotificationSettings } from "@/components/settings/notification-settings";
 import { Heading } from "@/components/ui/heading";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { NotificationSettings } from "@/components/settings/notification-settings";
-import { DisplaySettings } from "@/components/settings/display-settings";
-import { AccountSettings } from "@/components/settings/account-settings";
-// import { getCurrentUser } from "@/lib/auth/auth";
-import { redirect } from "next/navigation";
-import { getCurrentUser } from "@/app/actions/auth";
 import { getServerSession } from "@/lib/auth/auth";
+import { redirect } from "next/navigation";
 
 export default async function SettingsPage() {
     const session = await getServerSession();

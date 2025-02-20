@@ -5,7 +5,8 @@ export const userSettings = pgTable("user_settings", {
   id: uuid("id").defaultRandom().primaryKey(),
   userId: uuid("user_id")
     .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
+    .references(() => users.id, { onDelete: "cascade" })
+    .unique(),
   emailClockInNotifications: boolean("email_clock_in_notifications")
     .notNull()
     .default(false),

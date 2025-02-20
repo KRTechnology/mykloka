@@ -2,7 +2,6 @@ import { getServerSession } from "@/lib/auth/auth";
 import { redirect } from "next/navigation";
 import { DashboardClient } from "./dashboard-client";
 
-
 export default async function DashboardLayout({
   children,
 }: {
@@ -14,5 +13,5 @@ export default async function DashboardLayout({
     redirect("/login");
   }
 
-  return <DashboardClient  user={session}>{children}</DashboardClient>;
+  return <DashboardClient user={session}>{children}</DashboardClient>;
 }

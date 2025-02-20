@@ -78,7 +78,10 @@ export function NotificationSettings({ user }: NotificationSettingsProps) {
             />
           </div>
           <div className="flex items-center justify-between space-x-2">
-            <Label htmlFor="task-notifications" className="flex flex-col space-y-1">
+            <Label
+              htmlFor="task-notifications"
+              className="flex flex-col space-y-1"
+            >
               <span>Task Notifications</span>
               <span className="text-sm text-muted-foreground">
                 Get notified when tasks are created in your department
@@ -104,7 +107,10 @@ export function NotificationSettings({ user }: NotificationSettingsProps) {
             />
           </div>
           <div className="flex items-center justify-between space-x-2">
-            <Label htmlFor="department-updates" className="flex flex-col space-y-1">
+            <Label
+              htmlFor="department-updates"
+              className="flex flex-col space-y-1"
+            >
               <span>Department Updates</span>
               <span className="text-sm text-muted-foreground">
                 Get notified about important updates in your department

@@ -35,7 +35,7 @@ export async function updateNotificationSettingsAction({
         updatedAt: new Date(),
       })
       .onConflictDoUpdate({
-        target: [userSettings.userId],
+        target: userSettings.userId,
         set: {
           ...settings,
           updatedAt: new Date(),

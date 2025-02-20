@@ -18,9 +18,16 @@ import {
 } from "@/components/ui/select";
 import { useTheme } from "next-themes";
 import { toast } from "sonner";
+import { useEffect, useState } from "react";
 
 export function DisplaySettings() {
   const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  // Prevent hydration mismatch
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleThemeChange = (newTheme: string) => {
     try {
@@ -30,6 +37,10 @@ export function DisplaySettings() {
       toast.error("Failed to update theme");
     }
   };
+
+  if (!mounted) {
+    return null;
+  }
 
   return (
     <motion.div
@@ -47,7 +58,7 @@ export function DisplaySettings() {
         <CardContent className="space-y-6">
           <div className="space-y-2">
             <Label>Theme</Label>
-            <Select onValueChange={handleThemeChange} defaultValue={theme}>
+            <Select onValueChange={handleThemeChange} value={theme}>
               <SelectTrigger>
                 <SelectValue placeholder="Select theme" />
               </SelectTrigger>

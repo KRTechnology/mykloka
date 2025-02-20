@@ -21,6 +21,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { LoadingSpinner } from "../ui/loading-spinner";
 import { Badge } from "@/components/ui/badge";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 interface HeaderProps {
   user: UserJWTPayload & { userId: string };
@@ -106,97 +107,94 @@ export function Header({ user }: HeaderProps) {
   };
 
   return (
-    <>
-      <header className="border-b bg-card">
-        <div className="flex items-center justify-between px-6 py-4">
-          <h1 className="text-2xl font-semibold text-foreground">Dashboard</h1>
-
-          <div className="flex items-center space-x-4">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={isCompleted ? "completed" : isClockedIn ? "out" : "in"}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
+    <div className="border-b">
+      <div className="flex h-16 items-center px-4">
+        <div className="ml-auto flex items-center space-x-4">
+          <ThemeToggle />
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={isCompleted ? "completed" : isClockedIn ? "out" : "in"}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+            >
+              <Button
+                variant={
+                  isCompleted
+                    ? "secondary"
+                    : isClockedIn
+                      ? "destructive"
+                      : "default"
+                }
+                onClick={handleClockInOut}
+                className={
+                  isCompleted
+                    ? "bg-muted hover:bg-muted/90 cursor-not-allowed"
+                    : isClockedIn
+                      ? "bg-destructive hover:bg-destructive/90"
+                      : "bg-kr-orange hover:bg-kr-orange/90"
+                }
+                disabled={isCheckingStatus || isCompleted}
               >
-                <Button
-                  variant={
-                    isCompleted
-                      ? "secondary"
-                      : isClockedIn
-                        ? "destructive"
-                        : "default"
-                  }
-                  onClick={handleClockInOut}
-                  className={
-                    isCompleted
-                      ? "bg-muted hover:bg-muted/90 cursor-not-allowed"
-                      : isClockedIn
-                        ? "bg-destructive hover:bg-destructive/90"
-                        : "bg-kr-orange hover:bg-kr-orange/90"
-                  }
-                  disabled={isCheckingStatus || isCompleted}
-                >
-                  {isCheckingStatus ? (
-                    <LoadingSpinner />
-                  ) : isCompleted ? (
-                    "Attendance Completed"
-                  ) : (
-                    <>{isClockedIn ? "Clock Out" : "Clock In"}</>
-                  )}
-                </Button>
-              </motion.div>
-            </AnimatePresence>
+                {isCheckingStatus ? (
+                  <LoadingSpinner />
+                ) : isCompleted ? (
+                  "Attendance Completed"
+                ) : (
+                  <>{isClockedIn ? "Clock Out" : "Clock In"}</>
+                )}
+              </Button>
+            </motion.div>
+          </AnimatePresence>
 
-            <button className="p-2 rounded-lg hover:bg-accent relative">
-              <Bell className="h-5 w-5" />
-              <span className="absolute top-1 right-1 w-2 h-2 bg-kr-orange rounded-full" />
-            </button>
+          <button className="p-2 rounded-lg hover:bg-accent relative">
+            <Bell className="h-5 w-5" />
+            <span className="absolute top-1 right-1 w-2 h-2 bg-kr-orange rounded-full" />
+          </button>
 
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="flex items-center space-x-2 p-2 rounded-lg hover:bg-accent">
-                  <User className="h-5 w-5" />
-                  <div className="flex items-center gap-2">
-                    <span>{`${user.firstName} ${user.lastName}`}</span>
-                    <Badge variant="secondary" className="font-normal">
-                      {user.role.name}
-                    </Badge>
-                  </div>
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem className="text-sm text-muted-foreground">
-                  {user.email}
-                </DropdownMenuItem>
-                <DropdownMenuItem className="text-sm text-muted-foreground">
-                  Role: {user.role.name}
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>Profile</DropdownMenuItem>
-                <DropdownMenuItem>Settings</DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  className="text-destructive focus:text-destructive"
-                  onClick={handleLogout}
-                  disabled={isLoggingOut}
-                >
-                  {isLoggingOut ? (
-                    <>
-                      <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
-                      Logging out...
-                    </>
-                  ) : (
-                    "Logout"
-                  )}
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="flex items-center space-x-2 p-2 rounded-lg hover:bg-accent">
+                <User className="h-5 w-5" />
+                <div className="flex items-center gap-2">
+                  <span>{`${user.firstName} ${user.lastName}`}</span>
+                  <Badge variant="secondary" className="font-normal">
+                    {user.role.name}
+                  </Badge>
+                </div>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel>My Account</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem className="text-sm text-muted-foreground">
+                {user.email}
+              </DropdownMenuItem>
+              <DropdownMenuItem className="text-sm text-muted-foreground">
+                Role: {user.role.name}
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem>Profile</DropdownMenuItem>
+              <DropdownMenuItem>Settings</DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                className="text-destructive focus:text-destructive"
+                onClick={handleLogout}
+                disabled={isLoggingOut}
+              >
+                {isLoggingOut ? (
+                  <>
+                    <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
+                    Logging out...
+                  </>
+                ) : (
+                  "Logout"
+                )}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
-      </header>
+      </div>
 
       {user.userId && (
         <AttendanceDialog
@@ -210,6 +208,6 @@ export function Header({ user }: HeaderProps) {
           attendanceId={attendanceId}
         />
       )}
-    </>
+    </div>
   );
 }
