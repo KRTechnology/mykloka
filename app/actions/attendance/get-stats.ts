@@ -75,12 +75,16 @@ export async function getWeeklyStatsAction(date: Date) {
     const weekStart = startOfWeek(date, { weekStartsOn: 1 });
     const weekEnd = endOfWeek(date, { weekStartsOn: 1 });
 
+    console.log("Getting weekly stats for:", {
+      weekStart: weekStart.toISOString(),
+      weekEnd: weekEnd.toISOString()
+    });
+
     // Get stats for each day of the week
     const weekDays = [];
     let currentDay = new Date(weekStart);
 
     while (currentDay <= weekEnd) {
-      // Create a new date object to avoid mutations
       const dayToCheck = new Date(currentDay);
       const stats = await attendanceService.getDailyStats(dayToCheck, {
         userId: session.userId,
@@ -91,18 +95,16 @@ export async function getWeeklyStatsAction(date: Date) {
         ...stats,
       });
 
-      // Move to next day
       currentDay.setDate(currentDay.getDate() + 1);
     }
 
-    console.log({ weekDays });
+    console.log("Weekly stats result:", weekDays);
     return { success: true, data: weekDays };
   } catch (error) {
     console.error("Error getting weekly stats:", error);
     return {
       success: false,
-      error:
-        error instanceof Error ? error.message : "Failed to get weekly stats",
+      error: error instanceof Error ? error.message : "Failed to get weekly stats",
     };
   }
 }

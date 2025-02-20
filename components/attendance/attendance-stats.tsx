@@ -52,24 +52,32 @@ export function AttendanceStats({
   canViewDepartment,
   canViewAll,
 }: AttendanceStatsProps) {
-  const [date] = useState<Date>(startOfWeek(new Date()));
+  // Initialize with the start of the current week
+  const [date] = useState<Date>(() => {
+    const now = new Date();
+    return startOfWeek(now, { weekStartsOn: 1 }); // Start week on Monday
+  });
   const [isLoading, setIsLoading] = useState(true);
   const [weeklyStats, setWeeklyStats] = useState<WeeklyStats[]>([]);
   const [streak, setStreak] = useState<AttendanceStreak | null>(null);
   const [averages, setAverages] = useState<AverageTimings | null>(null);
 
-  // console.log({ weeklyStats });
+  console.log("Component rendered with date:", date);
+
   useEffect(() => {
     async function fetchStats() {
       setIsLoading(true);
       try {
-        // console.log("fetching stats");
+        console.log("Fetching stats for date:", date);
         const response = await getWeeklyStatsAction(date);
+        console.log("Weekly stats response:", response);
+        
         if (!response.success || !response.data) {
           throw new Error(response.error || "Failed to load statistics");
         }
         setWeeklyStats(response.data);
       } catch (error) {
+        console.error("Error fetching stats:", error);
         toast.error(
           error instanceof Error ? error.message : "Failed to load statistics"
         );

@@ -210,23 +210,57 @@ class AttendanceService {
   ) {
     const startOfDay = new Date(date);
     startOfDay.setHours(0, 0, 0, 0);
-
+    
     const endOfDay = new Date(date);
     endOfDay.setHours(23, 59, 59, 999);
 
+    console.log("Getting daily stats for:", {
+      date: date.toISOString(),
+      startOfDay: startOfDay.toISOString(),
+      endOfDay: endOfDay.toISOString(),
+      options
+    });
+
+    // Get all users that should be counted
+    const usersQuery = this.db
+      .select()
+      .from(users);
+
+    if (options.userId) {
+      usersQuery.where(eq(users.id, options.userId));
+    } else if (options.departmentId) {
+      usersQuery.where(eq(users.departmentId, options.departmentId));
+    }
+
+    const allUsers = await usersQuery;
+    const totalUsers = allUsers.length;
+
+    // Get attendance records for the day
     const records = await this.getAttendanceByDateRange(
       startOfDay,
       endOfDay,
       options
     );
 
-    // console.log({ startOfDay, endOfDay });
+    // Count present and late users
+    const presentCount = records.filter(r => r.attendance.status === "present").length;
+    const lateCount = records.filter(r => r.attendance.status === "late").length;
+    
+    // Absent is total users minus present and late
+    const absentCount = totalUsers - (presentCount + lateCount);
+
+    console.log("Daily stats result:", {
+      present: presentCount,
+      late: lateCount,
+      absent: absentCount,
+      total: totalUsers
+    });
 
     return {
-      present: records.filter((r) => r.attendance.status === "present").length,
-      late: records.filter((r) => r.attendance.status === "late").length,
-      absent: records.filter((r) => r.attendance.status === "absent").length,
-      total: records.length || 0,
+      present: presentCount,
+      late: lateCount,
+      absent: absentCount,
+      total: totalUsers
     };
   }
 
