@@ -1,39 +1,39 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import {
-  CalendarIcon,
-  Filter,
-  ChevronDown,
-  Check,
-  X,
-  Users2,
-} from "lucide-react";
-import {
-  format,
-  startOfWeek,
-  endOfWeek,
-  startOfMonth,
-  endOfMonth,
-} from "date-fns";
-import { cn } from "@/lib/utils";
 import {
   Command,
   CommandEmpty,
   CommandGroup,
   CommandInput,
   CommandItem,
+  CommandList,
 } from "@/components/ui/command";
-import { Badge } from "@/components/ui/badge";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
-import { motion, AnimatePresence } from "framer-motion";
+import { cn } from "@/lib/utils";
+import {
+  endOfMonth,
+  endOfWeek,
+  format,
+  startOfMonth,
+  startOfWeek,
+} from "date-fns";
+import { AnimatePresence, motion } from "framer-motion";
+import {
+  CalendarIcon,
+  Check,
+  Filter,
+  Users2,
+  X
+} from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
 interface Department {
@@ -220,38 +220,40 @@ export function AttendanceFilter({
           <PopoverContent className="w-[200px] p-0">
             <Command>
               <CommandInput placeholder="Search department..." />
-              <CommandEmpty>No department found.</CommandEmpty>
-              <CommandGroup>
-                <CommandItem
-                  onSelect={() => handleDepartmentChange(null)}
-                  className="cursor-pointer"
-                >
-                  <Check
-                    className={cn(
-                      "mr-2 h-4 w-4",
-                      !selectedDepartment ? "opacity-100" : "opacity-0"
-                    )}
-                  />
-                  All Departments
-                </CommandItem>
-                {departments.map((department) => (
+              <CommandList>
+                <CommandEmpty>No department found.</CommandEmpty>
+                <CommandGroup>
                   <CommandItem
-                    key={department.id}
-                    onSelect={() => handleDepartmentChange(department.id)}
+                    onSelect={() => handleDepartmentChange(null)}
                     className="cursor-pointer"
                   >
                     <Check
                       className={cn(
                         "mr-2 h-4 w-4",
-                        selectedDepartment === department.id
-                          ? "opacity-100"
-                          : "opacity-0"
+                        !selectedDepartment ? "opacity-100" : "opacity-0"
                       )}
                     />
-                    {department.name}
+                    All Departments
                   </CommandItem>
-                ))}
-              </CommandGroup>
+                  {departments.map((department) => (
+                    <CommandItem
+                      key={department.id}
+                      onSelect={() => handleDepartmentChange(department.id)}
+                      className="cursor-pointer"
+                    >
+                      <Check
+                        className={cn(
+                          "mr-2 h-4 w-4",
+                          selectedDepartment === department.id
+                            ? "opacity-100"
+                            : "opacity-0"
+                        )}
+                      />
+                      {department.name}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </CommandList>
             </Command>
           </PopoverContent>
         </Popover>
@@ -274,27 +276,29 @@ export function AttendanceFilter({
         <PopoverContent className="w-[200px] p-0" align="end">
           <Command>
             <CommandInput placeholder="Filter status..." />
-            <CommandEmpty>No status found.</CommandEmpty>
-            <CommandGroup>
-              {statusOptions.map((status) => (
-                <CommandItem
-                  key={status.value}
-                  onSelect={() => handleStatusToggle(status.value)}
-                >
-                  <div
-                    className={cn(
-                      "mr-2",
-                      selectedStatuses.includes(status.value)
-                        ? "opacity-100"
-                        : "opacity-0"
-                    )}
+            <CommandList>
+              <CommandEmpty>No status found.</CommandEmpty>
+              <CommandGroup>
+                {statusOptions.map((status) => (
+                  <CommandItem
+                    key={status.value}
+                    onSelect={() => handleStatusToggle(status.value)}
                   >
-                    <Check className="h-4 w-4" />
-                  </div>
-                  <span className={status.color}>{status.label}</span>
-                </CommandItem>
-              ))}
-            </CommandGroup>
+                    <div
+                      className={cn(
+                        "mr-2",
+                        selectedStatuses.includes(status.value)
+                          ? "opacity-100"
+                          : "opacity-0"
+                      )}
+                    >
+                      <Check className="h-4 w-4" />
+                    </div>
+                    <span className={status.color}>{status.label}</span>
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            </CommandList>
             {selectedStatuses.length > 0 && (
               <>
                 <Separator />

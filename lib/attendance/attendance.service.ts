@@ -1,10 +1,10 @@
+import { cache } from "@/lib/cache";
 import { db } from "@/lib/db/config";
 import { attendance } from "@/lib/db/schema";
 import { users } from "@/lib/db/schema/users";
-import { addDays, endOfDay, format, startOfDay } from "date-fns";
+import { endOfDay, format, startOfDay, startOfWeek, endOfWeek } from "date-fns";
 import { and, between, desc, eq, isNotNull, sql } from "drizzle-orm";
-import { cache } from "@/lib/cache";
-import { AttendanceStats, AttendanceStreak, AverageTimings } from "./types";
+import { AttendanceStreak, AverageTimings } from "./types";
 
 // Define return type for getCurrentDayAttendance
 type AttendanceStatus =
@@ -167,34 +167,14 @@ class AttendanceService {
       .orderBy(desc(attendance.clockInTime));
   }
 
-  async getDailyStats(
-    date: Date,
-    options: {
-      userId?: string;
-      departmentId?: string;
-    }
-  ): Promise<AttendanceStats> {
-    const cacheKey = `daily-stats-${date.toISOString()}-${options.userId || ""}-${
-      options.departmentId || ""
-    }`;
-    const cachedData = cache.get<AttendanceStats>(cacheKey);
-    if (cachedData) return cachedData;
-
-    const result = await this._getDailyStats(date, options);
-    cache.set<AttendanceStats>(cacheKey, result, 5 * 60 * 1000);
-    return result;
-  }
-
-  private async _getDailyStats(
-    date: Date,
+  async getDateRangeStats(
+    startDate: Date,
+    endDate: Date,
     options: { userId?: string; departmentId?: string }
   ) {
-    const startOfDayDate = startOfDay(date);
-    const endOfDayDate = endOfDay(date);
-
     const records = await this.getAttendanceByDateRange(
-      startOfDayDate,
-      endOfDayDate,
+      startDate,
+      endDate,
       options
     );
 
@@ -206,44 +186,38 @@ class AttendanceService {
     };
   }
 
+  async getMonthlyStats(
+    date: Date,
+    options: { userId?: string; departmentId?: string }
+  ) {
+    // Get first and last day of the month
+    const startOfMonth = new Date(date.getFullYear(), date.getMonth(), 1);
+    const endOfMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+
+    return this.getDateRangeStats(startOfMonth, endOfMonth, options);
+  }
+
+  async getDailyStats(
+    date: Date,
+    options: { userId?: string; departmentId?: string }
+  ) {
+    const startOfDay = new Date(date.setHours(0, 0, 0, 0));
+    const endOfDay = new Date(date.setHours(23, 59, 59, 999));
+
+    return this.getDateRangeStats(startOfDay, endOfDay, options);
+  }
+
   async getWeeklyStats(
     date: Date,
-    options: {
-      userId?: string;
-      departmentId?: string;
-    }
+    options: { userId?: string; departmentId?: string }
   ) {
-    const startOfWeek = startOfDay(date);
-    const endOfWeek = endOfDay(addDays(date, 6));
+    // Use startOfWeek and endOfWeek from date-fns
+    const weekStart = startOfWeek(date, { weekStartsOn: 1 }); // Start week on Monday
+    const weekStartDay = startOfDay(weekStart);
+    const weekEnd = endOfWeek(date, { weekStartsOn: 1 }); // End week on Sunday
+    const weekEndDay = endOfDay(weekEnd);
 
-    const records = await this.getAttendanceByDateRange(
-      startOfWeek,
-      endOfWeek,
-      options
-    );
-
-    // Group by day and status
-    const stats = new Map<string, AttendanceStats>();
-
-    records.forEach((record) => {
-      const day = record.attendance.clockInTime.toLocaleDateString("en-US", {
-        weekday: "short",
-      });
-      const status = record.attendance.status;
-
-      if (!stats.has(day)) {
-        stats.set(day, { present: 0, late: 0, absent: 0, total: 0 });
-      }
-
-      const dayStats = stats.get(day)!;
-      dayStats[status]++;
-      dayStats.total++;
-    });
-
-    return Array.from(stats.entries()).map(([day, stats]) => ({
-      name: day,
-      ...stats,
-    }));
+    return this.getDateRangeStats(weekStartDay, weekEndDay, options);
   }
 
   async getMonthlyCalendar(startDate: Date, endDate: Date, userId: string) {

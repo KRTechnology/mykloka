@@ -20,6 +20,7 @@ import { startOfDay, endOfDay } from "date-fns";
 interface AttendanceListProps {
   viewMode: "personal" | "department" | "all";
   date: Date;
+  dateRange?: { from: Date; to: Date } | null;
 }
 
 type AttendanceRecord = {
@@ -36,7 +37,7 @@ type AttendanceRecord = {
   };
 };
 
-export function AttendanceList({ viewMode, date }: AttendanceListProps) {
+export function AttendanceList({ viewMode, date, dateRange }: AttendanceListProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [data, setData] = useState<AttendanceRecord[]>([]);
 
@@ -44,9 +45,12 @@ export function AttendanceList({ viewMode, date }: AttendanceListProps) {
     async function fetchRecords() {
       setIsLoading(true);
       try {
+        const startDate = dateRange ? dateRange.from : startOfDay(date);
+        const endDate = dateRange ? dateRange.to : endOfDay(date);
+
         const response = await getAttendanceRecordsAction(
-          startOfDay(date),
-          endOfDay(date),
+          startDate,
+          endDate,
           viewMode
         );
         if (!response.success || !response.data) {
@@ -67,7 +71,7 @@ export function AttendanceList({ viewMode, date }: AttendanceListProps) {
     }
 
     fetchRecords();
-  }, [date, viewMode]);
+  }, [date, dateRange, viewMode]);
 
   if (isLoading) {
     return <LoadingSkeleton />;

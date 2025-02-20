@@ -18,8 +18,8 @@ import {
 } from "@/components/ui/select";
 import { AttendanceFilter } from "./attendance-filter";
 import { AttendanceList } from "./attendance-list";
-import { getDailyStatsAction } from "@/app/actions/attendance/get-stats";
-import { format } from "date-fns";
+import { getStatsAction } from "@/app/actions/attendance/get-stats";
+import { format, differenceInDays } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Clock, UserCheck, UserX, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
@@ -37,6 +37,9 @@ export function AttendanceOverview({
     "personal"
   );
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [dateRange, setDateRange] = useState<{ from: Date; to: Date } | null>(
+    null
+  );
   const [isLoading, setIsLoading] = useState(true);
   const [stats, setStats] = useState<{
     present: number;
@@ -51,7 +54,23 @@ export function AttendanceOverview({
     async function fetchStats() {
       setIsLoading(true);
       try {
-        const response = await getDailyStatsAction(selectedDate);
+        const startDate = dateRange ? dateRange.from : selectedDate;
+        const endDate = dateRange ? dateRange.to : selectedDate;
+
+        // Determine the type based on the date range
+        let type: "daily" | "weekly" | "monthly" = "daily";
+        if (dateRange) {
+          const days = differenceInDays(dateRange.to, dateRange.from);
+          if (days > 27) type = "monthly";
+          else if (days > 6) type = "weekly";
+        }
+
+        const response = await getStatsAction({
+          startDate,
+          endDate,
+          type,
+        });
+
         if (!response.success || !response.data) {
           throw new Error(response.error || "Failed to load stats");
         }
@@ -66,7 +85,7 @@ export function AttendanceOverview({
     }
 
     fetchStats();
-  }, [selectedDate, viewMode]);
+  }, [selectedDate, dateRange, viewMode]);
 
   return (
     <motion.div
@@ -110,6 +129,10 @@ export function AttendanceOverview({
           <AttendanceFilter
             date={selectedDate}
             onDateChange={setSelectedDate}
+            onRangeChange={(range) => {
+              setDateRange(range);
+              setSelectedDate(range.from); // Update selected date to start of range
+            }}
           />
         </div>
       </div>
@@ -155,16 +178,22 @@ export function AttendanceOverview({
         <CardHeader>
           <CardTitle>Attendance Records</CardTitle>
           <CardDescription>
-            A list of attendance records for{" "}
-            {viewMode === "personal"
-              ? "you"
-              : viewMode === "department"
-                ? "your department"
-                : "all departments"}
+            {dateRange ? (
+              <>
+                Records from {format(dateRange.from, "PPP")} to{" "}
+                {format(dateRange.to, "PPP")}
+              </>
+            ) : (
+              `Records for ${format(selectedDate, "PPP")}`
+            )}
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <AttendanceList viewMode={viewMode} date={selectedDate} />
+          <AttendanceList
+            viewMode={viewMode}
+            date={selectedDate}
+            dateRange={dateRange}
+          />
         </CardContent>
       </Card>
     </motion.div>
