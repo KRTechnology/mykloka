@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { motion, AnimatePresence } from "framer-motion";
@@ -76,17 +76,44 @@ export function AttendanceCalendar({
     fetchCalendarData();
   }, [currentMonth]);
 
-  const modifiers = {
-    present: attendanceData
-      .filter((day) => day.status === "present")
-      .map((day) => new Date(day.clockInTime)),
-    late: attendanceData
-      .filter((day) => day.status === "late")
-      .map((day) => new Date(day.clockInTime)),
-    absent: attendanceData
-      .filter((day) => day.status === "absent")
-      .map((day) => new Date(day.clockInTime)),
-  };
+  const modifiers = useMemo(
+    () => ({
+      present: attendanceData
+        .filter((day) => day.status === "present")
+        .map((day) => new Date(day.date)),
+      late: attendanceData
+        .filter((day) => day.status === "late")
+        .map((day) => new Date(day.date)),
+      absent: attendanceData
+        .filter((day) => day.status === "absent")
+        .map((day) => new Date(day.date)),
+    }),
+    [attendanceData]
+  );
+
+  const modifiersStyles = {
+    present: {
+      color: "white",
+      backgroundColor: "var(--kr-green)",
+      transform: "scale(0.9)",
+      borderRadius: "8px",
+      fontWeight: "600",
+    },
+    late: {
+      color: "white",
+      backgroundColor: "var(--kr-yellow)",
+      transform: "scale(0.9)",
+      borderRadius: "8px",
+      fontWeight: "600",
+    },
+    absent: {
+      color: "white",
+      backgroundColor: "var(--kr-red)",
+      transform: "scale(0.9)",
+      borderRadius: "8px",
+      fontWeight: "600",
+    },
+  } as const;
 
   const getStatusColor = (status?: "present" | "late" | "absent") => {
     switch (status) {
@@ -161,29 +188,7 @@ export function AttendanceCalendar({
               }}
               className="rounded-md border p-3"
               modifiers={modifiers}
-              modifiersStyles={{
-                present: {
-                  color: "white",
-                  backgroundColor: "var(--kr-green)",
-                  transform: "scale(0.9)",
-                  borderRadius: "8px",
-                  fontWeight: "600",
-                },
-                late: {
-                  color: "white",
-                  backgroundColor: "var(--kr-yellow)",
-                  transform: "scale(0.9)",
-                  borderRadius: "8px",
-                  fontWeight: "600",
-                },
-                absent: {
-                  color: "white",
-                  backgroundColor: "var(--kr-red)",
-                  transform: "scale(0.9)",
-                  borderRadius: "8px",
-                  fontWeight: "600",
-                },
-              }}
+              modifiersStyles={modifiersStyles}
               components={{
                 DayContent: ({ date }) => (
                   <DayContent
@@ -245,15 +250,15 @@ export function AttendanceCalendar({
 
       <div className="flex items-center gap-6 text-sm">
         <div className="flex items-center gap-2">
-          <div className="h-3 w-3 rounded-md bg-kr-green shadow-sm" />
+          <div className="h-3 w-3 rounded-md bg-[var(--kr-green)] shadow-sm" />
           <span className="font-medium">Present</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="h-3 w-3 rounded-md bg-kr-yellow shadow-sm" />
+          <div className="h-3 w-3 rounded-md bg-[var(--kr-yellow)] shadow-sm" />
           <span className="font-medium">Late</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="h-3 w-3 rounded-md bg-kr-red shadow-sm" />
+          <div className="h-3 w-3 rounded-md bg-[var(--kr-red)] shadow-sm" />
           <span className="font-medium">Absent</span>
         </div>
       </div>
