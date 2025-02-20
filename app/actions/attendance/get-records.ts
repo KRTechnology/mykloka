@@ -59,8 +59,13 @@ export async function getMonthlyCalendarAction(date: Date) {
     const session = await getServerSession();
     if (!session) throw new Error("Unauthorized");
 
+    // Get first and last day of the month
+    const startOfMonth = new Date(date.getFullYear(), date.getMonth(), 1);
+    const endOfMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+
     const records = await attendanceService.getMonthlyCalendar(
-      date,
+      startOfMonth,
+      endOfMonth,
       session.userId
     );
     return { success: true, data: records };

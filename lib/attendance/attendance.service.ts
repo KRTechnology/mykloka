@@ -246,20 +246,55 @@ class AttendanceService {
     }));
   }
 
-  async getMonthlyCalendar(date: Date, userId: string) {
-    const startOfMonth = new Date(date.getFullYear(), date.getMonth(), 1);
-    const endOfMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+  async getMonthlyCalendar(startDate: Date, endDate: Date, userId: string) {
+    try {
+      // Format dates for SQL query
+      const formattedStartDate = startDate.toISOString().split("T")[0];
+      const formattedEndDate = endDate.toISOString().split("T")[0];
 
-    const records = await this.getAttendanceByDateRange(
-      startOfMonth,
-      endOfMonth,
-      { userId }
-    );
+      const records = await this.db
+        .select({
+          attendance: {
+            clockInTime: attendance.clockInTime,
+            clockOutTime: attendance.clockOutTime,
+            status: attendance.status,
+          },
+        })
+        .from(attendance)
+        .where(
+          and(
+            eq(attendance.userId, userId),
+            sql`DATE(${attendance.clockInTime}) >= ${formattedStartDate}`,
+            sql`DATE(${attendance.clockInTime}) <= ${formattedEndDate}`
+          )
+        )
+        .orderBy(attendance.clockInTime);
 
-    return records.map((record) => ({
-      date: record.attendance.clockInTime,
-      status: record.attendance.status,
-    }));
+      // Get unique records per day with latest status
+      const dailyRecords = new Map();
+      records.forEach((record) => {
+        const dateKey = new Date(record.attendance.clockInTime).toDateString();
+        if (
+          !dailyRecords.has(dateKey) ||
+          new Date(record.attendance.clockInTime) >
+            new Date(dailyRecords.get(dateKey).attendance.clockInTime)
+        ) {
+          dailyRecords.set(dateKey, record);
+        }
+      });
+
+      return Array.from(dailyRecords.values()).map((record) => ({
+        date: new Date(record.attendance.clockInTime),
+        status: record.attendance.status,
+        clockInTime: new Date(record.attendance.clockInTime),
+        clockOutTime: record.attendance.clockOutTime
+          ? new Date(record.attendance.clockOutTime)
+          : null,
+      }));
+    } catch (error) {
+      console.error("Error fetching monthly calendar:", error);
+      throw error;
+    }
   }
 
   async getAttendanceStreak(userId: string) {

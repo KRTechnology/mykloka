@@ -24,8 +24,8 @@ interface AttendanceCalendarProps {
 type CalendarDay = {
   date: Date;
   status: "present" | "late" | "absent";
-  clockInTime: string;
-  clockOutTime?: string;
+  clockInTime: Date;
+  clockOutTime: Date | null;
   note?: string;
 };
 
@@ -37,16 +37,31 @@ export function AttendanceCalendar({
   const [isLoading, setIsLoading] = useState(true);
   const [attendanceData, setAttendanceData] = useState<CalendarDay[]>([]);
   const [selectedDay, setSelectedDay] = useState<CalendarDay | null>(null);
+  const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
 
   useEffect(() => {
     async function fetchCalendarData() {
       setIsLoading(true);
       try {
-        const response = await getMonthlyCalendarAction(date);
+        const startOfMonth = new Date(
+          currentMonth.getFullYear(),
+          currentMonth.getMonth(),
+          1
+        );
+        const endOfMonth = new Date(
+          currentMonth.getFullYear(),
+          currentMonth.getMonth() + 1,
+          0
+        );
+
+        const response = await getMonthlyCalendarAction(startOfMonth);
+
         if (!response.success || !response.data) {
           throw new Error(response.error || "Failed to load calendar data");
         }
-        setAttendanceData(response.data as CalendarDay[]);
+
+        // No need to transform dates as they're already Date objects from the service
+        setAttendanceData(response.data);
       } catch (error) {
         toast.error(
           error instanceof Error
@@ -59,26 +74,50 @@ export function AttendanceCalendar({
     }
 
     fetchCalendarData();
-  }, [date]);
+  }, [currentMonth]);
 
   const modifiers = {
     present: attendanceData
       .filter((day) => day.status === "present")
-      .map((day) => new Date(day.date)),
+      .map((day) => new Date(day.clockInTime)),
     late: attendanceData
       .filter((day) => day.status === "late")
-      .map((day) => new Date(day.date)),
+      .map((day) => new Date(day.clockInTime)),
     absent: attendanceData
       .filter((day) => day.status === "absent")
-      .map((day) => new Date(day.date)),
+      .map((day) => new Date(day.clockInTime)),
+  };
+
+  const getStatusColor = (status?: "present" | "late" | "absent") => {
+    switch (status) {
+      case "present":
+        return "bg-kr-green/10 text-kr-green";
+      case "late":
+        return "bg-kr-yellow/10 text-kr-yellow";
+      case "absent":
+        return "bg-kr-red/10 text-kr-red";
+      default:
+        return "bg-muted text-muted-foreground";
+    }
   };
 
   const handleDayClick = (day: Date) => {
     const attendance = attendanceData.find(
-      (d) => new Date(d.date).toDateString() === day.toDateString()
+      (d) => new Date(d.clockInTime).toDateString() === day.toDateString()
     );
     setSelectedDay(attendance || null);
     // You can also trigger a modal or side panel here
+  };
+
+  const formatTime = (date: Date | null | undefined) => {
+    if (!date) return "Not recorded";
+    try {
+      if (isNaN(date.getTime())) return "Invalid time";
+      return format(date, "hh:mm a");
+    } catch (error) {
+      console.error("Error formatting time:", error);
+      return "Invalid time";
+    }
   };
 
   return (
@@ -87,21 +126,18 @@ export function AttendanceCalendar({
       animate={{ opacity: 1, y: 0 }}
       className="space-y-4"
     >
-      <Card className="max-w-[400px]">
+      <Card className="max-w-[400px] shadow-sm">
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Attendance Calendar</CardTitle>
+          <CardTitle className="text-xl font-semibold">
+            Attendance Calendar
+          </CardTitle>
           {selectedDay && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               className={cn(
-                "px-2 py-1 text-sm rounded-full",
-                selectedDay.status === "present" &&
-                  "bg-kr-green/10 text-kr-green",
-                selectedDay.status === "late" &&
-                  "bg-yellow-500/10 text-yellow-500",
-                selectedDay.status === "absent" &&
-                  "bg-destructive/10 text-destructive"
+                "px-3 py-1.5 text-sm rounded-full font-medium",
+                getStatusColor(selectedDay.status)
               )}
             >
               {format(new Date(selectedDay.date), "d MMMM yyyy")}
@@ -115,26 +151,37 @@ export function AttendanceCalendar({
             <Calendar
               mode="single"
               selected={date}
+              month={currentMonth}
+              onMonthChange={setCurrentMonth}
               onSelect={(newDate) => {
                 if (newDate) {
                   setDate(newDate);
                   handleDayClick(newDate);
                 }
               }}
-              className="rounded-md border"
+              className="rounded-md border p-3"
               modifiers={modifiers}
               modifiersStyles={{
                 present: {
                   color: "white",
                   backgroundColor: "var(--kr-green)",
+                  transform: "scale(0.9)",
+                  borderRadius: "8px",
+                  fontWeight: "600",
                 },
                 late: {
                   color: "white",
-                  backgroundColor: "var(--yellow-500)",
+                  backgroundColor: "var(--kr-yellow)",
+                  transform: "scale(0.9)",
+                  borderRadius: "8px",
+                  fontWeight: "600",
                 },
                 absent: {
                   color: "white",
-                  backgroundColor: "var(--destructive)",
+                  backgroundColor: "var(--kr-red)",
+                  transform: "scale(0.9)",
+                  borderRadius: "8px",
+                  fontWeight: "600",
                 },
               }}
               components={{
@@ -157,31 +204,36 @@ export function AttendanceCalendar({
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="space-y-2"
           >
-            <Card>
+            <Card className="max-w-[400px] shadow-sm">
               <CardContent className="pt-6">
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <Clock className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm">
-                      Clock In:{" "}
-                      {format(new Date(selectedDay.clockInTime), "hh:mm a")}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-full bg-muted">
+                      <Clock className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                    <span className="text-sm font-medium">
+                      Clock In: {formatTime(selectedDay.clockInTime)}
                     </span>
                   </div>
                   {selectedDay.clockOutTime && (
-                    <div className="flex items-center gap-2">
-                      <Clock className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm">
-                        Clock Out:{" "}
-                        {format(new Date(selectedDay.clockOutTime), "hh:mm a")}
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-full bg-muted">
+                        <Clock className="h-4 w-4 text-muted-foreground" />
+                      </div>
+                      <span className="text-sm font-medium">
+                        Clock Out: {formatTime(selectedDay.clockOutTime)}
                       </span>
                     </div>
                   )}
                   {selectedDay.note && (
-                    <div className="flex items-center gap-2">
-                      <AlertCircle className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm">{selectedDay.note}</span>
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-full bg-muted">
+                        <AlertCircle className="h-4 w-4 text-muted-foreground" />
+                      </div>
+                      <span className="text-sm text-muted-foreground">
+                        {selectedDay.note}
+                      </span>
                     </div>
                   )}
                 </div>
@@ -191,18 +243,18 @@ export function AttendanceCalendar({
         )}
       </AnimatePresence>
 
-      <div className="flex items-center gap-4 text-sm">
+      <div className="flex items-center gap-6 text-sm">
         <div className="flex items-center gap-2">
-          <div className="h-3 w-3 rounded-full bg-kr-green" />
-          <span>Present</span>
+          <div className="h-3 w-3 rounded-md bg-kr-green shadow-sm" />
+          <span className="font-medium">Present</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="h-3 w-3 rounded-full bg-yellow-500" />
-          <span>Late</span>
+          <div className="h-3 w-3 rounded-md bg-kr-yellow shadow-sm" />
+          <span className="font-medium">Late</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="h-3 w-3 rounded-full bg-destructive" />
-          <span>Absent</span>
+          <div className="h-3 w-3 rounded-md bg-kr-red shadow-sm" />
+          <span className="font-medium">Absent</span>
         </div>
       </div>
     </motion.div>
@@ -219,48 +271,59 @@ function DayContent({
   onDayClick: (date: Date) => void;
 }) {
   const attendance = attendanceData.find(
-    (day) => new Date(day.date).toDateString() === date.toDateString()
+    (day) => new Date(day.clockInTime).toDateString() === date.toDateString()
   );
 
+  const formatTime = (date: Date | null | undefined) => {
+    if (!date) return "Not recorded";
+    try {
+      if (isNaN(date.getTime())) return "Invalid time";
+      return format(date, "hh:mm a");
+    } catch (error) {
+      console.error("Error formatting time:", error);
+      return "Invalid time";
+    }
+  };
+
   return (
-    <HoverCard>
+    <HoverCard openDelay={0} closeDelay={0}>
       <HoverCardTrigger asChild>
         <div
           onClick={() => onDayClick(date)}
           className={cn(
-            "h-8 w-8 p-0 font-normal cursor-pointer hover:bg-muted/50 rounded-md transition-colors",
-            attendance && "font-semibold text-white"
+            "h-8 w-8 p-0 font-medium cursor-pointer hover:bg-muted/50 rounded-md transition-all duration-200",
+            attendance && "font-semibold text-white hover:opacity-90"
           )}
         >
           {date.getDate()}
         </div>
       </HoverCardTrigger>
-      {attendance && (
-        <HoverCardContent side="right" align="start" className="w-[200px] p-2">
+      {/* {attendance && (
+        <HoverCardContent
+          side="right"
+          align="start"
+          className="w-[200px] p-3 shadow-md bg-popover border z-[100]"
+          sideOffset={5}
+        >
           <div className="space-y-2">
             <p className="text-sm font-semibold">
               {format(date, "EEEE, MMMM d")}
             </p>
-            <div className="text-sm space-y-1">
+            <div className="text-sm space-y-1.5">
               <div className="flex items-center gap-2">
-                <Clock className="h-3 w-3" />
-                <span>{attendance.clockInTime}</span>
+                <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                <span>{formatTime(attendance.clockInTime)}</span>
               </div>
               {attendance.clockOutTime && (
                 <div className="flex items-center gap-2">
-                  <Clock className="h-3 w-3" />
-                  <span>{attendance.clockOutTime}</span>
+                  <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                  <span>{formatTime(attendance.clockOutTime)}</span>
                 </div>
-              )}
-              {attendance.note && (
-                <p className="text-xs text-muted-foreground">
-                  {attendance.note}
-                </p>
               )}
             </div>
           </div>
         </HoverCardContent>
-      )}
+      )} */}
     </HoverCard>
   );
 }
