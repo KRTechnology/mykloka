@@ -64,7 +64,7 @@ const menuItems: MenuItem[] = [
     title: "Settings",
     icon: Settings,
     href: "/dashboard/settings",
-    permissions: ["manage_system_settings"],
+    permissions: ["view_user_profiles"],
   },
 ];
 
