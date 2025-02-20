@@ -51,8 +51,13 @@ export function AttendanceList({
     async function fetchRecords() {
       setIsLoading(true);
       try {
-        const startDate = dateRange ? dateRange.from : startOfDay(date);
-        const endDate = dateRange ? dateRange.to : endOfDay(date);
+        const startDate = dateRange
+          ? new Date(dateRange.from.setHours(0, 0, 0, 0))
+          : new Date(date.setHours(0, 0, 0, 0));
+
+        const endDate = dateRange
+          ? new Date(dateRange.to.setHours(23, 59, 59, 999))
+          : new Date(date.setHours(23, 59, 59, 999));
 
         const response = await getAttendanceRecordsAction(
           startDate,

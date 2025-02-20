@@ -127,10 +127,35 @@ export function AttendanceFilter({
     onStatusFilter?.(selectedStatuses);
   }, [selectedStatuses, onStatusFilter]);
 
-  const handleRangeSelect = useCallback((range: { from: Date; to: Date }) => {
-    setSelectedRange(range);
-    setIsCalendarOpen(false);
-  }, []);
+  const handleDateSelect = useCallback(
+    (newDate: Date | undefined) => {
+      if (newDate) {
+        const selectedDate = new Date(newDate);
+        setSelectedRange(null);
+        onDateChange(selectedDate);
+        onRangeChange?.({
+          from: new Date(selectedDate),
+          to: new Date(selectedDate),
+        });
+        setIsCalendarOpen(false);
+      }
+    },
+    [onDateChange, onRangeChange]
+  );
+
+  const handleRangeSelect = useCallback(
+    (range: { from: Date; to: Date }) => {
+      const newRange = {
+        from: new Date(range.from),
+        to: new Date(range.to),
+      };
+      setSelectedRange(newRange);
+      onDateChange(new Date(range.from));
+      onRangeChange?.(newRange);
+      setIsCalendarOpen(false);
+    },
+    [onDateChange, onRangeChange]
+  );
 
   const handleDepartmentChange = useCallback(
     (departmentId: string | null) => {
@@ -142,15 +167,15 @@ export function AttendanceFilter({
   );
 
   const clearFilters = useCallback(() => {
+    const today = new Date();
     setSelectedStatuses([]);
     setSelectedRange(null);
-  }, []);
-
-  useEffect(() => {
-    if (selectedRange) {
-      onRangeChange?.(selectedRange);
-    }
-  }, [selectedRange, onRangeChange]);
+    onDateChange(today);
+    onRangeChange?.({
+      from: new Date(today),
+      to: new Date(today),
+    });
+  }, [onDateChange, onRangeChange]);
 
   return (
     <div className="flex items-center gap-2">
@@ -192,7 +217,7 @@ export function AttendanceFilter({
             <Calendar
               mode="single"
               selected={date}
-              onSelect={(newDate) => newDate && onDateChange(newDate)}
+              onSelect={handleDateSelect}
               initialFocus
             />
           </div>

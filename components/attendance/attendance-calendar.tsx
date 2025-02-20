@@ -1,20 +1,19 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { getMonthlyCalendarAction } from "@/app/actions/attendance/get-records";
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { motion, AnimatePresence } from "framer-motion";
-import { getMonthlyCalendarAction } from "@/app/actions/attendance/get-records";
-import { toast } from "sonner";
-import { Skeleton } from "@/components/ui/skeleton";
-import { cn } from "@/lib/utils";
 import {
   HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
+  HoverCardTrigger
 } from "@/components/ui/hover-card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import { Clock, AlertCircle } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
+import { AlertCircle, Clock } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 
 interface AttendanceCalendarProps {
   canViewDepartment: boolean;
