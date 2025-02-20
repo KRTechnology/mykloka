@@ -1,9 +1,9 @@
 "use server";
 
 import {
-    InviteUserData,
-    inviteUserSchema,
-    updateUserSchema,
+  InviteUserData,
+  inviteUserSchema,
+  updateUserSchema,
 } from "@/lib/api/users";
 import { validatePermission } from "@/lib/auth/auth";
 import { db } from "@/lib/db/config";
@@ -39,30 +39,38 @@ export async function inviteUserAction(data: InviteUserData) {
   }
 }
 
-export async function updateUserAction(data: any) {
+interface UpdateUserData {
+  id: string;
+  roleId: string;
+}
+
+export async function updateUserAction(data: UpdateUserData) {
   try {
+    // Validate permission
     const hasPermission = await validatePermission("edit_users");
     if (!hasPermission) {
       throw new Error("Unauthorized");
     }
 
-    const { id, ...updateData } = data;
-    const validatedData = updateUserSchema.parse(updateData);
-
-    const updatedUser = await db
+    // Update user
+    const [updatedUser] = await db
       .update(users)
-      .set({ ...validatedData, updatedAt: new Date() })
-      .where(eq(users.id, id))
+      .set({
+        roleId: data.roleId,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, data.id))
       .returning();
 
-    if (!updatedUser[0]) {
+    if (!updatedUser) {
       throw new Error("User not found");
     }
 
+    // Revalidate cache
     revalidateTag("users");
-    return { success: true, data: updatedUser[0] };
+
+    return { success: true, data: updatedUser };
   } catch (error) {
-    console.error("Error updating user:", error);
     return {
       success: false,
       error: error instanceof Error ? error.message : "Failed to update user",

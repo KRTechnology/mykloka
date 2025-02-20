@@ -3,7 +3,7 @@
 import { DepartmentData, departmentSchema } from "@/lib/api/departments";
 import { validatePermission } from "@/lib/auth/auth";
 import { db } from "@/lib/db/config";
-import { departments, users } from "@/lib/db/schema";
+import { departments, users, roles } from "@/lib/db/schema";
 import type { NewDepartment } from "@/lib/db/schema/departments";
 import { asc, desc, eq, sql } from "drizzle-orm";
 import { type PgColumn } from "drizzle-orm/pg-core";
@@ -44,11 +44,32 @@ export async function createDepartmentAction(data: CreateDepartmentData) {
 
       // If a head is assigned, update their role to Department Manager
       if (validatedData.headId) {
-        const departmentManagerRoleId = "department-manager-role-id"; // Replace with actual role ID
-        await updateUserAction({
-          id: validatedData.headId,
-          roleId: departmentManagerRoleId,
-        });
+        // Fetch Department Manager role
+        const [departmentManagerRole] = await tx
+          .select({ id: roles.id })
+          .from(roles)
+          .where(eq(roles.name, "Department Manager"));
+
+        if (!departmentManagerRole) {
+          throw new Error("Department Manager role not found");
+        }
+
+        // Check if user already has the Department Manager role
+        const [currentUser] = await tx
+          .select({ roleId: users.roleId })
+          .from(users)
+          .where(eq(users.id, validatedData.headId));
+
+        if (currentUser.roleId !== departmentManagerRole.id) {
+          // Update user role directly within the transaction
+          await tx
+            .update(users)
+            .set({
+              roleId: departmentManagerRole.id,
+              updatedAt: new Date(),
+            })
+            .where(eq(users.id, validatedData.headId));
+        }
       }
 
       return department;
@@ -57,7 +78,6 @@ export async function createDepartmentAction(data: CreateDepartmentData) {
     revalidateTag("departments");
     return { success: true, data: result };
   } catch (error) {
-    console.error("Error creating department:", error);
     return {
       success: false,
       error:

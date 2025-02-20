@@ -10,13 +10,13 @@ import Link from "next/link";
 import { Suspense } from "react";
 
 interface PageProps {
-  searchParams: {
+  searchParams: Promise<{
     page?: string;
     per_page?: string;
     sortBy?: string;
     sortDirection?: string;
     search?: string;
-  };
+  }>;
 }
 
 export default async function DepartmentsPage({ searchParams }: PageProps) {
