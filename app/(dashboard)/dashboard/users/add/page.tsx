@@ -4,6 +4,7 @@ import { getAllDepartmentsForDropdown } from "@/lib/api/departments";
 import { rolesAPI } from "@/lib/api/roles";
 import { headers } from "next/headers";
 import { Suspense } from "react";
+import { BackButton } from "@/components/ui/back-button";
 
 export default async function AddUserPage() {
   const headersList = await headers();
@@ -21,7 +22,10 @@ export default async function AddUserPage() {
     <div className="flex-1 p-8 pt-6">
       <div className="mx-auto max-w-2xl">
         <div className="mb-8">
-          <h2 className="text-3xl font-semibold tracking-tight">Invite User</h2>
+          <BackButton href="/dashboard/users" />
+          <h2 className="text-3xl font-semibold tracking-tight mt-4">
+            Invite User
+          </h2>
           <p className="text-muted-foreground">
             Send an invitation to a new user to join the platform.
           </p>

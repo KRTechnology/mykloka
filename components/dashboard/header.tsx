@@ -20,6 +20,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { LoadingSpinner } from "../ui/loading-spinner";
+import { Badge } from "@/components/ui/badge";
 
 interface HeaderProps {
   user: UserJWTPayload & { userId: string };
@@ -156,7 +157,12 @@ export function Header({ user }: HeaderProps) {
               <DropdownMenuTrigger asChild>
                 <button className="flex items-center space-x-2 p-2 rounded-lg hover:bg-accent">
                   <User className="h-5 w-5" />
-                  <span>{`${user.firstName} ${user.lastName}`}</span>
+                  <div className="flex items-center gap-2">
+                    <span>{`${user.firstName} ${user.lastName}`}</span>
+                    <Badge variant="secondary" className="font-normal">
+                      {user.role.name}
+                    </Badge>
+                  </div>
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
@@ -164,6 +170,9 @@ export function Header({ user }: HeaderProps) {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem className="text-sm text-muted-foreground">
                   {user.email}
+                </DropdownMenuItem>
+                <DropdownMenuItem className="text-sm text-muted-foreground">
+                  Role: {user.role.name}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem>Profile</DropdownMenuItem>

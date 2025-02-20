@@ -77,6 +77,12 @@ export function Sidebar({ user }: SidebarProps) {
     item.permissions.some((permission) => user.permissions.includes(permission))
   );
 
+  // Check if current path is part of the menu item's path
+  const isActiveRoute = (href: string) => {
+    if (href === "/dashboard" && pathname !== "/dashboard") return false;
+    return pathname.startsWith(href);
+  };
+
   return (
     <motion.div
       className={cn(
@@ -117,7 +123,7 @@ export function Sidebar({ user }: SidebarProps) {
               "flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors",
               collapsed ? "justify-center" : "",
               "hover:bg-accent",
-              pathname === item.href && "bg-kr-orange/10 text-kr-orange"
+              isActiveRoute(item.href) && "bg-kr-orange/10 text-kr-orange"
             )}
           >
             <item.icon
