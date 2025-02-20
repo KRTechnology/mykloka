@@ -1,42 +1,49 @@
+import { getDepartmentsAction } from "@/app/actions/departments";
 import { DepartmentsTable } from "@/components/departments/departments-table";
 import { Button } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
 import { Separator } from "@/components/ui/separator";
 import { TableSkeleton } from "@/components/ui/table-skeleton";
-import { getAllDepartments } from "@/lib/api/departments";
 import { Plus } from "lucide-react";
-import { headers } from "next/headers";
+import { unstable_noStore as noStore } from "next/cache";
 import Link from "next/link";
 import { Suspense } from "react";
 
-type SearchParams = {
-  page?: string;
-  per_page?: string;
-  sortBy?: string;
-  sortDirection?: string;
-  search?: string;
-};
-
 interface PageProps {
-  searchParams: Promise<SearchParams | undefined>;
+  searchParams: {
+    page?: string;
+    per_page?: string;
+    sortBy?: string;
+    sortDirection?: string;
+    search?: string;
+  };
 }
 
 export default async function DepartmentsPage({ searchParams }: PageProps) {
+  noStore();
+
   try {
-    const headersList = await headers();
-    const protocol = headersList.get("x-forwarded-proto") || "http";
-    const host = headersList.get("host");
-    const baseUrl = `${protocol}://${host}`;
+    const pageParams = await searchParams;
+    const page = pageParams?.page ? parseInt(pageParams.page) : 1;
+    const pageSize = pageParams?.per_page ? parseInt(pageParams.per_page) : 10;
+    const sortBy = pageParams?.sortBy;
+    const sortDirection = pageParams?.sortDirection as
+      | "asc"
+      | "desc"
+      | undefined;
+    const search = pageParams?.search;
 
-    const params = await searchParams;
-
-    const page = params?.page ? parseInt(params.page) : 1;
-    const pageSize = params?.per_page ? parseInt(params.per_page) : 10;
-
-    const { data: departments, totalPages } = await getAllDepartments(baseUrl, {
+    const result = await getDepartmentsAction({
       page,
       pageSize,
+      sortBy,
+      sortDirection,
+      search,
     });
+
+    if (!result.success) {
+      throw new Error(result.error);
+    }
 
     return (
       <div className="flex-1 space-y-4 p-8 pt-6">
@@ -55,8 +62,8 @@ export default async function DepartmentsPage({ searchParams }: PageProps) {
         <Separator />
         <Suspense fallback={<TableSkeleton />}>
           <DepartmentsTable
-            initialDepartments={departments}
-            totalPages={totalPages}
+            initialDepartments={result.data}
+            totalPages={result.totalPages || 1}
             currentPage={page}
           />
         </Suspense>

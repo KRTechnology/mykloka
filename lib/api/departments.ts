@@ -1,10 +1,11 @@
+import { getDepartmentsAction } from "@/app/actions/departments";
+import type { GetDepartmentsOptions as TypeGetDepartmentsOptions } from "@/app/actions/types/departments";
 import { z } from "zod";
-
-const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
 export const departmentSchema = z.object({
   name: z.string().min(1, "Department name is required"),
   headId: z.string().uuid().optional(),
+  description: z.string().optional(),
 });
 
 export type DepartmentData = z.infer<typeof departmentSchema>;
@@ -15,67 +16,32 @@ export interface Department {
   headId: string | null;
   head: string | null;
   userCount: number;
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface GetDepartmentsOptions {
-  page?: number;
-  pageSize?: number;
+  createdAt: Date;
+  updatedAt?: Date;
 }
 
 export async function getAllDepartments(
-  baseUrl?: string,
-  options: GetDepartmentsOptions = {}
+  options: TypeGetDepartmentsOptions = {}
 ) {
-  try {
-    const { page = 1, pageSize = 10 } = options;
-
-    if (baseUrl) {
-      const queryParams = new URLSearchParams({
-        page: page.toString(),
-        pageSize: pageSize.toString(),
-      });
-
-      const url = `${baseUrl}/api/departments?${queryParams}`;
-      const res = await fetch(url, {
-        next: { tags: ["departments"], revalidate: 3600 },
-      });
-
-      if (!res.ok) {
-        throw new Error("Failed to fetch departments");
-      }
-
-      const response = await res.json();
-      return {
-        data: response.data || [],
-        totalPages: response.totalPages || 1,
-      };
-    }
-
-    // For client-side requests
-    const res = await fetch("/api/departments", {
-      next: { tags: ["departments"], revalidate: 3600 },
-      cache: "no-store",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-
-    if (!res.ok) {
-      throw new Error("Failed to fetch departments");
-    }
-
-    const response = await res.json();
-    // Return the data array from the paginated response
-    return {
-      data: response.data || [],
-      totalPages: response.totalPages || 1,
-    };
-  } catch (error) {
-    console.error("Error fetching departments:", error);
+  const result = await getDepartmentsAction(options);
+  if (!result.success) {
     return { data: [], totalPages: 1 };
   }
+
+  const departments: Department[] = result.data.map((dept: any) => ({
+    id: dept.id,
+    name: dept.name,
+    headId: dept.headId,
+    head: dept.head,
+    userCount: dept.userCount || 0,
+    createdAt: dept.createdAt,
+    updatedAt: dept.updatedAt,
+  }));
+
+  return {
+    data: departments,
+    totalPages: result.totalPages || 1,
+  };
 }
 
 export async function getAllDepartmentsForDropdown(
