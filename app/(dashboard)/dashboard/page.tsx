@@ -2,6 +2,11 @@ import { Suspense } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Users, Clock, ClipboardList, Building2 } from "lucide-react";
+import { getDashboardStatsAction } from "@/app/actions/dashboard";
+import { QuickLinks } from "./components/quick-links";
+import { RecentActivity } from "./components/recent-activity";
+import { WeeklyAttendanceChart } from "./components/weekly-attendance-chart";
+import { TaskOverview } from "./components/task-overview";
 
 function StatCard({
   title,
@@ -31,34 +36,74 @@ function StatCard({
   );
 }
 
-function DashboardContent() {
-  return (
-    <div className="space-y-8">
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <StatCard title="Total Employees" value={42} icon={Users} />
-        <StatCard title="Clocked In Today" value={38} icon={Clock} />
-        <StatCard title="Active Tasks" value={12} icon={ClipboardList} />
-        <StatCard title="Departments" value={5} icon={Building2} />
-      </div>
+async function DashboardStats() {
+  const { data: stats } = await getDashboardStatsAction();
 
-      {/* Add more dashboard sections here */}
+  return (
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <StatCard
+        title="Total Employees"
+        value={stats?.totalEmployees || 0}
+        icon={Users}
+      />
+      <StatCard
+        title="Clocked In Today"
+        value={stats?.clockedInToday || 0}
+        icon={Clock}
+      />
+      <StatCard
+        title="Active Tasks"
+        value={stats?.activeTasks || 0}
+        icon={ClipboardList}
+      />
+      <StatCard
+        title="Departments"
+        value={stats?.totalDepartments || 0}
+        icon={Building2}
+      />
     </div>
   );
 }
 
 export default function DashboardPage() {
   return (
-    <Suspense 
-      fallback={
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <StatCard title="Total Employees" value={0} icon={Users} loading />
-          <StatCard title="Clocked In Today" value={0} icon={Clock} loading />
-          <StatCard title="Active Tasks" value={0} icon={ClipboardList} loading />
-          <StatCard title="Departments" value={0} icon={Building2} loading />
+    <div className="space-y-8">
+      <Suspense
+        fallback={
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <StatCard title="Total Employees" value={0} icon={Users} loading />
+            <StatCard title="Clocked In Today" value={0} icon={Clock} loading />
+            <StatCard
+              title="Active Tasks"
+              value={0}
+              icon={ClipboardList}
+              loading
+            />
+            <StatCard title="Departments" value={0} icon={Building2} loading />
+          </div>
+        }
+      >
+        <DashboardStats />
+      </Suspense>
+
+      <div>
+        <h2 className="text-2xl font-bold tracking-tight mb-4">Quick Access</h2>
+        <QuickLinks />
+      </div>
+
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
+        <div className="col-span-4">
+          <WeeklyAttendanceChart />
         </div>
-      }
-    >
-      <DashboardContent />
-    </Suspense>
+        <div className="col-span-3">
+          <TaskOverview />
+        </div>
+      </div>
+
+      <div className="grid gap-6 md:grid-cols-2">
+        <RecentActivity />
+        {/* You can add another component here for balance */}
+      </div>
+    </div>
   );
-} 
+}
