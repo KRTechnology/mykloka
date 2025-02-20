@@ -139,7 +139,8 @@ class AttendanceService {
     options: {
       userId?: string;
       departmentId?: string;
-    }
+    },
+    statusFilters: string[] = []
   ) {
     let whereConditions = [between(attendance.clockInTime, startDate, endDate)];
 
@@ -149,6 +150,11 @@ class AttendanceService {
 
     if (options.departmentId) {
       whereConditions.push(eq(users.departmentId, options.departmentId));
+    }
+
+    // Add status filter if any statuses are selected
+    if (statusFilters.length > 0) {
+      whereConditions.push(sql`${attendance.status} IN ${statusFilters}`);
     }
 
     return await this.db

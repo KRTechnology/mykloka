@@ -47,6 +47,7 @@ export function AttendanceOverview({
     absent: number;
     total: number;
   } | null>(null);
+  const [statusFilters, setStatusFilters] = useState<string[]>([]);
 
   //   const { toast } = useToast();
 
@@ -131,7 +132,10 @@ export function AttendanceOverview({
             onDateChange={setSelectedDate}
             onRangeChange={(range) => {
               setDateRange(range);
-              setSelectedDate(range.from); // Update selected date to start of range
+              setSelectedDate(range.from);
+            }}
+            onStatusFilter={(statuses) => {
+              setStatusFilters(statuses);
             }}
           />
         </div>
@@ -193,6 +197,7 @@ export function AttendanceOverview({
             viewMode={viewMode}
             date={selectedDate}
             dateRange={dateRange}
+            statusFilters={statusFilters}
           />
         </CardContent>
       </Card>

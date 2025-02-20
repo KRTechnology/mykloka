@@ -21,6 +21,7 @@ interface AttendanceListProps {
   viewMode: "personal" | "department" | "all";
   date: Date;
   dateRange?: { from: Date; to: Date } | null;
+  statusFilters?: string[];
 }
 
 type AttendanceRecord = {
@@ -37,7 +38,12 @@ type AttendanceRecord = {
   };
 };
 
-export function AttendanceList({ viewMode, date, dateRange }: AttendanceListProps) {
+export function AttendanceList({ 
+  viewMode, 
+  date, 
+  dateRange,
+  statusFilters = []
+}: AttendanceListProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [data, setData] = useState<AttendanceRecord[]>([]);
 
@@ -51,7 +57,8 @@ export function AttendanceList({ viewMode, date, dateRange }: AttendanceListProp
         const response = await getAttendanceRecordsAction(
           startDate,
           endDate,
-          viewMode
+          viewMode,
+          statusFilters
         );
         if (!response.success || !response.data) {
           throw new Error(
@@ -71,7 +78,7 @@ export function AttendanceList({ viewMode, date, dateRange }: AttendanceListProp
     }
 
     fetchRecords();
-  }, [date, dateRange, viewMode]);
+  }, [date, dateRange, viewMode, statusFilters]);
 
   if (isLoading) {
     return <LoadingSkeleton />;

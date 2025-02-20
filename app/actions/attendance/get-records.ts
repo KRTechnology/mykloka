@@ -6,39 +6,26 @@ import { validatePermission, getServerSession } from "@/lib/auth/auth";
 export async function getAttendanceRecordsAction(
   startDate: Date,
   endDate: Date,
-  viewMode: "personal" | "department" | "all"
+  viewMode: "personal" | "department" | "all",
+  statusFilters: string[] = []
 ) {
   try {
     const session = await getServerSession();
     if (!session) throw new Error("Unauthorized");
 
-    let options = {};
+    let options: { userId?: string; departmentId?: string } = {};
 
-    switch (viewMode) {
-      case "personal":
-        options = { userId: session.userId };
-        break;
-      case "department":
-        const canViewDepartment = await validatePermission(
-          "view_department_attendance"
-        );
-        if (!canViewDepartment) {
-          throw new Error("Unauthorized to view department attendance");
-        }
-        options = { departmentId: session.departmentId };
-        break;
-      case "all":
-        const canViewAll = await validatePermission("view_all_attendance");
-        if (!canViewAll) {
-          throw new Error("Unauthorized to view all attendance");
-        }
-        break;
+    if (viewMode === "personal") {
+      options.userId = session.userId;
+    } else if (viewMode === "department" && session.departmentId) {
+      options.departmentId = session.departmentId;
     }
 
     const records = await attendanceService.getAttendanceByDateRange(
       startDate,
       endDate,
-      options
+      options,
+      statusFilters
     );
 
     return { success: true, data: records };
@@ -46,10 +33,7 @@ export async function getAttendanceRecordsAction(
     console.error("Error getting attendance records:", error);
     return {
       success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : "Failed to get attendance records",
+      error: error instanceof Error ? error.message : "Failed to get records",
     };
   }
 }
