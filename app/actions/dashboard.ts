@@ -32,8 +32,8 @@ export async function getDashboardStatsAction(): Promise<{
       .from(attendance)
       .where(
         and(
-          sql`DATE(${attendance.clockInTime}) = ${today}::date`,
-          sql`${attendance.clockOutTime} IS NULL`
+          sql`DATE(${attendance.clockInTime}) = ${today}::date`
+          // sql`${attendance.clockOutTime} IS NULL`
         )
       );
 
