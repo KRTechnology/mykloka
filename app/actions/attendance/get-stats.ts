@@ -2,7 +2,7 @@
 
 import { attendanceService } from "@/lib/attendance/attendance.service";
 import { validatePermission, getServerSession } from "@/lib/auth/auth";
-import { isEqual, isWithinInterval } from "date-fns";
+import { isEqual, isWithinInterval, startOfWeek, endOfWeek, format } from "date-fns";
 
 export async function getStatsAction(params: {
   startDate: Date;
@@ -68,7 +68,36 @@ export async function getDailyStatsAction(date: Date) {
 }
 
 export async function getWeeklyStatsAction(date: Date) {
-  return getStatsAction({ startDate: date, endDate: date, type: "weekly" });
+  try {
+    const session = await getServerSession();
+    if (!session) throw new Error("Unauthorized");
+
+    const weekStart = startOfWeek(date, { weekStartsOn: 1 });
+    const weekEnd = endOfWeek(date, { weekStartsOn: 1 });
+
+    // Get stats for each day of the week
+    const weekDays = [];
+    let currentDay = new Date(weekStart);
+
+    while (currentDay <= weekEnd) {
+      const stats = await attendanceService.getDailyStats(currentDay, {
+        userId: session.userId,
+      });
+      weekDays.push({
+        name: format(currentDay, "EEE"),
+        ...stats,
+      });
+      currentDay.setDate(currentDay.getDate() + 1);
+    }
+
+    return { success: true, data: weekDays };
+  } catch (error) {
+    console.error("Error getting weekly stats:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to get weekly stats",
+    };
+  }
 }
 
 export async function getMonthlyStatsAction(date: Date) {

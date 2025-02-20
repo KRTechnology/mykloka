@@ -35,7 +35,11 @@ interface AttendanceStatsProps {
 
 type WeeklyStats = {
   name: string;
-} & AttendanceStats;
+  present: number;
+  late: number;
+  absent: number;
+  total: number;
+};
 
 export function AttendanceStats({
   canViewDepartment,
@@ -55,7 +59,7 @@ export function AttendanceStats({
         if (!response.success || !response.data) {
           throw new Error(response.error || "Failed to load statistics");
         }
-        setWeeklyStats(response.data as WeeklyStats[]);
+        setWeeklyStats(response.data);
       } catch (error) {
         toast.error(
           error instanceof Error ? error.message : "Failed to load statistics"
@@ -92,12 +96,11 @@ export function AttendanceStats({
   }, []);
 
   const attendanceRate = weeklyStats.reduce(
-    (acc, day) => {
-      acc.total += day.total;
-      acc.present += day.present;
-      acc.late += day.late;
-      return acc;
-    },
+    (acc, day) => ({
+      total: acc.total + day.total,
+      present: acc.present + day.present,
+      late: acc.late + day.late,
+    }),
     { total: 0, present: 0, late: 0 }
   );
 
