@@ -33,15 +33,13 @@ export async function createDepartmentAction(data: CreateDepartmentData) {
     // Start a transaction
     const result = await db.transaction(async (tx) => {
       // Create department
-      const departmentData: NewDepartment = {
-        name: validatedData.name,
-        description: validatedData.description,
-        headId: validatedData.headId,
-      };
-
       const [department] = await tx
         .insert(departments)
-        .values(departmentData)
+        .values({
+          name: validatedData.name,
+          description: validatedData.description || null,
+          headId: validatedData.headId || null,
+        })
         .returning();
 
       // If a head is assigned, update their role to Department Manager

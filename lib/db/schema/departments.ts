@@ -1,13 +1,10 @@
 import { sql } from "drizzle-orm";
 import { pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
-import { createId } from "@paralleldrive/cuid2";
 import { relations } from "drizzle-orm";
 import { users } from "./users";
 
 export const departments = pgTable("departments", {
-  id: uuid("id")
-    .primaryKey()
-    .$defaultFn(() => createId()),
+  id: uuid("id").defaultRandom().primaryKey().notNull(),
   name: text("name").notNull(),
   description: text("description"),
   headId: uuid("head_id").references(() => users.id, { onDelete: "set null" }),

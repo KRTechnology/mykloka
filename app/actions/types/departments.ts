@@ -10,5 +10,5 @@ export type GetDepartmentsOptions = {
 export type CreateDepartmentData = {
   name: string;
   description?: string;
-  headId?: string;
+  headId?: string | null;
 };

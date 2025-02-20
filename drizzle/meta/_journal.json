@@ -43,6 +43,13 @@
       "when": 1740045074890,
       "tag": "0005_hard_scarlet_witch",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1740051638838,
+      "tag": "0006_cooing_patriot",
+      "breakpoints": true
     }
   ]
 }

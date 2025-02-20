@@ -107,7 +107,7 @@ export function DepartmentForm({ users }: DepartmentFormProps) {
                 <FormLabel>Department Head (Optional)</FormLabel>
                 <Select
                   onValueChange={field.onChange}
-                  defaultValue={field.value}
+                  defaultValue={field.value ?? undefined}
                 >
                   <FormControl>
                     <SelectTrigger>

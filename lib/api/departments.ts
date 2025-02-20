@@ -4,7 +4,7 @@ import { z } from "zod";
 
 export const departmentSchema = z.object({
   name: z.string().min(1, "Department name is required"),
-  headId: z.string().uuid().optional(),
+  headId: z.string().uuid().nullish(),
   description: z.string().optional(),
 });
 
