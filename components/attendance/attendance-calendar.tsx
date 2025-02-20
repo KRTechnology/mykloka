@@ -153,7 +153,7 @@ export function AttendanceCalendar({
       animate={{ opacity: 1, y: 0 }}
       className="space-y-4"
     >
-      <Card className="max-w-[400px] shadow-sm">
+      <Card className="shadow-sm w-fit">
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-xl font-semibold">
             Attendance Calendar
@@ -163,7 +163,7 @@ export function AttendanceCalendar({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               className={cn(
-                "px-3 py-1.5 text-sm rounded-full",
+                "px-3 py-1.5 text-sm rounded-full ml-4",
                 getStatusColor(selectedDay.status)
               )}
             >
@@ -171,7 +171,7 @@ export function AttendanceCalendar({
             </motion.div>
           )}
         </CardHeader>
-        <CardContent>
+        <CardContent className="px-1 pb-4">
           {isLoading ? (
             <CalendarSkeleton />
           ) : (
@@ -186,7 +186,31 @@ export function AttendanceCalendar({
                   handleDayClick(newDate);
                 }
               }}
-              className="rounded-md border p-3"
+              className="rounded-md p-3"
+              classNames={{
+                months: "flex flex-col space-y-4",
+                month: "space-y-4",
+                caption: "flex justify-center pt-1 relative items-center px-8",
+                caption_label: "text-sm font-medium",
+                nav: "space-x-1 flex items-center",
+                nav_button:
+                  "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100",
+                nav_button_previous: "absolute left-1",
+                nav_button_next: "absolute right-1",
+                table: "w-full border-collapse space-y-1",
+                head_row: "flex",
+                head_cell:
+                  "text-muted-foreground rounded-md w-9 font-normal text-[0.8rem]",
+                row: "flex w-full",
+                cell: "h-9 w-9 text-center text-sm relative p-0 focus-within:relative focus-within:z-20",
+                day: "h-9 w-9 p-0 font-normal aria-selected:opacity-100",
+                day_range_end: "day-range-end",
+                day_selected: "rounded-md",
+                day_today: "rounded-md",
+                day_outside: "opacity-50",
+                day_disabled: "opacity-50",
+                day_hidden: "invisible",
+              }}
               modifiers={modifiers}
               modifiersStyles={modifiersStyles}
               components={{
@@ -210,7 +234,7 @@ export function AttendanceCalendar({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
           >
-            <Card className="max-w-[400px] shadow-sm">
+            <Card className="w-fit shadow-sm">
               <CardContent className="pt-6">
                 <div className="space-y-3">
                   <div className="flex items-center gap-3">
@@ -248,7 +272,7 @@ export function AttendanceCalendar({
         )}
       </AnimatePresence>
 
-      <div className="flex items-center gap-6 text-sm">
+      <div className="flex items-center gap-6 w-fit text-sm">
         <div className="flex items-center gap-2">
           <div className="h-3 w-3 rounded-md bg-[var(--kr-green)] shadow-sm" />
           <span className="font-medium">Present</span>
@@ -279,56 +303,19 @@ function DayContent({
     (day) => new Date(day.clockInTime).toDateString() === date.toDateString()
   );
 
-  const formatTime = (date: Date | null | undefined) => {
-    if (!date) return "Not recorded";
-    try {
-      if (isNaN(date.getTime())) return "Invalid time";
-      return format(date, "hh:mm a");
-    } catch (error) {
-      console.error("Error formatting time:", error);
-      return "Invalid time";
-    }
-  };
-
   return (
     <HoverCard openDelay={0} closeDelay={0}>
       <HoverCardTrigger asChild>
         <div
           onClick={() => onDayClick(date)}
           className={cn(
-            "h-8 w-8 p-0 font-medium cursor-pointer hover:bg-muted/50 rounded-md transition-all duration-200",
+            "h-9 w-9 p-0 font-medium cursor-pointer hover:bg-muted/50 rounded-md transition-all duration-200 flex items-center justify-center",
             attendance && "font-semibold text-white hover:opacity-90"
           )}
         >
           {date.getDate()}
         </div>
       </HoverCardTrigger>
-      {/* {attendance && (
-        <HoverCardContent
-          side="right"
-          align="start"
-          className="w-[200px] p-3 shadow-md bg-popover border z-[100]"
-          sideOffset={5}
-        >
-          <div className="space-y-2">
-            <p className="text-sm font-semibold">
-              {format(date, "EEEE, MMMM d")}
-            </p>
-            <div className="text-sm space-y-1.5">
-              <div className="flex items-center gap-2">
-                <Clock className="h-3.5 w-3.5 text-muted-foreground" />
-                <span>{formatTime(attendance.clockInTime)}</span>
-              </div>
-              {attendance.clockOutTime && (
-                <div className="flex items-center gap-2">
-                  <Clock className="h-3.5 w-3.5 text-muted-foreground" />
-                  <span>{formatTime(attendance.clockOutTime)}</span>
-                </div>
-              )}
-            </div>
-          </div>
-        </HoverCardContent>
-      )} */}
     </HoverCard>
   );
 }
