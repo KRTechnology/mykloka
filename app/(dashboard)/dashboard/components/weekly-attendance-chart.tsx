@@ -34,7 +34,11 @@ export function WeeklyAttendanceChart() {
               <XAxis dataKey="day" />
               <YAxis />
               <Tooltip />
-              <Bar dataKey="present" fill="hsl(var(--primary))" name="Present" />
+              <Bar
+                dataKey="present"
+                fill="hsl(var(--primary))"
+                name="Present"
+              />
               <Bar dataKey="late" fill="hsl(var(--destructive))" name="Late" />
             </BarChart>
           </ResponsiveContainer>
@@ -42,4 +46,4 @@ export function WeeklyAttendanceChart() {
       </CardContent>
     </Card>
   );
-} 
+}

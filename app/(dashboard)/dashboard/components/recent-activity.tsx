@@ -61,7 +61,9 @@ export function RecentActivity() {
                 <ActivityIcon type={activity.type} />
                 <div className="space-y-1">
                   <p className="font-medium">{activity.user}</p>
-                  <p className="text-muted-foreground">{activity.description}</p>
+                  <p className="text-muted-foreground">
+                    {activity.description}
+                  </p>
                   <p className="text-xs text-muted-foreground">
                     {activity.time}
                   </p>
@@ -73,4 +75,4 @@ export function RecentActivity() {
       </CardContent>
     </Card>
   );
-} 
+}
