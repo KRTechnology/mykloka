@@ -95,6 +95,7 @@ export async function getWeeklyStatsAction(date: Date) {
       currentDay.setDate(currentDay.getDate() + 1);
     }
 
+    console.log({ weekDays });
     return { success: true, data: weekDays };
   } catch (error) {
     console.error("Error getting weekly stats:", error);

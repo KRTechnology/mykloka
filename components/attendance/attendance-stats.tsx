@@ -58,10 +58,12 @@ export function AttendanceStats({
   const [streak, setStreak] = useState<AttendanceStreak | null>(null);
   const [averages, setAverages] = useState<AverageTimings | null>(null);
 
+  console.log({ weeklyStats });
   useEffect(() => {
     async function fetchStats() {
       setIsLoading(true);
       try {
+        console.log("fetching stats");
         const response = await getWeeklyStatsAction(date);
         if (!response.success || !response.data) {
           throw new Error(response.error || "Failed to load statistics");
