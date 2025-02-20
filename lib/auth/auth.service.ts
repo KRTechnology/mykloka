@@ -6,6 +6,7 @@ import { Permission } from "./types";
 import { roles, users } from "../db/schema";
 import { emailVerificationTokens } from "../db/schema/email-verification";
 import { db as dbClient } from "../db/config";
+// import {  } from "drizzle-orm";
 
 export interface UserJWTPayload {
   userId: string;
@@ -31,16 +32,19 @@ export class AuthService {
     process.env.JWT_SECRET!
   );
 
-  async createEmailVerificationToken(email: string, userId: string) {
+  async createEmailVerificationToken(email: string, userId: string, tx?: any) {
+    const dbClient = tx || this.db;
+
     // Delete any existing tokens for this user
-    await this.db
+    await dbClient
       .delete(emailVerificationTokens)
       .where(eq(emailVerificationTokens.userId, userId));
 
     const token = nanoid(32);
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
-    await this.db.insert(emailVerificationTokens).values({
+    // Create new token
+    await dbClient.insert(emailVerificationTokens).values({
       token,
       userId,
       expiresAt,
