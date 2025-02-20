@@ -220,6 +220,8 @@ class AttendanceService {
       options
     );
 
+    // console.log({ startOfDay, endOfDay });
+
     return {
       present: records.filter((r) => r.attendance.status === "present").length,
       late: records.filter((r) => r.attendance.status === "late").length,
