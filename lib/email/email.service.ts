@@ -1,6 +1,6 @@
 import { Resend } from "resend";
-import { UserInvitationEmail } from "./email-templates/user-invitation";
 import PasswordResetEmail from "./email-templates/password-reset-email";
+import { UserInvitationEmail } from "./email-templates/user-invitation";
 
 export class EmailService {
   private resend: Resend;
@@ -34,7 +34,6 @@ export class EmailService {
 
       return data;
     } catch (error) {
-      // You might want to handle this error according to your needs
       console.error("Failed to send email:", error);
       throw error;
     }
@@ -42,14 +41,12 @@ export class EmailService {
 
   async sendPasswordResetEmail(email: string, resetLink: string) {
     try {
-      const { data, error } = await this.resend.emails.send({
+      await this.resend.emails.send({
         from: `${process.env.NEXT_PUBLIC_COMPANY_NAME} <${process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev"}>`,
         to: email,
         subject: "Reset Your Password",
         react: PasswordResetEmail({ resetLink }),
       });
-
-      console.log("Email sent successfully:", { error });
     } catch (error) {
       console.error("Error sending password reset email:", error);
       throw error;

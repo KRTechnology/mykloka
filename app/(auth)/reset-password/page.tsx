@@ -8,12 +8,14 @@ export const metadata: Metadata = {
   description: "Create a new password",
 };
 
-export default function ResetPasswordPage({
+export default async function ResetPasswordPage({
   searchParams,
 }: {
-  searchParams: { token?: string };
+  searchParams: Promise<{ token?: string }>;
 }) {
-  if (!searchParams.token) {
+  const pageParams = await searchParams;
+
+  if (!pageParams.token) {
     redirect("/login");
   }
 
@@ -31,7 +33,7 @@ export default function ResetPasswordPage({
               className="w-auto h-auto"
             />
           </div>
-          <ResetPasswordForm token={searchParams.token} />
+          <ResetPasswordForm token={pageParams.token} />
         </div>
       </main>
       <footer className="py-6 text-center text-sm text-muted-foreground">
