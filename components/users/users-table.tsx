@@ -172,7 +172,9 @@ export function UsersTable({
                 Joined
                 <SortIcon field="createdAt" sorting={sorting} />
               </TableHead>
-              {canEditUsers && <TableHead className="w-[100px]">Actions</TableHead>}
+              {canEditUsers && (
+                <TableHead className="w-[100px]">Actions</TableHead>
+              )}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -218,7 +220,9 @@ export function UsersTable({
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => setEditingUser(user)}>
+                          <DropdownMenuItem
+                            onClick={() => setEditingUser(user)}
+                          >
                             <Pencil className="mr-2 h-4 w-4" />
                             Edit
                           </DropdownMenuItem>

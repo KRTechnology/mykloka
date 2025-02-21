@@ -3,8 +3,7 @@
 import { DepartmentData, departmentSchema } from "@/lib/api/departments";
 import { validatePermission } from "@/lib/auth/auth";
 import { db } from "@/lib/db/config";
-import { departments, users, roles } from "@/lib/db/schema";
-import type { NewDepartment } from "@/lib/db/schema/departments";
+import { departments, roles, users } from "@/lib/db/schema";
 import { asc, desc, eq, sql } from "drizzle-orm";
 import { type PgColumn } from "drizzle-orm/pg-core";
 import { revalidateTag } from "next/cache";
@@ -13,7 +12,6 @@ import type {
   CreateDepartmentData,
   GetDepartmentsOptions,
 } from "./types/departments";
-import { updateUserAction } from "./users";
 
 const createDepartmentSchema = z.object({
   name: z.string().min(1, "Department name is required"),

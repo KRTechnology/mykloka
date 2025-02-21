@@ -42,6 +42,10 @@ export async function inviteUserAction(data: InviteUserData) {
 interface UpdateUserData {
   id: string;
   roleId: string;
+  departmentId?: string | null;
+  firstName?: string;
+  lastName?: string;
+  email?: string;
 }
 
 export async function updateUserAction(data: UpdateUserData) {
@@ -52,13 +56,22 @@ export async function updateUserAction(data: UpdateUserData) {
       throw new Error("Unauthorized");
     }
 
+    // Create update object using the schema type
+    const updateData = {
+      ...(data.roleId && { roleId: data.roleId }),
+      ...(data.departmentId !== undefined && {
+        departmentId: data.departmentId,
+      }),
+      ...(data.firstName && { firstName: data.firstName }),
+      ...(data.lastName && { lastName: data.lastName }),
+      ...(data.email && { email: data.email }),
+      updatedAt: new Date(),
+    };
+
     // Update user
     const [updatedUser] = await db
       .update(users)
-      .set({
-        roleId: data.roleId,
-        updatedAt: new Date(),
-      })
+      .set(updateData)
       .where(eq(users.id, data.id))
       .returning();
 
