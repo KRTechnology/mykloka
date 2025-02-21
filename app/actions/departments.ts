@@ -5,7 +5,7 @@ import { validatePermission } from "@/lib/auth/auth";
 import { db } from "@/lib/db/config";
 import { departments, roles, users } from "@/lib/db/schema";
 import { asc, desc, eq, sql } from "drizzle-orm";
-import { type PgColumn, alias } from "drizzle-orm/pg-core";
+import { alias } from "drizzle-orm/pg-core";
 import { revalidateTag } from "next/cache";
 import { z } from "zod";
 import type {

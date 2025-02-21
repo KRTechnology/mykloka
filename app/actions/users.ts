@@ -11,6 +11,8 @@ import { users } from "@/lib/db/schema";
 import { userService } from "@/lib/users/user.service";
 import { eq } from "drizzle-orm";
 import { revalidateTag } from "next/cache";
+import { authService } from "@/lib/auth/auth.service";
+import { emailService } from "@/lib/email/email.service";
 
 export async function inviteUserAction(data: InviteUserData) {
   try {
@@ -115,6 +117,58 @@ export async function deleteUserAction(id: string) {
     return {
       success: false,
       error: error instanceof Error ? error.message : "Failed to delete user",
+    };
+  }
+}
+
+export async function resendInvitationAction(userId: string) {
+  try {
+    const hasPermission = await validatePermission("edit_users");
+    if (!hasPermission) {
+      throw new Error("Unauthorized");
+    }
+
+    // Get user details
+    const user = await db.query.users.findFirst({
+      where: eq(users.id, userId),
+      columns: {
+        id: true,
+        email: true,
+        isActive: true,
+      },
+    });
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    if (user.isActive) {
+      throw new Error("User is already active");
+    }
+
+    // Create new verification token
+    const token = await authService.createEmailVerificationToken(
+      user.email,
+      user.id
+    );
+
+    // Generate verification link
+    const verificationLink = `${process.env.NEXT_PUBLIC_APP_URL}/verify?token=${token}`;
+
+    // Send invitation email
+    await emailService.sendUserInvitation({
+      email: user.email,
+      verificationLink,
+      companyName: process.env.NEXT_PUBLIC_COMPANY_NAME!,
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error resending invitation:", error);
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "Failed to resend invitation",
     };
   }
 }

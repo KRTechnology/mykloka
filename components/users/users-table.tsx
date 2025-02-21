@@ -29,11 +29,12 @@ import { type User } from "@/lib/api/users";
 import { formatDate } from "@/lib/utils/format";
 import { type SortingState } from "@/types/table";
 import { AnimatePresence, motion } from "framer-motion";
-import { MoreHorizontal, Pencil, Trash } from "lucide-react";
+import { MoreHorizontal, Pencil, Trash, Mail } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { DeleteUserDialog } from "./delete-user-dialog";
 import { EditUserDialog } from "./edit-user-dialog";
+import { ResendInvitationDialog } from "./resend-invitation-dialog";
 
 interface UsersTableProps {
   initialUsers: User[];
@@ -66,6 +67,8 @@ export function UsersTable({
   });
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [deletingUser, setDeletingUser] = useState<User | null>(null);
+  const [userToResendInvitation, setUserToResendInvitation] =
+    useState<User | null>(null);
 
   // Update URL and trigger new data fetch when sorting changes
   const handleSort = useCallback(
@@ -233,6 +236,14 @@ export function UsersTable({
                             <Trash className="mr-2 h-4 w-4" />
                             Delete
                           </DropdownMenuItem>
+                          {!user.status && (
+                            <DropdownMenuItem
+                              onClick={() => setUserToResendInvitation(user)}
+                            >
+                              <Mail className="mr-2 h-4 w-4" />
+                              Resend Invitation
+                            </DropdownMenuItem>
+                          )}
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>
@@ -270,6 +281,10 @@ export function UsersTable({
       <DeleteUserDialog
         user={deletingUser}
         onClose={() => setDeletingUser(null)}
+      />
+      <ResendInvitationDialog
+        user={userToResendInvitation}
+        onClose={() => setUserToResendInvitation(null)}
       />
     </div>
   );
