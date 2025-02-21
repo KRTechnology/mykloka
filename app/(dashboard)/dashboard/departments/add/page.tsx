@@ -17,7 +17,7 @@ export default async function AddDepartmentPage() {
   });
 
   // Filter users to only show employees (not managers or admins)
-  const eligibleHeads = users.filter((user) => user.role?.name === "Employee");
+  const eligibleHeads = users.filter((user) => user.role?.name !== "Employee");
 
   return (
     <div className="flex-1 p-8 pt-6">
