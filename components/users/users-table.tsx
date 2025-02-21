@@ -39,6 +39,7 @@ interface UsersTableProps {
   initialUsers: User[];
   totalPages: number;
   currentPage: number;
+  canEditUsers: boolean;
 }
 
 type SortableField = "firstName" | "email" | "createdAt";
@@ -47,6 +48,7 @@ export function UsersTable({
   initialUsers = [],
   totalPages = 1,
   currentPage = 1,
+  canEditUsers,
 }: UsersTableProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -141,7 +143,7 @@ export function UsersTable({
   }
 
   return (
-    <>
+    <div className="space-y-4">
       <div className="rounded-md border">
         <Table>
           <TableHeader>
@@ -170,7 +172,7 @@ export function UsersTable({
                 Joined
                 <SortIcon field="createdAt" sorting={sorting} />
               </TableHead>
-              <TableHead className="w-[100px]">Actions</TableHead>
+              {canEditUsers && <TableHead className="w-[100px]">Actions</TableHead>}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -206,29 +208,31 @@ export function UsersTable({
                     </Badge>
                   </TableCell>
                   <TableCell>{formatDate(user.createdAt)}</TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                          <span className="sr-only">Open menu</span>
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => setEditingUser(user)}>
-                          <Pencil className="mr-2 h-4 w-4" />
-                          Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          className="text-destructive"
-                          onClick={() => setDeletingUser(user)}
-                        >
-                          <Trash className="mr-2 h-4 w-4" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
+                  {canEditUsers && (
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" className="h-8 w-8 p-0">
+                            <span className="sr-only">Open menu</span>
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => setEditingUser(user)}>
+                            <Pencil className="mr-2 h-4 w-4" />
+                            Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            className="text-destructive"
+                            onClick={() => setDeletingUser(user)}
+                          >
+                            <Trash className="mr-2 h-4 w-4" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  )}
                 </motion.tr>
               ))}
             </AnimatePresence>
@@ -263,7 +267,7 @@ export function UsersTable({
         user={deletingUser}
         onClose={() => setDeletingUser(null)}
       />
-    </>
+    </div>
   );
 }
 

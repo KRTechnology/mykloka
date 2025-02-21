@@ -1,14 +1,16 @@
+import { getServerSession } from "@/lib/auth/auth";
+import { UsersTable } from "@/components/users/users-table";
 import { Button } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
 import { Separator } from "@/components/ui/separator";
 import { TableSkeleton } from "@/components/ui/table-skeleton";
-import { UsersTable } from "@/components/users/users-table";
 import { getUsers } from "@/lib/api/users";
 import { Plus } from "lucide-react";
 import { headers } from "next/headers";
 import Link from "next/link";
 import { Suspense } from "react";
 import { unstable_noStore as noStore } from "next/cache";
+import { redirect } from "next/navigation";
 
 type SearchParams = {
   page?: string;
@@ -24,6 +26,13 @@ interface PageProps {
 
 export default async function UsersPage({ searchParams }: PageProps) {
   noStore(); // Disable page caching
+
+  const session = await getServerSession();
+  if (!session) redirect("/auth/login");
+
+  // Check if user has permission to create users
+  const canCreateUsers = session.permissions.includes("create_users");
+  const canEditUsers = session.permissions.includes("edit_users");
 
   try {
     const headersList = await headers();
@@ -54,12 +63,14 @@ export default async function UsersPage({ searchParams }: PageProps) {
             title="Users"
             description="Manage your organization's users"
           />
-          <Link href="/dashboard/users/add">
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              Add User
-            </Button>
-          </Link>
+          {canCreateUsers && (
+            <Link href="/dashboard/users/add">
+              <Button>
+                <Plus className="mr-2 h-4 w-4" />
+                Add User
+              </Button>
+            </Link>
+          )}
         </div>
         <Separator />
         <Suspense fallback={<TableSkeleton />}>
@@ -67,6 +78,7 @@ export default async function UsersPage({ searchParams }: PageProps) {
             initialUsers={users}
             totalPages={totalPages}
             currentPage={page}
+            canEditUsers={canEditUsers}
           />
         </Suspense>
       </div>
