@@ -5,7 +5,7 @@ import { validatePermission } from "@/lib/auth/auth";
 import { db } from "@/lib/db/config";
 import { departments, roles, users } from "@/lib/db/schema";
 import { asc, desc, eq, sql } from "drizzle-orm";
-import { type PgColumn } from "drizzle-orm/pg-core";
+import { type PgColumn, alias } from "drizzle-orm/pg-core";
 import { revalidateTag } from "next/cache";
 import { z } from "zod";
 import type {
@@ -150,98 +150,97 @@ export async function deleteDepartmentAction(id: string) {
   }
 }
 
-export async function getDepartmentsAction(
-  options: GetDepartmentsOptions = {}
-) {
+export async function getDepartmentsAction({
+  page = 1,
+  pageSize = 10,
+  sortBy = "createdAt",
+  sortDirection = "desc",
+  search,
+}: GetDepartmentsOptions = {}) {
   try {
-    const {
-      page = 1,
-      pageSize = 10,
-      sortBy = "name",
-      sortDirection = "asc",
-      search = "",
-      isDropdown = false,
-    } = options;
+    // Create aliases for the users table
+    const deptMembers = alias(users, "dept_members");
+    const head = alias(users, "head");
 
-    // If it's a dropdown request, fetch all departments
-    if (isDropdown) {
-      const allDepartments = await db
-        .select({
-          id: departments.id,
-          name: departments.name,
-          headId: departments.headId,
-          head: sql<string | null>`NULL`,
-          userCount: sql<number>`0`,
-          createdAt: departments.createdAt,
-        })
-        .from(departments)
-        .orderBy(asc(departments.name));
-
-      return { success: true, data: allDepartments };
-    }
-
-    // Calculate offset
-    const offset = (page - 1) * pageSize;
-
-    // Build base query with head information and user count
-    let query = db
+    // Build base query
+    let baseQuery = db
       .select({
         id: departments.id,
         name: departments.name,
-        createdAt: departments.createdAt,
+        description: departments.description,
         headId: departments.headId,
-        head: sql<
-          string | null
-        >`CASE WHEN ${users.id} IS NOT NULL THEN concat(${users.firstName}, ' ', ${users.lastName}) ELSE NULL END`,
-        userCount: sql<number>`count(distinct ${users.id}) filter (where ${users.departmentId} = ${departments.id})`,
+        createdAt: departments.createdAt,
+        updatedAt: departments.updatedAt,
+        userCount: sql<number>`COUNT(DISTINCT ${deptMembers.id})`,
+        head: sql<string | null>`
+          CASE 
+            WHEN ${head.id} IS NOT NULL 
+            THEN CONCAT(${head.firstName}, ' ', ${head.lastName})
+            ELSE NULL
+          END
+        `,
       })
       .from(departments)
-      .leftJoin(users, eq(departments.headId, users.id))
-      .groupBy(departments.id, users.id, users.firstName, users.lastName)
+      .leftJoin(deptMembers, eq(departments.id, deptMembers.departmentId))
+      .leftJoin(head, eq(departments.headId, head.id))
+      .groupBy(
+        departments.id,
+        departments.name,
+        departments.description,
+        departments.headId,
+        departments.createdAt,
+        departments.updatedAt,
+        head.id,
+        head.firstName,
+        head.lastName
+      )
       .$dynamic();
 
     // Add search condition if provided
     if (search) {
-      query = query.where(
-        sql`LOWER(${departments.name}) LIKE LOWER(${"%" + search + "%"})`
+      baseQuery = baseQuery.where(
+        sql`LOWER(${departments.name}) LIKE ${`%${search.toLowerCase()}%`}`
       );
     }
 
+    // Add sorting
+    const sortableColumns = {
+      name: departments.name,
+      createdAt: departments.createdAt,
+      userCount: sql`COUNT(DISTINCT ${deptMembers.id})`,
+    } as const;
+
+    const sortColumn =
+      sortBy in sortableColumns
+        ? sortableColumns[sortBy as keyof typeof sortableColumns]
+        : departments.createdAt;
+
+    baseQuery = baseQuery.orderBy(
+      sortDirection === "desc" ? desc(sortColumn) : asc(sortColumn)
+    );
+
     // Get total count for pagination
-    const totalPromise = db
+    const countQuery = db
       .select({ count: sql<number>`count(*)` })
       .from(departments)
       .$dynamic();
 
-    // Add sorting
-    const sortColumn = departments[
-      sortBy as keyof typeof departments
-    ] as PgColumn<any>;
-    if (sortColumn) {
-      query = query.orderBy(
-        sortDirection === "desc" ? desc(sortColumn) : asc(sortColumn)
-      );
-    }
-
     // Add pagination
-    query = query.limit(pageSize).offset(offset);
+    const offset = (page - 1) * pageSize;
+    const paginatedQuery = baseQuery.limit(pageSize).offset(offset);
 
     // Execute queries in parallel
-    const [results, [{ count }]] = await Promise.all([query, totalPromise]);
-
-    // Transform results to match Department interface
-    const transformedResults = results.map((dept) => ({
-      id: dept.id,
-      name: dept.name,
-      headId: dept.headId,
-      head: dept.head,
-      userCount: Number(dept.userCount) || 0,
-      createdAt: dept.createdAt,
-    }));
+    const [results, [{ count }]] = await Promise.all([
+      paginatedQuery,
+      countQuery,
+    ]);
 
     return {
       success: true,
-      data: transformedResults,
+      data: results.map((dept) => ({
+        ...dept,
+        userCount: Number(dept.userCount) || 0,
+      })),
       total: Number(count) || 0,
       page,
       pageSize,
