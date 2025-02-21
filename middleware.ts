@@ -3,9 +3,15 @@ import type { NextRequest } from "next/server";
 import { jwtVerify } from "jose";
 
 // Add auth routes that should be accessible without a token
-const publicRoutes = ["/login", "/verify", "/reset-password"];
+const publicRoutes = [
+  "/login",
+  "/verify",
+  "/reset-password",
+  "/forgot-password",
+];
 // Add routes that should redirect to dashboard if user is authenticated
-const authRoutes = ["/login", "/verify", "/reset-password"];
+const authRoutes = ["/login"];
+// const authRoutes = ["/login", "/verify", "/reset-password"];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;

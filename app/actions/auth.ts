@@ -1,9 +1,13 @@
 "use server";
 
 import { getServerSession } from "@/lib/auth/auth";
+import { authService } from "@/lib/auth/auth.service";
 import { db } from "@/lib/db/config";
 import { users, roles } from "@/lib/db/schema";
+import { emailService } from "@/lib/email/email.service";
 import { eq } from "drizzle-orm";
+// import { authService } from "@/lib/auth/authService";
+// import { emailService } from "@/lib/email/emailService";
 
 export type CurrentUser = {
   id: string;
@@ -69,6 +73,51 @@ export async function getCurrentUser(): Promise<{
     return {
       success: false,
       error: error instanceof Error ? error.message : "Failed to fetch user",
+    };
+  }
+}
+
+export async function requestPasswordResetAction(email: string) {
+  try {
+    const user = await db.query.users.findFirst({
+      where: eq(users.email, email),
+    });
+
+    if (!user) {
+      // For security, don't reveal if email exists
+      return { success: true };
+    }
+
+    const token = await authService.createEmailVerificationToken(
+      email,
+      user.id
+    );
+    const resetLink = `${process.env.NEXT_PUBLIC_APP_URL}/reset-password?token=${token}`;
+
+    await emailService.sendPasswordResetEmail(email, resetLink);
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error requesting password reset:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to request reset",
+    };
+  }
+}
+
+export async function resetPasswordAction(token: string, password: string) {
+  try {
+    const userId = await authService.verifyEmailToken(token);
+    await authService.setPassword(userId, password);
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error resetting password:", error);
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "Failed to reset password",
     };
   }
 }

@@ -1,5 +1,6 @@
 import {
   Loader2,
+  MailCheck,
   MapPin,
   Moon,
   SunMedium,
@@ -13,4 +14,5 @@ export const Icons = {
   moon: Moon,
   spinner: Loader2,
   mapPin: MapPin,
+  mailCheck: MailCheck,
 } satisfies Record<string, Icon>;

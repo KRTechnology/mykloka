@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import * as z from "zod";
+import Link from "next/link";
 
 const formSchema = z.object({
   email: z.string().min(1, "Email is required").email("Invalid email address"),
@@ -103,6 +104,14 @@ export function LoginForm({ from }: { from: string }) {
               </FormItem>
             )}
           />
+          <div className="flex justify-end">
+            <Link
+              href="/forgot-password"
+              className="text-sm text-muted-foreground hover:text-foreground"
+            >
+              Forgot password?
+            </Link>
+          </div>
           <Button
             className="w-full bg-kr-orange hover:bg-kr-orange/90"
             type="submit"

@@ -189,3 +189,5 @@ export class AuthService {
     return user.id;
   }
 }
+
+export const authService = new AuthService(dbClient);
