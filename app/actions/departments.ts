@@ -28,53 +28,48 @@ export async function createDepartmentAction(data: CreateDepartmentData) {
 
     const validatedData = createDepartmentSchema.parse(data);
 
-    // Start a transaction
-    const result = await db.transaction(async (tx) => {
-      // Create department
-      const [department] = await tx
-        .insert(departments)
-        .values({
-          name: validatedData.name,
-          description: validatedData.description || null,
-          headId: validatedData.headId || null,
-        })
-        .returning();
+    // Create department
+    const [department] = await db
+      .insert(departments)
+      .values({
+        name: validatedData.name,
+        description: validatedData.description || null,
+        headId: validatedData.headId || null,
+      })
+      .returning();
 
-      // If a head is assigned, update their role to Department Manager
-      if (validatedData.headId) {
-        // Fetch Department Manager role
-        const [departmentManagerRole] = await tx
-          .select({ id: roles.id })
-          .from(roles)
-          .where(eq(roles.name, "Department Manager"));
+    // If a head is assigned, update their role to Department Manager
+    if (validatedData.headId) {
+      // Fetch Department Manager role
+      const [departmentManagerRole] = await db
+        .select({ id: roles.id })
+        .from(roles)
+        .where(eq(roles.name, "Department Manager"));
 
-        if (!departmentManagerRole) {
-          throw new Error("Department Manager role not found");
-        }
-
-        // Check if user already has the Department Manager role
-        const [currentUser] = await tx
-          .select({ roleId: users.roleId })
-          .from(users)
-          .where(eq(users.id, validatedData.headId));
-
-        if (currentUser.roleId !== departmentManagerRole.id) {
-          // Update user role directly within the transaction
-          await tx
-            .update(users)
-            .set({
-              roleId: departmentManagerRole.id,
-              updatedAt: new Date(),
-            })
-            .where(eq(users.id, validatedData.headId));
-        }
+      if (!departmentManagerRole) {
+        throw new Error("Department Manager role not found");
       }
 
-      return department;
-    });
+      // Check if user already has the Department Manager role
+      const [currentUser] = await db
+        .select({ roleId: users.roleId })
+        .from(users)
+        .where(eq(users.id, validatedData.headId));
+
+      if (currentUser.roleId !== departmentManagerRole.id) {
+        // Update user role
+        await db
+          .update(users)
+          .set({
+            roleId: departmentManagerRole.id,
+            updatedAt: new Date(),
+          })
+          .where(eq(users.id, validatedData.headId));
+      }
+    }
 
     revalidateTag("departments");
-    return { success: true, data: result };
+    return { success: true, data: department };
   } catch (error) {
     return {
       success: false,

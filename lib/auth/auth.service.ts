@@ -32,11 +32,9 @@ export class AuthService {
     process.env.JWT_SECRET!
   );
 
-  async createEmailVerificationToken(email: string, userId: string, tx?: any) {
-    const dbClient = tx || this.db;
-
+  async createEmailVerificationToken(email: string, userId: string) {
     // Delete any existing tokens for this user
-    await dbClient
+    await this.db
       .delete(emailVerificationTokens)
       .where(eq(emailVerificationTokens.userId, userId));
 
@@ -44,7 +42,7 @@ export class AuthService {
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
     // Create new token
-    await dbClient.insert(emailVerificationTokens).values({
+    await this.db.insert(emailVerificationTokens).values({
       token,
       userId,
       expiresAt,

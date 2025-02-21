@@ -26,30 +26,24 @@ export class UserService {
       throw new Error("User with this email already exists");
     }
 
-    // Use transaction to create user and verification token
-    const result = await this.db.transaction(async (tx) => {
-      // Create user without password
-      const [user] = await tx
-        .insert(users)
-        .values({
-          ...data,
-          passwordHash: "", // Will be set when user verifies email
-          isActive: false,
-        })
-        .returning();
+    // Create user without password
+    const [user] = await this.db
+      .insert(users)
+      .values({
+        ...data,
+        passwordHash: "", // Will be set when user verifies email
+        isActive: false,
+      })
+      .returning();
 
-      // Create verification token within the transaction
-      const token = await authService.createEmailVerificationToken(
-        data.email,
-        user.id,
-        tx
-      );
-
-      return { user, token };
-    });
+    // Create verification token
+    const token = await authService.createEmailVerificationToken(
+      data.email,
+      user.id
+    );
 
     // Generate verification link
-    const verificationLink = `${process.env.NEXT_PUBLIC_APP_URL}/verify?token=${result.token}`;
+    const verificationLink = `${process.env.NEXT_PUBLIC_APP_URL}/verify?token=${token}`;
 
     // Send invitation email
     await emailService.sendUserInvitation({
@@ -58,7 +52,7 @@ export class UserService {
       companyName: process.env.NEXT_PUBLIC_COMPANY_NAME!,
     });
 
-    return result.user;
+    return user;
   }
 
   async verifyAndSetPassword(token: string, password: string) {
