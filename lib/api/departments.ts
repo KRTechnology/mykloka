@@ -13,6 +13,7 @@ export type DepartmentData = z.infer<typeof departmentSchema>;
 export interface Department {
   id: string;
   name: string;
+  description?: string | null;
   headId: string | null;
   head: string | null;
   userCount: number;

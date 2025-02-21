@@ -40,6 +40,7 @@ interface DepartmentsTableProps {
   initialDepartments: Department[];
   totalPages: number;
   currentPage: number;
+  canEditDepartments: boolean;
 }
 
 type SortableField = "name" | "createdAt" | "userCount";
@@ -48,6 +49,7 @@ export function DepartmentsTable({
   initialDepartments = [],
   totalPages = 1,
   currentPage = 1,
+  canEditDepartments,
 }: DepartmentsTableProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -178,7 +180,9 @@ export function DepartmentsTable({
                 Created
                 <SortIcon field="createdAt" sorting={sorting} />
               </TableHead>
-              <TableHead className="w-[100px]">Actions</TableHead>
+              {canEditDepartments && (
+                <TableHead className="w-[100px]">Actions</TableHead>
+              )}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -203,35 +207,37 @@ export function DepartmentsTable({
                   </TableCell>
                   <TableCell>{department.userCount}</TableCell>
                   <TableCell>{formatDate(department.createdAt)}</TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100"
-                        >
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                          onClick={() => setEditingDepartment(department)}
-                        >
-                          <Pencil className="mr-2 h-4 w-4" />
-                          Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          className="text-destructive"
-                          onClick={() => setDeletingDepartment(department)}
-                        >
-                          <Trash className="mr-2 h-4 w-4" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
+                  {canEditDepartments && (
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100"
+                          >
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            onClick={() => setEditingDepartment(department)}
+                          >
+                            <Pencil className="mr-2 h-4 w-4" />
+                            Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            className="text-destructive"
+                            onClick={() => setDeletingDepartment(department)}
+                          >
+                            <Trash className="mr-2 h-4 w-4" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  )}
                 </motion.tr>
               ))}
             </AnimatePresence>

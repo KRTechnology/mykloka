@@ -1,3 +1,4 @@
+import { getServerSession } from "@/lib/auth/auth";
 import { getDepartmentsAction } from "@/app/actions/departments";
 import { DepartmentsTable } from "@/components/departments/departments-table";
 import { Button } from "@/components/ui/button";
@@ -8,6 +9,7 @@ import { Plus } from "lucide-react";
 import { unstable_noStore as noStore } from "next/cache";
 import Link from "next/link";
 import { Suspense } from "react";
+import { redirect } from "next/navigation";
 
 interface PageProps {
   searchParams: Promise<{
@@ -21,6 +23,14 @@ interface PageProps {
 
 export default async function DepartmentsPage({ searchParams }: PageProps) {
   noStore();
+
+  const session = await getServerSession();
+  if (!session) redirect("/auth/login");
+
+  // Check permissions
+  const canCreateDepartments =
+    session.permissions.includes("create_departments");
+  const canEditDepartments = session.permissions.includes("edit_departments");
 
   try {
     const pageParams = await searchParams;
@@ -52,12 +62,14 @@ export default async function DepartmentsPage({ searchParams }: PageProps) {
             title="Departments"
             description="Manage your organization's departments"
           />
-          <Link href="/dashboard/departments/add">
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              Add Department
-            </Button>
-          </Link>
+          {canCreateDepartments && (
+            <Link href="/dashboard/departments/add">
+              <Button>
+                <Plus className="mr-2 h-4 w-4" />
+                Add Department
+              </Button>
+            </Link>
+          )}
         </div>
         <Separator />
         <Suspense fallback={<TableSkeleton />}>
@@ -65,6 +77,7 @@ export default async function DepartmentsPage({ searchParams }: PageProps) {
             initialDepartments={result.data}
             totalPages={result.totalPages || 1}
             currentPage={page}
+            canEditDepartments={canEditDepartments}
           />
         </Suspense>
       </div>

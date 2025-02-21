@@ -86,19 +86,19 @@ export async function createDepartmentAction(data: CreateDepartmentData) {
 
 export async function updateDepartmentAction(id: string, data: DepartmentData) {
   try {
-    // Validate permission
     const hasPermission = await validatePermission("edit_departments");
     if (!hasPermission) {
       throw new Error("Unauthorized");
     }
 
-    // Validate input
     const validatedData = departmentSchema.parse(data);
 
-    // Update department
     const updatedDepartment = await db
       .update(departments)
-      .set({ ...validatedData, updatedAt: new Date() })
+      .set({
+        ...validatedData,
+        updatedAt: new Date(),
+      })
       .where(eq(departments.id, id))
       .returning();
 
@@ -106,9 +106,7 @@ export async function updateDepartmentAction(id: string, data: DepartmentData) {
       throw new Error("Department not found");
     }
 
-    // Revalidate cache
     revalidateTag("departments");
-
     return { success: true, data: updatedDepartment[0] };
   } catch (error) {
     console.error("Error updating department:", error);
@@ -260,6 +258,58 @@ export async function getDepartmentsAction(
       page: 1,
       pageSize: 10,
       totalPages: 1,
+    };
+  }
+}
+
+export async function getManagersForDepartmentAction() {
+  try {
+    // First get the role IDs for managers and admins
+    const managerRoles = await db.query.roles.findMany({
+      where: (roles, { inArray }) =>
+        inArray(roles.name, [
+          "Department Manager",
+          "HR Manager",
+          "Super Admin",
+        ]),
+      columns: {
+        id: true,
+      },
+    });
+
+    if (!managerRoles.length) {
+      throw new Error("Manager roles not found");
+    }
+
+    // Get the role IDs
+    const roleIds = managerRoles.map((role) => role.id);
+
+    // Then fetch users with these roles
+    const managers = await db.query.users.findMany({
+      where: (users, { inArray }) => inArray(users.roleId, roleIds),
+      columns: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+      },
+      with: {
+        role: {
+          columns: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+    });
+
+    return { success: true, data: managers };
+  } catch (error) {
+    console.error("Error fetching managers:", error);
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "Failed to fetch managers",
     };
   }
 }

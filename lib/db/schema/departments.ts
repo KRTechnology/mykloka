@@ -2,6 +2,7 @@ import { sql } from "drizzle-orm";
 import { pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { users } from "./users";
+import { z } from "zod";
 
 export const departments = pgTable("departments", {
   id: uuid("id").defaultRandom().primaryKey().notNull(),
@@ -26,3 +27,9 @@ export const departmentsRelations = relations(departments, ({ many, one }) => ({
     references: [users.id],
   }),
 }));
+
+export const departmentSchema = z.object({
+  name: z.string().min(1, "Department name is required"),
+  description: z.string().optional(),
+  headId: z.string().uuid().nullable().optional(),
+});
