@@ -17,7 +17,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { motion } from "framer-motion";
 import { Eye, EyeOff } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import * as z from "zod";
@@ -49,7 +49,12 @@ export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const router = useRouter();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -79,6 +84,10 @@ export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
     }
   }
 
+  if (!mounted) {
+    return null;
+  }
+
   return (
     <AuthCard title="Reset Password" subtitle="Enter your new password below.">
       <Form {...form}>
@@ -98,6 +107,7 @@ export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
                       <Input
                         type={showPassword ? "text" : "password"}
                         className="pr-10"
+                        autoComplete="new-password"
                         {...field}
                       />
                       <Button
@@ -106,6 +116,7 @@ export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
                         size="sm"
                         className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                         onClick={() => setShowPassword(!showPassword)}
+                        tabIndex={-1}
                       >
                         {showPassword ? (
                           <EyeOff className="h-4 w-4" />
@@ -141,6 +152,7 @@ export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
                       <Input
                         type={showConfirmPassword ? "text" : "password"}
                         className="pr-10"
+                        autoComplete="new-password"
                         {...field}
                       />
                       <Button
@@ -151,6 +163,7 @@ export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
                         onClick={() =>
                           setShowConfirmPassword(!showConfirmPassword)
                         }
+                        tabIndex={-1}
                       >
                         {showConfirmPassword ? (
                           <EyeOff className="h-4 w-4" />
