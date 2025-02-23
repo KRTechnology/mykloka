@@ -41,14 +41,16 @@ interface CreateTaskDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-type FormData = z.infer<typeof createTaskSchema>;
+// Remove assignedToId from the form schema since it's handled on the server
+const formSchema = createTaskSchema.omit({ assignedToId: true });
+type FormData = z.infer<typeof formSchema>;
 
 export function CreateTaskDialog({
   open,
   onOpenChange,
 }: CreateTaskDialogProps) {
   const form = useForm<FormData>({
-    resolver: zodResolver(createTaskSchema),
+    resolver: zodResolver(formSchema),
     defaultValues: {
       title: "",
       description: "",
@@ -56,19 +58,31 @@ export function CreateTaskDialog({
   });
 
   async function onSubmit(data: FormData) {
-    const formData = new FormData();
-    Object.entries(data).forEach(([key, value]) => {
-      if (value) formData.append(key, value.toString());
-    });
+    try {
+      const formData = new FormData();
+      Object.entries(data).forEach(([key, value]) => {
+        if (value) {
+          if (value instanceof Date) {
+            formData.append(key, value.toISOString());
+          } else {
+            formData.append(key, value.toString());
+          }
+        }
+      });
 
-    const result = await createTaskAction(formData);
+      const result = await createTaskAction(formData);
 
-    if (result.success) {
-      toast.success("Task created successfully");
-      form.reset();
-      onOpenChange(false);
-    } else {
-      toast.error(result.error || "Failed to create task");
+      if (result.success) {
+        toast.success("Task created successfully");
+        form.reset();
+        onOpenChange(false);
+      } else {
+        throw new Error(result.error);
+      }
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Failed to create task"
+      );
     }
   }
 
@@ -156,24 +170,16 @@ export function CreateTaskDialog({
                           </Button>
                         </FormControl>
                       </PopoverTrigger>
-                      <PopoverContent
-                        className="w-auto p-0 rounded-md border bg-popover shadow-md"
-                        align="start"
-                        side="bottom"
-                        sideOffset={4}
-                      >
+                      <PopoverContent className="w-auto p-0" align="start">
                         <Calendar
                           mode="single"
                           selected={field.value}
-                          onSelect={(date) => {
-                            field.onChange(date ? new Date(date) : null);
-                          }}
+                          onSelect={field.onChange}
                           disabled={(date) =>
                             date < new Date(new Date().setHours(0, 0, 0, 0)) ||
                             date < new Date("1900-01-01")
                           }
                           initialFocus
-                          className="rounded-md"
                         />
                       </PopoverContent>
                     </Popover>

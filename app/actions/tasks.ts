@@ -13,9 +13,10 @@ export async function createTaskAction(data: FormData) {
 
     // Parse form data
     const rawData = {
-      title: data.get("title"),
-      description: data.get("description"),
-      assignedToId: data.get("assignedToId"),
+      title: data.get("title") as string,
+      description: data.get("description") as string,
+      // Assign the task to the creator by default
+      assignedToId: session.userId,
       startTime: data.get("startTime")
         ? new Date(data.get("startTime") as string)
         : undefined,
