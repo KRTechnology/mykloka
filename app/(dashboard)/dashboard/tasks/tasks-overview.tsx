@@ -20,6 +20,8 @@ import { Task } from "@/lib/tasks/types";
 import { formatDate } from "@/lib/utils/format";
 import { AnimatePresence, motion } from "framer-motion";
 import { TaskActions } from "./task-actions";
+import { ClipboardList } from "lucide-react";
+import { CreateTaskButton } from "./create-task-button";
 
 interface TasksOverviewProps {
   tasks: Task[];
@@ -35,6 +37,25 @@ export function TasksOverview({ tasks, userRole }: TasksOverviewProps) {
     "HR Manager",
     "Department Manager",
   ].includes(userRole.name);
+
+  if (tasks.length === 0) {
+    return (
+      <Card>
+        <CardContent className="flex flex-col items-center justify-center py-16">
+          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-muted">
+            <ClipboardList className="h-10 w-10 text-muted-foreground" />
+          </div>
+          <h3 className="mt-4 text-lg font-semibold">No tasks found</h3>
+          <p className="mb-4 mt-2 text-center text-sm text-muted-foreground">
+            {canApproveTasks
+              ? "No tasks require your attention at the moment."
+              : "You don't have any tasks yet. Create one to get started!"}
+          </p>
+          <CreateTaskButton />
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>
