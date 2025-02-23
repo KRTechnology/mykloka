@@ -46,7 +46,11 @@ const menuItems: MenuItem[] = [
     title: "Attendance",
     icon: Clock,
     href: "/dashboard/attendance",
-    permissions: ["view_own_attendance", "view_all_attendance"],
+    permissions: [
+      "view_own_attendance",
+      "view_department_attendance",
+      "view_all_attendance",
+    ],
   },
   {
     title: "Tasks",
