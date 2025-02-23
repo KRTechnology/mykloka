@@ -137,7 +137,7 @@ export function CreateTaskDialog({
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
                     <FormLabel>Due Date</FormLabel>
-                    <Popover>
+                    <Popover modal={true}>
                       <PopoverTrigger asChild>
                         <FormControl>
                           <Button
@@ -157,27 +157,24 @@ export function CreateTaskDialog({
                         </FormControl>
                       </PopoverTrigger>
                       <PopoverContent
-                        className="w-auto p-0"
+                        className="w-auto p-0 rounded-md border bg-popover shadow-md"
                         align="start"
                         side="bottom"
                         sideOffset={4}
                       >
-                        <div className="z-50 rounded-md border bg-popover shadow-md">
-                          <Calendar
-                            mode="single"
-                            selected={field.value}
-                            onSelect={(date) => {
-                              field.onChange(date ? new Date(date) : null);
-                            }}
-                            disabled={(date) =>
-                              date <
-                                new Date(new Date().setHours(0, 0, 0, 0)) ||
-                              date < new Date("1900-01-01")
-                            }
-                            initialFocus
-                            className="rounded-md"
-                          />
-                        </div>
+                        <Calendar
+                          mode="single"
+                          selected={field.value}
+                          onSelect={(date) => {
+                            field.onChange(date ? new Date(date) : null);
+                          }}
+                          disabled={(date) =>
+                            date < new Date(new Date().setHours(0, 0, 0, 0)) ||
+                            date < new Date("1900-01-01")
+                          }
+                          initialFocus
+                          className="rounded-md"
+                        />
                       </PopoverContent>
                     </Popover>
                     <FormMessage />

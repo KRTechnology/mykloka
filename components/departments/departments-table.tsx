@@ -55,7 +55,6 @@ export function DepartmentsTable({
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  console.log({ initialDepartments });
   const [sorting, setSorting] = useState<SortingState<SortableField>>({
     field: "name",
     direction: "asc",
