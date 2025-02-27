@@ -20,6 +20,7 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import * as z from "zod";
 import Link from "next/link";
+import { Eye, EyeOff } from "lucide-react";
 
 const formSchema = z.object({
   email: z.string().min(1, "Email is required").email("Invalid email address"),
@@ -30,6 +31,7 @@ type FormData = z.infer<typeof formSchema>;
 
 export function LoginForm({ from }: { from: string }) {
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
 
   const form = useForm<FormData>({
@@ -91,14 +93,33 @@ export function LoginForm({ from }: { from: string }) {
               <FormItem>
                 <FormLabel className="text-foreground/70">Password</FormLabel>
                 <FormControl>
-                  <Input
-                    placeholder="Enter your password"
-                    type="password"
-                    disabled={isLoading}
-                    className="bg-background"
-                    error={Boolean(form.formState.errors.password)}
-                    {...field}
-                  />
+                  <div className="relative">
+                    <Input
+                      placeholder="Enter your password"
+                      type={showPassword ? "text" : "password"}
+                      disabled={isLoading}
+                      className="bg-background pr-10"
+                      error={Boolean(form.formState.errors.password)}
+                      {...field}
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                      onClick={() => setShowPassword(!showPassword)}
+                      disabled={isLoading}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+                      ) : (
+                        <Eye className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+                      )}
+                      <span className="sr-only">
+                        {showPassword ? "Hide password" : "Show password"}
+                      </span>
+                    </Button>
+                  </div>
                 </FormControl>
                 <FormMessage />
               </FormItem>
