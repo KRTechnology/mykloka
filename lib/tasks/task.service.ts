@@ -76,6 +76,8 @@ export class TaskService {
 
   async getTasksByDepartment(departmentId: string) {
     const assignedToUsers = alias(users, "assignedTo");
+    const approvedByUsers = alias(users, "approvedBy");
+    const completionApprovedByUsers = alias(users, "completionApprovedBy");
 
     const departmentTasks = await this.db
       .select({
@@ -99,24 +101,49 @@ export class TaskService {
           id: users.id,
           firstName: users.firstName,
           lastName: users.lastName,
+          departmentId: users.departmentId,
         },
         assignedTo: {
           id: assignedToUsers.id,
           firstName: assignedToUsers.firstName,
           lastName: assignedToUsers.lastName,
         },
+        approvedBy: {
+          id: approvedByUsers.id,
+          firstName: approvedByUsers.firstName,
+          lastName: approvedByUsers.lastName,
+        },
+        completionApprovedBy: {
+          id: completionApprovedByUsers.id,
+          firstName: completionApprovedByUsers.firstName,
+          lastName: completionApprovedByUsers.lastName,
+        },
       })
       .from(tasks)
       .innerJoin(users, eq(tasks.createdById, users.id))
       .leftJoin(assignedToUsers, eq(tasks.assignedToId, assignedToUsers.id))
+      .leftJoin(approvedByUsers, eq(tasks.approvedById, approvedByUsers.id))
+      .leftJoin(
+        completionApprovedByUsers,
+        eq(tasks.completionApprovedById, completionApprovedByUsers.id)
+      )
       .where(eq(users.departmentId, departmentId))
       .orderBy(desc(tasks.createdAt));
 
-    return departmentTasks;
+    return departmentTasks.map((task) => ({
+      ...task,
+      assignedTo: task.assignedTo?.id ? task.assignedTo : null,
+      approvedBy: task.approvedBy?.id ? task.approvedBy : null,
+      completionApprovedBy: task.completionApprovedBy?.id
+        ? task.completionApprovedBy
+        : null,
+    }));
   }
 
   async getPendingApprovals(departmentId: string) {
     const assignedToUsers = alias(users, "assignedTo");
+    const approvedByUsers = alias(users, "approvedBy");
+    const completionApprovedByUsers = alias(users, "completionApprovedBy");
 
     const pendingTasks = await this.db
       .select({
@@ -140,16 +167,32 @@ export class TaskService {
           id: users.id,
           firstName: users.firstName,
           lastName: users.lastName,
+          departmentId: users.departmentId,
         },
         assignedTo: {
           id: assignedToUsers.id,
           firstName: assignedToUsers.firstName,
           lastName: assignedToUsers.lastName,
         },
+        approvedBy: {
+          id: approvedByUsers.id,
+          firstName: approvedByUsers.firstName,
+          lastName: approvedByUsers.lastName,
+        },
+        completionApprovedBy: {
+          id: completionApprovedByUsers.id,
+          firstName: completionApprovedByUsers.firstName,
+          lastName: completionApprovedByUsers.lastName,
+        },
       })
       .from(tasks)
       .innerJoin(users, eq(tasks.createdById, users.id))
       .leftJoin(assignedToUsers, eq(tasks.assignedToId, assignedToUsers.id))
+      .leftJoin(approvedByUsers, eq(tasks.approvedById, approvedByUsers.id))
+      .leftJoin(
+        completionApprovedByUsers,
+        eq(tasks.completionApprovedById, completionApprovedByUsers.id)
+      )
       .where(
         and(
           eq(users.departmentId, departmentId),
@@ -159,11 +202,20 @@ export class TaskService {
       )
       .orderBy(desc(tasks.createdAt));
 
-    return pendingTasks;
+    return pendingTasks.map((task) => ({
+      ...task,
+      assignedTo: task.assignedTo?.id ? task.assignedTo : null,
+      approvedBy: task.approvedBy?.id ? task.approvedBy : null,
+      completionApprovedBy: task.completionApprovedBy?.id
+        ? task.completionApprovedBy
+        : null,
+    }));
   }
 
   async getUserTasks(userId: string) {
     const assignedToUsers = alias(users, "assignedTo");
+    const approvedByUsers = alias(users, "approvedBy");
+    const completionApprovedByUsers = alias(users, "completionApprovedBy");
 
     const userTasks = await this.db
       .select({
@@ -187,20 +239,115 @@ export class TaskService {
           id: users.id,
           firstName: users.firstName,
           lastName: users.lastName,
+          departmentId: users.departmentId,
         },
         assignedTo: {
           id: assignedToUsers.id,
           firstName: assignedToUsers.firstName,
           lastName: assignedToUsers.lastName,
         },
+        approvedBy: {
+          id: approvedByUsers.id,
+          firstName: approvedByUsers.firstName,
+          lastName: approvedByUsers.lastName,
+        },
+        completionApprovedBy: {
+          id: completionApprovedByUsers.id,
+          firstName: completionApprovedByUsers.firstName,
+          lastName: completionApprovedByUsers.lastName,
+        },
       })
       .from(tasks)
       .innerJoin(users, eq(tasks.createdById, users.id))
       .leftJoin(assignedToUsers, eq(tasks.assignedToId, assignedToUsers.id))
+      .leftJoin(approvedByUsers, eq(tasks.approvedById, approvedByUsers.id))
+      .leftJoin(
+        completionApprovedByUsers,
+        eq(tasks.completionApprovedById, completionApprovedByUsers.id)
+      )
       .where(or(eq(tasks.createdById, userId), eq(tasks.assignedToId, userId)))
       .orderBy(desc(tasks.createdAt));
 
-    return userTasks;
+    // Transform the results to match our Task type
+    return userTasks.map((task) => ({
+      ...task,
+      assignedTo: task.assignedTo?.id ? task.assignedTo : null,
+      approvedBy: task.approvedBy?.id ? task.approvedBy : null,
+      completionApprovedBy: task.completionApprovedBy?.id
+        ? task.completionApprovedBy
+        : null,
+    }));
+  }
+
+  async getTaskById(id: string): Promise<Task | null> {
+    const task = await this.db.query.tasks.findFirst({
+      where: eq(tasks.id, id),
+      with: {
+        createdBy: {
+          columns: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            departmentId: true,
+          },
+        },
+        assignedTo: {
+          columns: {
+            id: true,
+            firstName: true,
+            lastName: true,
+          },
+        },
+        approvedBy: {
+          columns: {
+            id: true,
+            firstName: true,
+            lastName: true,
+          },
+        },
+        completionApprovedBy: {
+          columns: {
+            id: true,
+            firstName: true,
+            lastName: true,
+          },
+        },
+      },
+    });
+
+    if (!task) return null;
+
+    // Transform the data to match our Task type
+    return {
+      ...task,
+      createdBy: {
+        id: task.createdBy.id,
+        firstName: task.createdBy.firstName,
+        lastName: task.createdBy.lastName,
+        departmentId: task.createdBy.departmentId,
+      },
+      assignedTo: task.assignedTo
+        ? {
+            id: task.assignedTo.id,
+            firstName: task.assignedTo.firstName,
+            lastName: task.assignedTo.lastName,
+          }
+        : null,
+      approvedBy: task.approvedBy
+        ? {
+            id: task.approvedBy.id,
+            firstName: task.approvedBy.firstName,
+            lastName: task.approvedBy.lastName,
+          }
+        : null,
+      completionApprovedBy: task.completionApprovedBy
+        ? {
+            id: task.completionApprovedBy.id,
+            firstName: task.completionApprovedBy.firstName,
+            lastName: task.completionApprovedBy.lastName,
+          }
+        : null,
+    };
   }
 }
 

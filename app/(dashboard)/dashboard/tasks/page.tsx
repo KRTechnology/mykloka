@@ -32,7 +32,7 @@ export default async function TasksPage() {
         <h1 className="text-3xl font-bold tracking-tight">Tasks</h1>
         <CreateTaskButton />
       </div>
-      <TasksOverview tasks={tasks} userRole={session.role} />
+      <TasksOverview tasks={tasks} user={session} />
     </div>
   );
 }

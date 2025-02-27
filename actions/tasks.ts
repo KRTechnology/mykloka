@@ -126,3 +126,30 @@ export async function approveTaskCompletionAction(id: string) {
     };
   }
 }
+
+export async function getTaskAction(id: string) {
+  try {
+    const session = await getServerSession();
+    if (!session) throw new Error("Unauthorized");
+
+    const task = await taskService.getTaskById(id);
+    if (!task) throw new Error("Task not found");
+
+    // Check if user has access to this task
+    const canView =
+      task.createdById === session.userId ||
+      task.assignedToId === session.userId ||
+      session.permissions.includes("view_all_tasks") ||
+      (session.permissions.includes("view_department_tasks") &&
+        task.createdBy.departmentId === session.departmentId);
+
+    if (!canView) throw new Error("Unauthorized");
+
+    return { success: true, data: task };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to fetch task",
+    };
+  }
+}

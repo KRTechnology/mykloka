@@ -1,42 +1,60 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Card, CardContent } from "@/components/ui/card";
+import { UserJWTPayload } from "@/lib/auth/auth.service";
 import { Task } from "@/lib/tasks/types";
-import { formatDate } from "@/lib/utils/format";
 import { AnimatePresence, motion } from "framer-motion";
-import { TaskActions } from "./task-actions";
 import { ClipboardList } from "lucide-react";
+import { useMemo, useState } from "react";
 import { CreateTaskButton } from "./create-task-button";
+import { TaskFilters } from "./task-filters";
+import { TaskList } from "./task-list";
 
 interface TasksOverviewProps {
   tasks: Task[];
-  userRole: {
-    id: string;
-    name: string;
-  };
+  user: UserJWTPayload;
 }
 
-export function TasksOverview({ tasks, userRole }: TasksOverviewProps) {
-  const canApproveTasks = [
-    "Super Admin",
-    "HR Manager",
-    "Department Manager",
-  ].includes(userRole.name);
+type ViewMode = "all" | "my-tasks" | "department";
+
+interface Filters {
+  viewMode: ViewMode;
+  status?: Task["status"];
+}
+
+export function TasksOverview({ tasks, user }: TasksOverviewProps) {
+  const [filters, setFilters] = useState<Filters>({
+    viewMode: "all",
+    status: undefined,
+  });
+
+  const canViewDepartment = user.permissions.includes("view_department");
+
+  const filteredTasks = useMemo(() => {
+    let filtered = [...tasks];
+
+    // Apply view mode filter
+    if (filters.viewMode === "my-tasks") {
+      filtered = filtered.filter(
+        (task) =>
+          task.createdById === user.userId || task.assignedToId === user.userId
+      );
+    } else if (filters.viewMode === "department" && canViewDepartment) {
+      filtered = filtered.filter(
+        (task) => task.requiresApproval && task.status === "PENDING"
+      );
+    }
+
+    // Apply status filter
+    if (filters.status) {
+      filtered = filtered.filter((task) => task.status === filters.status);
+    }
+
+    return filtered;
+  }, [tasks, filters, user.userId, canViewDepartment]);
+
+  const canApproveTasks = user.permissions.includes("approve_tasks");
 
   if (tasks.length === 0) {
     return (
@@ -58,79 +76,23 @@ export function TasksOverview({ tasks, userRole }: TasksOverviewProps) {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Tasks Overview</CardTitle>
-        <CardDescription>
-          Manage and track your tasks and approvals
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Title</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Assigned To</TableHead>
-              <TableHead>Due Date</TableHead>
-              <TableHead>Created By</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            <AnimatePresence mode="popLayout">
-              {tasks.map((task) => (
-                <motion.tr
-                  key={task.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <TableCell className="font-medium">{task.title}</TableCell>
-                  <TableCell>
-                    <TaskStatusBadge status={task.status} />
-                  </TableCell>
-                  <TableCell>
-                    {task.assignedTo
-                      ? `${task.assignedTo.firstName} ${task.assignedTo.lastName}`
-                      : "Unassigned"}
-                  </TableCell>
-                  <TableCell>
-                    {task.dueTime ? formatDate(task.dueTime) : "No due date"}
-                  </TableCell>
-                  <TableCell>
-                    {`${task.createdBy.firstName} ${task.createdBy.lastName}`}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <TaskActions task={task} canApprove={canApproveTasks} />
-                  </TableCell>
-                </motion.tr>
-              ))}
-            </AnimatePresence>
-          </TableBody>
-        </Table>
-      </CardContent>
-    </Card>
+    <div className="space-y-4">
+      <TaskFilters
+        tasks={tasks}
+        onFilterChange={setFilters}
+        canViewDepartment={canViewDepartment}
+      />
+
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={`${filters.viewMode}-${filters.status}`}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+        >
+          <TaskList tasks={filteredTasks} user={user} />
+        </motion.div>
+      </AnimatePresence>
+    </div>
   );
-}
-
-function TaskStatusBadge({ status }: { status: Task["status"] }) {
-  const variants: Record<
-    Task["status"],
-    {
-      label: string;
-      variant: "default" | "secondary" | "destructive" | "outline" | "success";
-    }
-  > = {
-    PENDING: { label: "Pending", variant: "secondary" },
-    IN_PROGRESS: { label: "In Progress", variant: "default" },
-    COMPLETED: { label: "Completed", variant: "success" },
-    APPROVED: { label: "Approved", variant: "success" },
-    REJECTED: { label: "Rejected", variant: "destructive" },
-  };
-
-  const { label, variant } = variants[status];
-
-  return <Badge variant={variant}>{label}</Badge>;
 }
