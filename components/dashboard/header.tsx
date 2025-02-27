@@ -2,6 +2,7 @@
 
 import { checkAttendanceStatusAction } from "@/app/actions/attendance";
 import { AttendanceDialog } from "@/components/attendance/attendance-dialog";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -12,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Icons } from "@/components/ui/icons";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { authAPI } from "@/lib/api/auth";
 import { UserJWTPayload } from "@/lib/auth/auth.service";
 import { AnimatePresence, motion } from "framer-motion";
@@ -20,8 +22,6 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { LoadingSpinner } from "../ui/loading-spinner";
-import { Badge } from "@/components/ui/badge";
-import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 interface HeaderProps {
   user: UserJWTPayload & { userId: string };
