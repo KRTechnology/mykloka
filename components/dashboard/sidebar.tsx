@@ -52,12 +52,12 @@ const menuItems: MenuItem[] = [
       "view_all_attendance",
     ],
   },
-  {
-    title: "Tasks",
-    icon: ClipboardList,
-    href: "/dashboard/tasks",
-    permissions: ["create_tasks", "view_own_tasks", "view_all_tasks"],
-  },
+  // {
+  //   title: "Tasks",
+  //   icon: ClipboardList,
+  //   href: "/dashboard/tasks",
+  //   permissions: ["create_tasks", "view_own_tasks", "view_all_tasks"],
+  // },
   {
     title: "Departments",
     icon: Building2,
