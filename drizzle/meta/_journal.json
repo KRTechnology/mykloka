@@ -64,6 +64,13 @@
       "when": 1740067107806,
       "tag": "0008_striped_rocket_racer",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1740659740905,
+      "tag": "0009_soft_colleen_wing",
+      "breakpoints": true
     }
   ]
 }

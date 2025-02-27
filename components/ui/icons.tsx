@@ -5,6 +5,7 @@ import {
   Moon,
   SunMedium,
   type Icon as LucideIcon,
+  AlertTriangle,
 } from "lucide-react";
 
 export type Icon = typeof LucideIcon;
@@ -15,4 +16,5 @@ export const Icons = {
   spinner: Loader2,
   mapPin: MapPin,
   mailCheck: MailCheck,
+  alertTriangle: AlertTriangle,
 } satisfies Record<string, Icon>;

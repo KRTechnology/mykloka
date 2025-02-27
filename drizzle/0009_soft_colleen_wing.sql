@@ -1,0 +1,1 @@
+ALTER TABLE "attendance" ADD COLUMN "is_remote" boolean DEFAULT false NOT NULL;

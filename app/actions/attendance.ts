@@ -8,6 +8,7 @@ export async function clockInAction(data: {
   latitude: number;
   longitude: number;
   address: string;
+  isRemote: boolean;
 }) {
   try {
     if (!data.userId) {
@@ -19,6 +20,7 @@ export async function clockInAction(data: {
       clockInTime: new Date(),
       clockInLocation: { x: data.longitude, y: data.latitude },
       clockInAddress: data.address,
+      isRemote: data.isRemote,
     });
 
     revalidateTag("attendance");
@@ -37,12 +39,14 @@ export async function clockOutAction(data: {
   latitude: number;
   longitude: number;
   address: string;
+  isRemote: boolean;
 }) {
   try {
     const record = await attendanceService.clockOut(data.attendanceId, {
       clockOutTime: new Date(),
       clockOutLocation: { x: data.longitude, y: data.latitude },
       clockOutAddress: data.address,
+      isRemote: data.isRemote,
     });
 
     revalidateTag("attendance");
