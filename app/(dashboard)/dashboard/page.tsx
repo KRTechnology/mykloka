@@ -122,23 +122,25 @@ export default async function DashboardPage() {
         <QuickLinks />
       </div>
 
-      {isManager && (
-        <>
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
-            <div className="col-span-4">
-              <WeeklyAttendanceChart />
-            </div>
-            <div className="col-span-3">
-              <TaskOverview />
-            </div>
-          </div>
-
-          <div className="grid gap-6 md:grid-cols-2">
-            <RecentActivity />
-            {/* You can add another component here for balance */}
-          </div>
-        </>
-      )}
+      {/* IsManager Stuff goes here */}
     </div>
   );
 }
+
+// {isManager && (
+//   <>
+//     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
+//       <div className="col-span-4">
+//         <WeeklyAttendanceChart />
+//       </div>
+//       <div className="col-span-3">
+//         <TaskOverview />
+//       </div>
+//     </div>
+
+//     <div className="grid gap-6 md:grid-cols-2">
+//       <RecentActivity />
+//       {/* You can add another component here for balance */}
+//     </div>
+//   </>
+// )}
