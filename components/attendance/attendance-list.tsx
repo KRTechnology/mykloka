@@ -13,7 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getAttendanceRecordsAction } from "@/app/actions/attendance/get-records";
+import { getAttendanceRecordsAction } from "@/actions/attendance/get-records";
 import { toast } from "sonner";
 import { startOfDay, endOfDay } from "date-fns";
 

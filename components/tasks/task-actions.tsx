@@ -1,12 +1,12 @@
 "use client";
 
-import { updateTaskStatusAction } from "@/app/actions/tasks";
+import { updateTaskStatusAction } from "@/actions/tasks";
 import { Button } from "@/components/ui/button";
 import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Task } from "@/lib/tasks/types";
 import { Check, MoreHorizontal, Play, RotateCcw, X } from "lucide-react";

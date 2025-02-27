@@ -1,6 +1,6 @@
 "use client";
 
-import { deleteUserAction } from "@/app/actions/users";
+import { deleteUserAction } from "@/actions/users";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,

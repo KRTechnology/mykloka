@@ -1,6 +1,6 @@
 "use client";
 
-import { resendInvitationAction } from "@/app/actions/users";
+import { resendInvitationAction } from "@/actions/users";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,

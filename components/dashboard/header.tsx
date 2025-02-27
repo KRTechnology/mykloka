@@ -1,6 +1,6 @@
 "use client";
 
-import { checkAttendanceStatusAction } from "@/app/actions/attendance";
+import { checkAttendanceStatusAction } from "@/actions/attendance";
 import { AttendanceDialog } from "@/components/attendance/attendance-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";

@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { motion } from "framer-motion";
-import { createDepartmentAction } from "@/app/actions/departments";
+import { createDepartmentAction } from "@/actions/departments";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -26,7 +26,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { type User } from "@/lib/api/users";
-import { CreateDepartmentData } from "@/app/actions/types/departments";
+import { CreateDepartmentData } from "@/actions/types/departments";
 import { departmentSchema } from "@/lib/api/departments";
 
 interface DepartmentFormProps {

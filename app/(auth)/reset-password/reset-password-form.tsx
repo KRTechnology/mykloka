@@ -21,7 +21,7 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import * as z from "zod";
-import { resetPasswordAction } from "@/app/actions/auth";
+import { resetPasswordAction } from "@/actions/auth";
 
 const formSchema = z
   .object({

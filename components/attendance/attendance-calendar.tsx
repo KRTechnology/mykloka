@@ -1,12 +1,9 @@
 "use client";
 
-import { getMonthlyCalendarAction } from "@/app/actions/attendance/get-records";
+import { getMonthlyCalendarAction } from "@/actions/attendance/get-records";
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  HoverCard,
-  HoverCardTrigger
-} from "@/components/ui/hover-card";
+import { HoverCard, HoverCardTrigger } from "@/components/ui/hover-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";

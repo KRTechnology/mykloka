@@ -1,6 +1,6 @@
 "use client";
 
-import { createTaskAction } from "@/app/actions/tasks";
+import { createTaskAction } from "@/actions/tasks";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
