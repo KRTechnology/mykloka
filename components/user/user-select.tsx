@@ -1,5 +1,6 @@
 "use client";
 
+import { getDepartmentUsersAction } from "@/actions/users";
 import {
   Select,
   SelectContent,
@@ -8,8 +9,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useEffect, useState } from "react";
-import { userService } from "@/lib/users/user.service";
-import { toast } from "sonner";
 
 interface User {
   id: string;
@@ -30,16 +29,16 @@ export function UserSelect({ value, onChange, departmentId }: UserSelectProps) {
   useEffect(() => {
     async function loadUsers() {
       try {
-        let departmentUsers;
-        if (departmentId) {
-          departmentUsers = await userService.getDepartmentUsers(departmentId);
+        const result = await getDepartmentUsersAction(departmentId);
+        if (result.success) {
+          setUsers(result.data);
         } else {
-          departmentUsers = await userService.getAllUsers();
+          console.error(result.error);
+          setUsers([]);
         }
-        setUsers(departmentUsers);
       } catch (error) {
-        toast.error("Failed to load users");
-        console.error("Error loading users:", error);
+        console.error("Failed to load users:", error);
+        setUsers([]);
       } finally {
         setLoading(false);
       }
@@ -48,15 +47,25 @@ export function UserSelect({ value, onChange, departmentId }: UserSelectProps) {
     loadUsers();
   }, [departmentId]);
 
+  if (loading) {
+    return (
+      <Select disabled>
+        <SelectTrigger>
+          <SelectValue placeholder="Loading users..." />
+        </SelectTrigger>
+      </Select>
+    );
+  }
+
   return (
-    <Select value={value} onValueChange={onChange} disabled={loading}>
+    <Select value={value} onValueChange={onChange}>
       <SelectTrigger>
-        <SelectValue placeholder="Select a user" />
+        <SelectValue placeholder="Select user" />
       </SelectTrigger>
       <SelectContent>
         {users.map((user) => (
           <SelectItem key={user.id} value={user.id}>
-            {`${user.firstName} ${user.lastName}`}
+            {user.firstName} {user.lastName}
           </SelectItem>
         ))}
       </SelectContent>

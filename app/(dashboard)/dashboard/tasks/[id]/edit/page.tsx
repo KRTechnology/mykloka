@@ -5,9 +5,9 @@ import { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 interface EditTaskPageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 export const metadata: Metadata = {
@@ -19,7 +19,9 @@ export default async function EditTaskPage({ params }: EditTaskPageProps) {
   const session = await getServerSession();
   if (!session) return null;
 
-  const result = await getTaskAction(params.id);
+  const { id } = await params;
+
+  const result = await getTaskAction(id);
   if (!result.success || !result.data) {
     notFound();
   }
