@@ -13,6 +13,9 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { clockInAction, clockOutAction } from "@/app/actions/attendance";
 import { toast } from "sonner";
 import { Icons } from "@/components/ui/icons";
+import { isWithinOfficeRadius } from "@/lib/utils/geo";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { cn } from "@/lib/utils";
 
 interface AttendanceDialogProps {
   isOpen: boolean;
@@ -20,6 +23,13 @@ interface AttendanceDialogProps {
   userId: string;
   mode: "in" | "out";
   attendanceId?: string;
+}
+
+interface LocationState {
+  latitude: number;
+  longitude: number;
+  address: string;
+  isWithinRadius: boolean;
 }
 
 export function AttendanceDialog({
@@ -31,12 +41,11 @@ export function AttendanceDialog({
 }: AttendanceDialogProps) {
   const [isPending, setIsPending] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [location, setLocation] = useState<{
-    latitude: number;
-    longitude: number;
-    address: string;
-  } | null>(null);
+  const [location, setLocation] = useState<LocationState | null>(null);
   const [isLoadingLocation, setIsLoadingLocation] = useState(true);
+
+  const OFFICE_LAT = Number(process.env.NEXT_PUBLIC_OFFICE_LAT);
+  const OFFICE_LONG = Number(process.env.NEXT_PUBLIC_OFFICE_LONG);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -57,8 +66,14 @@ export function AttendanceDialog({
 
         const { latitude, longitude } = position.coords;
         const address = await getAddressFromCoords(latitude, longitude);
+        const isWithinRadius = isWithinOfficeRadius(
+          latitude,
+          longitude,
+          OFFICE_LAT,
+          OFFICE_LONG
+        );
 
-        setLocation({ latitude, longitude, address });
+        setLocation({ latitude, longitude, address, isWithinRadius });
       } catch (error) {
         console.error("Error getting location:", error);
         toast.error("Failed to get location");
@@ -95,11 +110,17 @@ export function AttendanceDialog({
         mode === "in"
           ? await clockInAction({
               userId,
-              ...location,
+              latitude: location.latitude,
+              longitude: location.longitude,
+              address: location.address,
+              // isRemote: !location.isWithinRadius,
             })
           : await clockOutAction({
               attendanceId: attendanceId!,
-              ...location,
+              latitude: location.latitude,
+              longitude: location.longitude,
+              address: location.address,
+              // isRemote: !location.isWithinRadius,
             });
 
       if (result.success) {
@@ -108,7 +129,6 @@ export function AttendanceDialog({
         );
         onClose();
       } else {
-        console.error("Error in attendance operation:", result.error);
         toast.error(result.error || `Failed to clock ${mode}`);
       }
     } catch (error) {
@@ -118,6 +138,23 @@ export function AttendanceDialog({
       setIsPending(false);
     }
   }
+
+  const locationAlert = location && !location.isWithinRadius && (
+    <motion.div
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -10 }}
+      transition={{ duration: 0.2 }}
+    >
+      <Alert className="mb-4 border-kr-yellow/50 bg-kr-yellow/10">
+        <Icons.alertTriangle className="h-4 w-4 text-kr-yellow" />
+        <AlertDescription className="text-sm ml-2">
+          You are currently away from the office. Your attendance will be marked
+          as remote.
+        </AlertDescription>
+      </Alert>
+    </motion.div>
+  );
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -146,6 +183,8 @@ export function AttendanceDialog({
             </p>
           </div>
 
+          <AnimatePresence>{locationAlert}</AnimatePresence>
+
           <div className="space-y-2">
             <h4 className="text-sm font-medium">Location</h4>
             {isLoadingLocation ? (
@@ -156,10 +195,20 @@ export function AttendanceDialog({
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="rounded-lg border p-4"
+                className={cn(
+                  "rounded-lg border p-4",
+                  !location.isWithinRadius && "border-kr-yellow/50"
+                )}
               >
                 <div className="flex items-start space-x-2">
-                  <Icons.mapPin className="h-4 w-4 text-kr-orange mt-1" />
+                  <Icons.mapPin
+                    className={cn(
+                      "h-4 w-4 mt-1",
+                      location.isWithinRadius
+                        ? "text-kr-orange"
+                        : "text-kr-yellow"
+                    )}
+                  />
                   <p className="text-sm">{location.address}</p>
                 </div>
               </motion.div>

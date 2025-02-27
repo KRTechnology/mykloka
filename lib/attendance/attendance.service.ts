@@ -210,7 +210,7 @@ class AttendanceService {
   ) {
     const startOfDay = new Date(date);
     startOfDay.setHours(0, 0, 0, 0);
-    
+
     const endOfDay = new Date(date);
     endOfDay.setHours(23, 59, 59, 999);
 
@@ -218,13 +218,11 @@ class AttendanceService {
       date: date.toISOString(),
       startOfDay: startOfDay.toISOString(),
       endOfDay: endOfDay.toISOString(),
-      options
+      options,
     });
 
     // Get all users that should be counted
-    const usersQuery = this.db
-      .select()
-      .from(users);
+    const usersQuery = this.db.select().from(users);
 
     if (options.userId) {
       usersQuery.where(eq(users.id, options.userId));
@@ -243,9 +241,13 @@ class AttendanceService {
     );
 
     // Count present and late users
-    const presentCount = records.filter(r => r.attendance.status === "present").length;
-    const lateCount = records.filter(r => r.attendance.status === "late").length;
-    
+    const presentCount = records.filter(
+      (r) => r.attendance.status === "present"
+    ).length;
+    const lateCount = records.filter(
+      (r) => r.attendance.status === "late"
+    ).length;
+
     // Absent is total users minus present and late
     const absentCount = totalUsers - (presentCount + lateCount);
 
@@ -253,14 +255,14 @@ class AttendanceService {
       present: presentCount,
       late: lateCount,
       absent: absentCount,
-      total: totalUsers
+      total: totalUsers,
     });
 
     return {
       present: presentCount,
       late: lateCount,
       absent: absentCount,
-      total: totalUsers
+      total: totalUsers,
     };
   }
 
