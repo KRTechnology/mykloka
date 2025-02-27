@@ -113,14 +113,14 @@ export function AttendanceDialog({
               latitude: location.latitude,
               longitude: location.longitude,
               address: location.address,
-              // isRemote: !location.isWithinRadius,
+              isRemote: !location.isWithinRadius,
             })
           : await clockOutAction({
               attendanceId: attendanceId!,
               latitude: location.latitude,
               longitude: location.longitude,
               address: location.address,
-              // isRemote: !location.isWithinRadius,
+              isRemote: !location.isWithinRadius,
             });
 
       if (result.success) {

@@ -29,6 +29,7 @@ class AttendanceService {
     clockInTime: Date;
     clockInLocation: { x: number; y: number };
     clockInAddress: string;
+    isRemote: boolean;
   }) {
     if (!data.userId) {
       throw new Error("User ID is required");
@@ -68,6 +69,7 @@ class AttendanceService {
       clockOutTime: Date;
       clockOutLocation: { x: number; y: number };
       clockOutAddress: string;
+      isRemote: boolean;
     }
   ) {
     const { clockOutLocation, ...rest } = data;
