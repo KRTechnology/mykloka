@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { UserJWTPayload } from "@/lib/auth/auth.service";
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { toast } from "sonner";
 
 interface AccountSettingsProps {
@@ -22,6 +22,7 @@ interface AccountSettingsProps {
 
 export function AccountSettings({ user }: AccountSettingsProps) {
   const [isLoading, setIsLoading] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
 
   const handlePasswordChange = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -48,7 +49,7 @@ export function AccountSettings({ user }: AccountSettingsProps) {
       }
 
       toast.success("Password updated successfully");
-      e.currentTarget.reset();
+      formRef.current?.reset();
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "Failed to update password"
@@ -98,7 +99,11 @@ export function AccountSettings({ user }: AccountSettingsProps) {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handlePasswordChange} className="space-y-4">
+          <form
+            ref={formRef}
+            onSubmit={handlePasswordChange}
+            className="space-y-4"
+          >
             <div className="space-y-2">
               <Label htmlFor="currentPassword">Current Password</Label>
               <Input

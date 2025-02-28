@@ -194,14 +194,27 @@ export function CreateTaskDialog({
                 type="button"
                 variant="outline"
                 onClick={() => onOpenChange(false)}
+                disabled={form.formState.isSubmitting}
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
                 className="bg-kr-orange hover:bg-kr-orange/90"
+                disabled={form.formState.isSubmitting}
               >
-                Create Task
+                {form.formState.isSubmitting ? (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="flex items-center gap-2"
+                  >
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                    Creating Task
+                  </motion.div>
+                ) : (
+                  "Create Task"
+                )}
               </Button>
             </DialogFooter>
           </form>

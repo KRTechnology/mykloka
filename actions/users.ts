@@ -1,19 +1,14 @@
 "use server";
 
-import {
-  InviteUserData,
-  inviteUserSchema,
-  updateUserSchema,
-} from "@/lib/api/users";
-import { validatePermission } from "@/lib/auth/auth";
+import { InviteUserData, inviteUserSchema } from "@/lib/api/users";
+import { getServerSession, validatePermission } from "@/lib/auth/auth";
+import { authService } from "@/lib/auth/auth.service";
 import { db } from "@/lib/db/config";
 import { users } from "@/lib/db/schema";
+import { emailService } from "@/lib/email/email.service";
 import { userService } from "@/lib/users/user.service";
 import { eq } from "drizzle-orm";
 import { revalidateTag } from "next/cache";
-import { authService } from "@/lib/auth/auth.service";
-import { emailService } from "@/lib/email/email.service";
-import { getServerSession } from "@/lib/auth/auth";
 
 export async function inviteUserAction(data: InviteUserData) {
   try {
@@ -209,6 +204,57 @@ export async function getDepartmentUsersAction(
     return {
       success: false,
       error: error instanceof Error ? error.message : "Failed to fetch users",
+    };
+  }
+}
+
+export async function getUserProfileAction(userId: string) {
+  try {
+    const session = await getServerSession();
+    if (!session) throw new Error("Unauthorized");
+
+    const user = await db.query.users.findFirst({
+      where: eq(users.id, userId),
+      with: {
+        role: {
+          columns: {
+            id: true,
+            name: true,
+          },
+        },
+        department: {
+          columns: {
+            id: true,
+            name: true,
+          },
+        },
+        manager: {
+          columns: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+          },
+        },
+        subordinates: {
+          columns: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+          },
+        },
+      },
+    });
+
+    if (!user) throw new Error("User not found");
+
+    return { success: true, data: user };
+  } catch (error) {
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "Failed to fetch user profile",
     };
   }
 }

@@ -16,10 +16,28 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Icons } from "../ui/icons";
 import { authAPI } from "@/lib/api/auth";
+
+// Custom hook for window width
+function useWindowWidth() {
+  const [width, setWidth] = useState(
+    typeof window !== "undefined" ? window.innerWidth : 0
+  );
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const handleResize = () => setWidth(window.innerWidth);
+    window.addEventListener("resize", handleResize);
+
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  return width;
+}
 // import { UserJWTPayload } from "@/lib/auth/types";
 
 interface SidebarProps {
@@ -80,6 +98,17 @@ export function Sidebar({ user }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const pathname = usePathname();
+  const windowWidth = useWindowWidth();
+
+  // Auto-collapse on small screens
+  useEffect(() => {
+    if (windowWidth < 512) {
+      setCollapsed(true);
+    } else {
+      setCollapsed(false);
+    }
+  }, [windowWidth]);
+
   const router = useRouter();
 
   // Filter menu items based on user permissions
@@ -114,6 +143,7 @@ export function Sidebar({ user }: SidebarProps) {
         collapsed ? "w-20" : "w-64"
       )}
       animate={{ width: collapsed ? 80 : 256 }}
+      transition={{ duration: 0.2 }}
     >
       <div className="p-4 flex justify-between items-center">
         {!collapsed && (

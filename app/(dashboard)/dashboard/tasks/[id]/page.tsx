@@ -1,9 +1,9 @@
+import { TaskDetails } from "@/components/tasks/task-details";
+import { BackButton } from "@/components/ui/back-button";
 import { getServerSession } from "@/lib/auth/auth";
 import { taskService } from "@/lib/tasks/task.service";
-import { notFound } from "next/navigation";
-// import { TaskDetails } from "@/components/tasks/task-details";
 import { Metadata } from "next";
-import { TaskDetails } from "@/components/tasks/task-details";
+import { notFound } from "next/navigation";
 
 interface TaskPageProps {
   params: Promise<{
@@ -40,7 +40,10 @@ export default async function TaskPage({ params }: TaskPageProps) {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="flex-1 space-y-6 p-8 pt-6">
+      <div className="mb-8">
+        <BackButton href="/dashboard/tasks" />
+      </div>
       <TaskDetails task={task} user={session} />
     </div>
   );
