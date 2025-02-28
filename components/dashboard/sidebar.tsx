@@ -10,12 +10,16 @@ import {
   ClipboardList,
   Clock,
   LayoutDashboard,
+  LogOut,
   Settings,
   Users,
 } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useState, useEffect } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
+import { Icons } from "../ui/icons";
+import { authAPI } from "@/lib/api/auth";
 
 // Custom hook for window width
 function useWindowWidth() {
@@ -34,6 +38,7 @@ function useWindowWidth() {
 
   return width;
 }
+// import { UserJWTPayload } from "@/lib/auth/types";
 
 interface SidebarProps {
   user: UserJWTPayload;
@@ -91,6 +96,7 @@ const menuItems: MenuItem[] = [
 
 export function Sidebar({ user }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const pathname = usePathname();
   const windowWidth = useWindowWidth();
 
@@ -103,6 +109,8 @@ export function Sidebar({ user }: SidebarProps) {
     }
   }, [windowWidth]);
 
+  const router = useRouter();
+
   // Filter menu items based on user permissions
   const authorizedMenuItems = menuItems.filter((item) =>
     item.permissions.some((permission) => user.permissions.includes(permission))
@@ -112,6 +120,20 @@ export function Sidebar({ user }: SidebarProps) {
   const isActiveRoute = (href: string) => {
     if (href === "/dashboard" && pathname !== "/dashboard") return false;
     return pathname.startsWith(href);
+  };
+
+  const handleLogout = async () => {
+    try {
+      setIsLoggingOut(true);
+      await authAPI.logout();
+      toast.success("Logged out successfully");
+      router.push("/login");
+      router.refresh();
+    } catch (error) {
+      toast.error("Failed to logout");
+    } finally {
+      setIsLoggingOut(false);
+    }
   };
 
   return (
@@ -176,6 +198,35 @@ export function Sidebar({ user }: SidebarProps) {
           </Link>
         ))}
       </nav>
+
+      <div className="p-4 border-t">
+        <button
+          onClick={handleLogout}
+          disabled={isLoggingOut}
+          className={cn(
+            "flex items-center w-full space-x-3 px-3 py-2 rounded-lg transition-colors",
+            collapsed ? "justify-center" : "",
+            "hover:bg-accent text-destructive hover:text-destructive"
+          )}
+        >
+          {isLoggingOut ? (
+            <Icons.spinner
+              className={cn("animate-spin", collapsed ? "h-6 w-6" : "h-5 w-5")}
+            />
+          ) : (
+            <LogOut className={cn(collapsed ? "h-6 w-6" : "h-5 w-5")} />
+          )}
+          {!collapsed && (
+            <motion.span
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              Logout
+            </motion.span>
+          )}
+        </button>
+      </div>
     </motion.div>
   );
 }

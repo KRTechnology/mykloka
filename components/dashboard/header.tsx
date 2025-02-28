@@ -190,7 +190,7 @@ export function Header({ user }: HeaderProps) {
                 {isLoggingOut ? (
                   <>
                     <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
-                    Logging out...
+                    Logout
                   </>
                 ) : (
                   "Logout"
