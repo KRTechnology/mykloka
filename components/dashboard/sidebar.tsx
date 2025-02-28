@@ -38,7 +38,6 @@ function useWindowWidth() {
 
   return width;
 }
-// import { UserJWTPayload } from "@/lib/auth/types";
 
 interface SidebarProps {
   user: UserJWTPayload;
