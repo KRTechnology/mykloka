@@ -1,9 +1,8 @@
+import { TaskDetails } from "@/components/tasks/task-details";
 import { getServerSession } from "@/lib/auth/auth";
 import { taskService } from "@/lib/tasks/task.service";
-import { notFound } from "next/navigation";
-// import { TaskDetails } from "@/components/tasks/task-details";
 import { Metadata } from "next";
-import { TaskDetails } from "@/components/tasks/task-details";
+import { notFound } from "next/navigation";
 
 interface TaskPageProps {
   params: Promise<{
