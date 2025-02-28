@@ -1,9 +1,6 @@
 "use server";
 
-import {
-  InviteUserData,
-  inviteUserSchema
-} from "@/lib/api/users";
+import { InviteUserData, inviteUserSchema } from "@/lib/api/users";
 import { getServerSession, validatePermission } from "@/lib/auth/auth";
 import { authService } from "@/lib/auth/auth.service";
 import { db } from "@/lib/db/config";
