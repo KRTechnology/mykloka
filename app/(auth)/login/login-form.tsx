@@ -1,6 +1,7 @@
 "use client";
 
 import { AuthCard } from "@/components/ui/auth-card";
+import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
@@ -13,14 +14,13 @@ import { Icons } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
 import { authAPI } from "@/lib/api/auth";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Eye, EyeOff } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import * as z from "zod";
-import Link from "next/link";
-import { Eye, EyeOff } from "lucide-react";
 
 const formSchema = z.object({
   email: z.string().min(1, "Email is required").email("Invalid email address"),

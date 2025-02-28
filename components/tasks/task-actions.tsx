@@ -1,17 +1,19 @@
 "use client";
 
-import { updateTaskStatusAction } from "@/app/actions/tasks";
+import { updateTaskStatusAction } from "@/actions/tasks";
 import { Button } from "@/components/ui/button";
 import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Task } from "@/lib/tasks/types";
-import { Check, MoreHorizontal, Play, RotateCcw, X } from "lucide-react";
+import { Check, Clock, MoreHorizontal, Play, RotateCcw, X } from "lucide-react";
 import { useTransition } from "react";
 import { toast } from "sonner";
+import { motion } from "framer-motion";
 
 interface TaskActionsProps {
   task: Task;
@@ -42,6 +44,18 @@ export function TaskActions({ task, canApprove }: TaskActionsProps) {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
+        {task.status === "PENDING" && !canApprove && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <DropdownMenuLabel className="flex items-center text-muted-foreground">
+              <Clock className="mr-2 h-4 w-4 text-kr-yellow" />
+              Awaiting Approval
+            </DropdownMenuLabel>
+          </motion.div>
+        )}
+
         {/* Approval actions for managers */}
         {canApprove && task.status === "PENDING" && (
           <>
@@ -49,7 +63,7 @@ export function TaskActions({ task, canApprove }: TaskActionsProps) {
               onClick={() => handleStatusChange("APPROVED")}
               disabled={isPending}
             >
-              <Play className="mr-2 h-4 w-4" />
+              <Play className="mr-2 h-4 w-4 text-kr-green" />
               Approve Task
             </DropdownMenuItem>
             <DropdownMenuItem
@@ -69,7 +83,7 @@ export function TaskActions({ task, canApprove }: TaskActionsProps) {
             onClick={() => handleStatusChange("COMPLETED")}
             disabled={isPending}
           >
-            <Check className="mr-2 h-4 w-4" />
+            <Check className="mr-2 h-4 w-4 text-kr-green" />
             Mark as Completed
           </DropdownMenuItem>
         )}

@@ -13,6 +13,7 @@ import { eq } from "drizzle-orm";
 import { revalidateTag } from "next/cache";
 import { authService } from "@/lib/auth/auth.service";
 import { emailService } from "@/lib/email/email.service";
+import { getServerSession } from "@/lib/auth/auth";
 
 export async function inviteUserAction(data: InviteUserData) {
   try {
@@ -169,6 +170,45 @@ export async function resendInvitationAction(userId: string) {
       success: false,
       error:
         error instanceof Error ? error.message : "Failed to resend invitation",
+    };
+  }
+}
+
+interface DepartmentUser {
+  id: string;
+  firstName: string;
+  lastName: string;
+}
+
+type GetDepartmentUsersResponse =
+  | { success: true; data: DepartmentUser[] }
+  | { success: false; error: string };
+
+export async function getDepartmentUsersAction(
+  departmentId?: string
+): Promise<GetDepartmentUsersResponse> {
+  try {
+    const session = await getServerSession();
+    if (!session) throw new Error("Unauthorized");
+
+    if (!departmentId) {
+      return { success: true, data: [] };
+    }
+
+    const departmentUsers = await db.query.users.findMany({
+      where: eq(users.departmentId, departmentId),
+      columns: {
+        id: true,
+        firstName: true,
+        lastName: true,
+      },
+    });
+
+    return { success: true, data: departmentUsers };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to fetch users",
     };
   }
 }

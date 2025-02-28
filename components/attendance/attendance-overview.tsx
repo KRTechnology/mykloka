@@ -1,6 +1,6 @@
 "use client";
 
-import { getStatsAction } from "@/app/actions/attendance/get-stats";
+import { getStatsAction } from "@/actions/attendance/get-stats";
 import {
   Card,
   CardContent,

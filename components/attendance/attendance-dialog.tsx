@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
-import { clockInAction, clockOutAction } from "@/app/actions/attendance";
+import { clockInAction, clockOutAction } from "@/actions/attendance";
 import { toast } from "sonner";
 import { Icons } from "@/components/ui/icons";
 import { isWithinOfficeRadius } from "@/lib/utils/geo";

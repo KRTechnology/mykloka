@@ -1,6 +1,6 @@
 "use client";
 
-import { inviteUserAction } from "@/app/actions/users";
+import { inviteUserAction } from "@/actions/users";
 import { Button } from "@/components/ui/button";
 import {
   Form,

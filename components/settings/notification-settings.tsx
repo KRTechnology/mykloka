@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { useState } from "react";
-import { updateNotificationSettingsAction } from "@/app/actions/settings";
+import { updateNotificationSettingsAction } from "@/actions/settings";
 import type { UserJWTPayload } from "@/lib/auth/auth.service";
 
 interface NotificationSettingsProps {

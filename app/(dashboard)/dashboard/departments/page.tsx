@@ -1,5 +1,5 @@
 import { getServerSession } from "@/lib/auth/auth";
-import { getDepartmentsAction } from "@/app/actions/departments";
+import { getDepartmentsAction } from "@/actions/departments";
 import { DepartmentsTable } from "@/components/departments/departments-table";
 import { Button } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";

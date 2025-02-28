@@ -1,5 +1,5 @@
-import { getDepartmentsAction } from "@/app/actions/departments";
-import type { GetDepartmentsOptions as TypeGetDepartmentsOptions } from "@/app/actions/types/departments";
+import { getDepartmentsAction } from "@/actions/departments";
+import type { GetDepartmentsOptions as TypeGetDepartmentsOptions } from "@/actions/types/departments";
 import { z } from "zod";
 
 export const departmentSchema = z.object({

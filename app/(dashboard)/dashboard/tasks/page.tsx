@@ -1,8 +1,8 @@
+import { CreateTaskButton } from "@/components/tasks/create-task-button";
+import { TasksOverview } from "@/components/tasks/tasks-overview";
 import { getServerSession } from "@/lib/auth/auth";
 import { taskService } from "@/lib/tasks/task.service";
 import { Metadata } from "next";
-import { CreateTaskButton } from "./create-task-button";
-import { TasksOverview } from "./tasks-overview";
 
 export const metadata: Metadata = {
   title: "Tasks | Kimberly Ryan",
@@ -32,7 +32,7 @@ export default async function TasksPage() {
         <h1 className="text-3xl font-bold tracking-tight">Tasks</h1>
         <CreateTaskButton />
       </div>
-      <TasksOverview tasks={tasks} userRole={session.role} />
+      <TasksOverview tasks={tasks} user={session} />
     </div>
   );
 }

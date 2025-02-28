@@ -3,7 +3,7 @@
 import {
   getManagersForDepartmentAction,
   updateDepartmentAction,
-} from "@/app/actions/departments";
+} from "@/actions/departments";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,

@@ -18,7 +18,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import * as z from "zod";
-import { requestPasswordResetAction } from "@/app/actions/auth";
+import { requestPasswordResetAction } from "@/actions/auth";
 import Link from "next/link";
 
 const formSchema = z.object({

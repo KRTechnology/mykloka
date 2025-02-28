@@ -1,13 +1,13 @@
 "use client";
 
-import { updateAccountSettingsAction } from "@/app/actions/settings";
+import { updateAccountSettingsAction } from "@/actions/settings";
 import { Button } from "@/components/ui/button";
 import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";

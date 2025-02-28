@@ -77,6 +77,59 @@ export class UserService {
 
     return updatedUser[0];
   }
+
+  async getAllUsers() {
+    const allUsers = await this.db.query.users.findMany({
+      where: eq(users.isActive, true),
+      columns: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        departmentId: true,
+        roleId: true,
+      },
+      with: {
+        role: {
+          columns: {
+            name: true,
+          },
+        },
+        department: {
+          columns: {
+            name: true,
+          },
+        },
+      },
+      orderBy: [users.firstName, users.lastName],
+    });
+
+    return allUsers;
+  }
+
+  async getDepartmentUsers(departmentId: string) {
+    const departmentUsers = await this.db.query.users.findMany({
+      where: (users) =>
+        eq(users.departmentId, departmentId) && eq(users.isActive, true),
+      columns: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        roleId: true,
+      },
+      with: {
+        role: {
+          columns: {
+            name: true,
+          },
+        },
+      },
+      orderBy: [users.firstName, users.lastName],
+    });
+
+    return departmentUsers;
+  }
 }
 
 // Create a singleton instance

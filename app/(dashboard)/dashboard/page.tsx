@@ -2,11 +2,11 @@ import { Suspense } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Users, Clock, ClipboardList, Building2 } from "lucide-react";
-import { getDashboardStatsAction } from "@/app/actions/dashboard";
-import { QuickLinks } from "./components/quick-links";
-import { RecentActivity } from "./components/recent-activity";
-import { WeeklyAttendanceChart } from "./components/weekly-attendance-chart";
-import { TaskOverview } from "./components/task-overview";
+import { getDashboardStatsAction } from "@/actions/dashboard";
+import { QuickLinks } from "../../../components/dashboard/quick-links";
+import { RecentActivity } from "../../../components/dashboard/recent-activity";
+import { WeeklyAttendanceChart } from "../../../components/dashboard/weekly-attendance-chart";
+import { TaskOverview } from "../../../components/dashboard/task-overview";
 import { getServerSession } from "@/lib/auth/auth";
 import { redirect } from "next/navigation";
 

@@ -13,7 +13,7 @@ import {
   Line,
   LineChart,
 } from "recharts";
-import { getWeeklyStatsAction } from "@/app/actions/attendance/get-stats";
+import { getWeeklyStatsAction } from "@/actions/attendance/get-stats";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -21,7 +21,7 @@ import { startOfWeek } from "date-fns";
 import {
   getAttendanceStreakAction,
   getAverageTimingsAction,
-} from "@/app/actions/attendance/get-enhanced-stats";
+} from "@/actions/attendance/get-enhanced-stats";
 import type {
   AttendanceStats,
   AttendanceStreak,

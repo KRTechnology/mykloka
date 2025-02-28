@@ -1,6 +1,6 @@
 "use client";
 
-import { updateUserAction } from "@/app/actions/users";
+import { updateUserAction } from "@/actions/users";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,

@@ -1,6 +1,6 @@
+import { DashboardClient } from "@/components/dashboard/dashboard-client";
 import { getServerSession } from "@/lib/auth/auth";
 import { redirect } from "next/navigation";
-import { DashboardClient } from "./dashboard-client";
 
 export default async function DashboardLayout({
   children,
