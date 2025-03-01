@@ -66,10 +66,71 @@ export function TaskFilters({
     (field: string) => {
       const direction =
         sortBy === field && sortDirection === "asc" ? "desc" : "asc";
+      setSortDirection(direction);
+      setSortBy(field);
       onFilterChange({ sortBy: field, sortDirection: direction });
     },
     [sortBy, sortDirection, onFilterChange]
   );
+
+  const handleViewModeChange = useCallback(
+    (mode: ViewMode) => {
+      setViewMode(mode);
+      onFilterChange({ viewMode: mode });
+    },
+    [onFilterChange]
+  );
+
+  const handleStatusChange = useCallback(
+    (newStatus: Task["status"] | null) => {
+      setStatus(newStatus === null ? undefined : newStatus);
+      onFilterChange({ status: newStatus });
+    },
+    [onFilterChange]
+  );
+
+  const resetFilters = useCallback(() => {
+    setSearchQuery("");
+    setViewMode("all");
+    setStatus(undefined);
+    setSortBy("createdAt");
+    setSortDirection("desc");
+    onFilterChange({
+      search: null,
+      viewMode: null,
+      status: null,
+      sortBy: null,
+      sortDirection: null,
+    });
+  }, [onFilterChange]);
+
+  // Get display names for current filters
+  const getViewModeDisplay = () => {
+    switch (viewMode) {
+      case "all":
+        return "All Tasks";
+      case "my-tasks":
+        return "My Tasks";
+      case "department":
+        return "Department Tasks";
+      default:
+        return "View";
+    }
+  };
+
+  const getStatusDisplay = () => {
+    if (!status) return "All Statuses";
+    return status.charAt(0) + status.slice(1).toLowerCase().replace("_", " ");
+  };
+
+  const getSortDisplay = () => {
+    const sortName = {
+      createdAt: "Date Created",
+      title: "Title",
+      dueTime: "Due Date",
+    }[sortBy];
+    return `${sortName} ${sortDirection === "asc" ? "↑" : "↓"}`;
+  };
 
   // Cleanup timeout on unmount
   useEffect(() => {
@@ -97,28 +158,28 @@ export function TaskFilters({
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" disabled={isLoading}>
-              View
+              {getViewModeDisplay()}
               <ChevronDown className="ml-2 h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             {user.permissions.includes("view_all_tasks") && (
               <DropdownMenuItem
-                onClick={() => onFilterChange({ viewMode: "all" })}
+                onClick={() => handleViewModeChange("all")}
                 className={viewMode === "all" ? "bg-accent" : ""}
               >
                 All Tasks
               </DropdownMenuItem>
             )}
             <DropdownMenuItem
-              onClick={() => onFilterChange({ viewMode: "my-tasks" })}
+              onClick={() => handleViewModeChange("my-tasks")}
               className={viewMode === "my-tasks" ? "bg-accent" : ""}
             >
               My Tasks
             </DropdownMenuItem>
             {canViewDepartment && (
               <DropdownMenuItem
-                onClick={() => onFilterChange({ viewMode: "department" })}
+                onClick={() => handleViewModeChange("department")}
                 className={viewMode === "department" ? "bg-accent" : ""}
               >
                 Department Tasks
@@ -129,43 +190,43 @@ export function TaskFilters({
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" disabled={isLoading}>
-              Status
+              {getStatusDisplay()}
               <ChevronDown className="ml-2 h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem
-              onClick={() => onFilterChange({ status: null })}
+              onClick={() => handleStatusChange(null)}
               className={!status ? "bg-accent" : ""}
             >
               All Statuses
             </DropdownMenuItem>
             <DropdownMenuItem
-              onClick={() => onFilterChange({ status: "PENDING" })}
+              onClick={() => handleStatusChange("PENDING")}
               className={status === "PENDING" ? "bg-accent" : ""}
             >
               Pending
             </DropdownMenuItem>
             <DropdownMenuItem
-              onClick={() => onFilterChange({ status: "IN_PROGRESS" })}
+              onClick={() => handleStatusChange("IN_PROGRESS")}
               className={status === "IN_PROGRESS" ? "bg-accent" : ""}
             >
               In Progress
             </DropdownMenuItem>
             <DropdownMenuItem
-              onClick={() => onFilterChange({ status: "COMPLETED" })}
+              onClick={() => handleStatusChange("COMPLETED")}
               className={status === "COMPLETED" ? "bg-accent" : ""}
             >
               Completed
             </DropdownMenuItem>
             <DropdownMenuItem
-              onClick={() => onFilterChange({ status: "APPROVED" })}
+              onClick={() => handleStatusChange("APPROVED")}
               className={status === "APPROVED" ? "bg-accent" : ""}
             >
               Approved
             </DropdownMenuItem>
             <DropdownMenuItem
-              onClick={() => onFilterChange({ status: "REJECTED" })}
+              onClick={() => handleStatusChange("REJECTED")}
               className={status === "REJECTED" ? "bg-accent" : ""}
             >
               Rejected
@@ -175,7 +236,7 @@ export function TaskFilters({
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" disabled={isLoading}>
-              Sort By
+              {getSortDisplay()}
               <ChevronDown className="ml-2 h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
@@ -203,6 +264,9 @@ export function TaskFilters({
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+        <Button variant="outline" onClick={resetFilters} disabled={isLoading}>
+          Reset Filters
+        </Button>
       </div>
     </div>
   );
