@@ -89,37 +89,36 @@ export async function updateTaskStatusAction(
     const task = await taskService.getTaskById(id);
     if (!task) throw new Error("Task not found");
 
-    // Check permissions based on status change and current status
-    if (status === "APPROVED") {
-      // For final approval of completed tasks
+    // Helper function to check manager approval permissions
+    const checkManagerApprovalPermission = async () => {
       const canApproveAll = await validatePermission("approve_tasks");
       const canApproveDepartment = await validatePermission(
         "approve_department_tasks"
       );
       const isTaskInDepartment =
         task.createdBy.departmentId === session.departmentId;
-      const hasPermission =
-        canApproveAll || (canApproveDepartment && isTaskInDepartment);
+      return canApproveAll || (canApproveDepartment && isTaskInDepartment);
+    };
 
+    // Check permissions based on status change and current status
+    if (status === "APPROVED") {
+      // For final approval of completed tasks
+      const hasPermission = await checkManagerApprovalPermission();
       if (!hasPermission) throw new Error("Unauthorized");
       if (task.status !== "COMPLETED")
         throw new Error("Task must be completed before final approval");
     }
 
     if (status === "IN_PROGRESS") {
-      // For initial task approval (moving from PENDING to IN_PROGRESS)
-      const canApproveAll = await validatePermission("approve_tasks");
-      const canApproveDepartment = await validatePermission(
-        "approve_department_tasks"
-      );
-      const isTaskInDepartment =
-        task.createdBy.departmentId === session.departmentId;
-      const hasPermission =
-        canApproveAll || (canApproveDepartment && isTaskInDepartment);
-
+      const hasPermission = await checkManagerApprovalPermission();
       if (!hasPermission) throw new Error("Unauthorized");
-      if (task.status !== "PENDING")
-        throw new Error("Only pending tasks can be approved to start");
+
+      // Allow IN_PROGRESS for both initial approval and reverting from completed
+      if (task.status !== "PENDING" && task.status !== "COMPLETED") {
+        throw new Error(
+          "Task must be pending or completed to move to in progress"
+        );
+      }
     }
 
     if (status === "COMPLETED") {
@@ -131,15 +130,7 @@ export async function updateTaskStatusAction(
     }
 
     if (status === "REJECTED") {
-      const canApproveAll = await validatePermission("approve_tasks");
-      const canApproveDepartment = await validatePermission(
-        "approve_department_tasks"
-      );
-      const isTaskInDepartment =
-        task.createdBy.departmentId === session.departmentId;
-      const hasPermission =
-        canApproveAll || (canApproveDepartment && isTaskInDepartment);
-
+      const hasPermission = await checkManagerApprovalPermission();
       if (!hasPermission) throw new Error("Unauthorized");
     }
 
