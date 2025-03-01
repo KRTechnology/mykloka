@@ -199,8 +199,19 @@ export function EditDepartmentDialog({
               <Button variant="outline" onClick={onClose} disabled={isLoading}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={isLoading}>
-                {isLoading ? <LoadingSpinner /> : "Save Changes"}
+              <Button
+                type="submit"
+                disabled={isLoading}
+                className="bg-kr-orange hover:bg-kr-orange/90"
+              >
+                {isLoading ? (
+                  <>
+                    <LoadingSpinner />
+                    Save Changes
+                  </>
+                ) : (
+                  "Save Changes"
+                )}
               </Button>
             </DialogFooter>
           </form>

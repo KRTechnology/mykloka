@@ -256,8 +256,8 @@ export function EditUserDialog({ user, onClose }: EditUserDialogProps) {
                 disabled={isPending}
                 className="bg-kr-orange hover:bg-kr-orange/90"
               >
-                <span className="mr-2">Save Changes</span>
                 {isPending && <LoadingSpinner />}
+                <span className="mr-2">Save Changes</span>
               </Button>
             </DialogFooter>
           </form>

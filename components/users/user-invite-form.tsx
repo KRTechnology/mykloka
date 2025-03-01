@@ -196,8 +196,8 @@ export function UserInviteForm({ roles, departments }: UserInviteFormProps) {
             disabled={isPending}
             className="bg-kr-orange hover:bg-kr-orange/90"
           >
-            <span className="mr-2">Send Invitation</span>
             {isPending && <LoadingSpinner />}
+            <span className="mr-2">Send Invitation</span>
           </Button>
         </div>
       </form>

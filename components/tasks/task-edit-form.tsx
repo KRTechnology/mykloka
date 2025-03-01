@@ -22,6 +22,7 @@ import { Task } from "@/lib/tasks/types";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
+import { motion } from "framer-motion";
 import { CalendarIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
@@ -29,6 +30,7 @@ import { toast } from "sonner";
 import * as z from "zod";
 import { Calendar } from "../ui/calendar";
 import { UserSelect } from "../user/user-select";
+import { LoadingSpinner } from "../ui/loading-spinner";
 
 const formSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -183,7 +185,12 @@ export function TaskEditForm({ task, user }: TaskEditFormProps) {
         />
 
         <div className="flex justify-end space-x-2">
-          <Button type="button" variant="outline" onClick={() => router.back()}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => router.back()}
+            disabled={form.formState.isSubmitting}
+          >
             Cancel
           </Button>
           <Button
@@ -191,7 +198,18 @@ export function TaskEditForm({ task, user }: TaskEditFormProps) {
             disabled={form.formState.isSubmitting}
             className="bg-kr-orange hover:bg-kr-orange/90"
           >
-            Save Changes
+            {form.formState.isSubmitting ? (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="flex items-center gap-2 text-white"
+              >
+                <LoadingSpinner />
+                Saving Changes
+              </motion.div>
+            ) : (
+              "Save Changes"
+            )}
           </Button>
         </div>
       </form>
