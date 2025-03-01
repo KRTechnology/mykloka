@@ -41,20 +41,11 @@ export function TaskFilters({
   );
   const [isSearching, setIsSearching] = useState(false);
   const searchTimeout = useRef<number | undefined>(undefined);
-
-  // Cleanup timeout on unmount
-  useEffect(() => {
-    return () => {
-      if (searchTimeout.current) {
-        window.clearTimeout(searchTimeout.current);
-      }
-    };
-  }, []);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const handleSearch = useCallback(
     (value: string) => {
       setSearchQuery(value);
-      setIsSearching(true);
 
       // Clear existing timeout
       if (searchTimeout.current) {
@@ -64,8 +55,7 @@ export function TaskFilters({
       // Set new timeout to debounce the search
       searchTimeout.current = window.setTimeout(() => {
         onFilterChange({ search: value || null });
-        setIsSearching(false);
-      }, 500);
+      }, 200);
     },
     [onFilterChange]
   );
@@ -79,23 +69,28 @@ export function TaskFilters({
     [sortBy, sortDirection, onFilterChange]
   );
 
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (searchTimeout.current) {
+        window.clearTimeout(searchTimeout.current);
+      }
+    };
+  }, []);
+
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex flex-1 items-center gap-4 flex-wrap">
         <div className="relative flex-1 min-w-[200px]">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
+            ref={inputRef}
             placeholder="Search tasks..."
             value={searchQuery}
             onChange={(e) => handleSearch(e.target.value)}
-            className={cn("pl-8", isSearching && "opacity-50")}
-            disabled={isSearching}
+            className="pl-8"
+            autoComplete="off"
           />
-          {isSearching && (
-            <div className="absolute right-2 top-2.5">
-              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-            </div>
-          )}
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

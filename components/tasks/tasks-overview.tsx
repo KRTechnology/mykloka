@@ -52,9 +52,8 @@ export function TasksOverview({
 
   const handleSearch = useCallback(
     async (params: Record<string, string | null>) => {
-      setIsLoading(true);
       try {
-        // Update URL with new search params
+        // Update URL with new search params without triggering a navigation
         const newSearchParams = new URLSearchParams(searchParams);
         Object.entries(params).forEach(([key, value]) => {
           if (value) {
@@ -64,8 +63,10 @@ export function TasksOverview({
           }
         });
 
-        // Update the URL without triggering a navigation
-        router.replace(`?${newSearchParams.toString()}`, { scroll: false });
+        // Update the URL without forcing a re-render
+        router.replace(`?${newSearchParams.toString()}`, {
+          scroll: false,
+        });
 
         // Fetch tasks with new params
         const newTasks = await fetchTasks(
@@ -75,8 +76,6 @@ export function TasksOverview({
         setTasks(newTasks);
       } catch (error) {
         console.error("Error fetching tasks:", error);
-      } finally {
-        setIsLoading(false);
       }
     },
     [searchParams, router, fetchTasks, user]
