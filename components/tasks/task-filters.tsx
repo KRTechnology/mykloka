@@ -12,8 +12,14 @@ import { Task } from "@/lib/tasks/types";
 import { ChevronDown, Loader2, Search } from "lucide-react";
 import { useCallback, useRef, useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
+import { getDepartmentsForFilterAction } from "@/actions/departments";
 
 type ViewMode = "all" | "my-tasks" | "department";
+
+interface Department {
+  id: string;
+  name: string;
+}
 
 interface TaskFiltersProps {
   onFilterChange: (filters: Record<string, string | null>) => void;
@@ -41,9 +47,24 @@ export function TaskFilters({
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">(
     (initialFilters.sortDirection as "asc" | "desc") || "desc"
   );
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [selectedDepartment, setSelectedDepartment] = useState<string | null>(
+    initialFilters.departmentId || null
+  );
   const [isSearching, setIsSearching] = useState(false);
   const searchTimeout = useRef<number | undefined>(undefined);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Fetch departments if user has view_all_tasks permission
+  useEffect(() => {
+    if (user.permissions.includes("view_all_tasks")) {
+      getDepartmentsForFilterAction().then((response) => {
+        if (response.success) {
+          setDepartments(response.data);
+        }
+      });
+    }
+  }, [user.permissions]);
 
   const handleSearch = useCallback(
     (value: string) => {
@@ -89,18 +110,28 @@ export function TaskFilters({
     [onFilterChange]
   );
 
+  const handleDepartmentChange = useCallback(
+    (departmentId: string | null) => {
+      setSelectedDepartment(departmentId);
+      onFilterChange({ departmentId: departmentId });
+    },
+    [onFilterChange]
+  );
+
   const resetFilters = useCallback(() => {
     setSearchQuery("");
     setViewMode("all");
     setStatus(undefined);
     setSortBy("createdAt");
     setSortDirection("desc");
+    setSelectedDepartment(null);
     onFilterChange({
       search: null,
       viewMode: null,
       status: null,
       sortBy: null,
       sortDirection: null,
+      departmentId: null,
     });
   }, [onFilterChange]);
 
@@ -130,6 +161,12 @@ export function TaskFilters({
       dueTime: "Due Date",
     }[sortBy];
     return `${sortName} ${sortDirection === "asc" ? "↑" : "↓"}`;
+  };
+
+  const getDepartmentDisplay = () => {
+    if (!selectedDepartment) return "All Departments";
+    const department = departments.find((d) => d.id === selectedDepartment);
+    return department ? department.name : "All Departments";
   };
 
   // Cleanup timeout on unmount
@@ -233,6 +270,36 @@ export function TaskFilters({
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+        {user.permissions.includes("view_all_tasks") &&
+          departments.length > 0 && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" disabled={isLoading}>
+                  {getDepartmentDisplay()}
+                  <ChevronDown className="ml-2 h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem
+                  onClick={() => handleDepartmentChange(null)}
+                  className={!selectedDepartment ? "bg-accent" : ""}
+                >
+                  All Departments
+                </DropdownMenuItem>
+                {departments.map((dept) => (
+                  <DropdownMenuItem
+                    key={dept.id}
+                    onClick={() => handleDepartmentChange(dept.id)}
+                    className={
+                      selectedDepartment === dept.id ? "bg-accent" : ""
+                    }
+                  >
+                    {dept.name}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" disabled={isLoading}>

@@ -425,159 +425,6 @@ export class TaskService {
     }));
   }
 
-  // async getPaginatedTasks(options: {
-  //   page?: number;
-  //   pageSize?: number;
-  //   sortBy?: string;
-  //   sortDirection?: "asc" | "desc";
-  //   search?: string;
-  //   userId?: string;
-  //   viewMode?: "all" | "my-tasks" | "department";
-  //   departmentId?: string;
-  //   status?: Task["status"];
-  // }) {
-  //   const {
-  //     page = 1,
-  //     pageSize = 10,
-  //     sortBy = "createdAt",
-  //     sortDirection = "desc",
-  //     search,
-  //     userId,
-  //     viewMode = "all",
-  //     departmentId,
-  //     status,
-  //   } = options;
-
-  //   const assignedToUsers = alias(users, "assignedTo");
-  //   const approvedByUsers = alias(users, "approvedBy");
-  //   const completionApprovedByUsers = alias(users, "completionApprovedBy");
-
-  //   // Build conditions array
-  //   const conditions = [];
-
-  //   // Add view mode conditions
-  //   if (viewMode === "my-tasks" && userId) {
-  //     conditions.push(
-  //       or(eq(tasks.createdById, userId), eq(tasks.assignedToId, userId))
-  //     );
-  //   } else if (viewMode === "department" && departmentId) {
-  //     conditions.push(
-  //       and(
-  //         eq(users.departmentId, departmentId),
-  //         eq(tasks.requiresApproval, true)
-  //       )
-  //     );
-  //   }
-
-  //   // Add status condition
-  //   if (status) {
-  //     conditions.push(eq(tasks.status, status));
-  //   }
-
-  //   // Add search condition
-  //   if (search) {
-  //     conditions.push(
-  //       or(
-  //         ilike(tasks.title, `%${search}%`),
-  //         ilike(tasks.description || "", `%${search}%`)
-  //       )
-  //     );
-  //   }
-
-  //   // Build the base query
-  //   const baseQuery = this.db
-  //     .select({
-  //       id: tasks.id,
-  //       title: tasks.title,
-  //       description: tasks.description,
-  //       status: tasks.status,
-  //       createdAt: tasks.createdAt,
-  //       updatedAt: tasks.updatedAt,
-  //       startTime: tasks.startTime,
-  //       dueTime: tasks.dueTime,
-  //       completedAt: tasks.completedAt,
-  //       requiresApproval: tasks.requiresApproval,
-  //       createdById: tasks.createdById,
-  //       assignedToId: tasks.assignedToId,
-  //       approvedById: tasks.approvedById,
-  //       approvalDate: tasks.approvalDate,
-  //       completionApprovedById: tasks.completionApprovedById,
-  //       completionApprovalDate: tasks.completionApprovalDate,
-  //       createdBy: {
-  //         id: users.id,
-  //         firstName: users.firstName,
-  //         lastName: users.lastName,
-  //         departmentId: users.departmentId,
-  //       },
-  //       assignedTo: {
-  //         id: assignedToUsers.id,
-  //         firstName: assignedToUsers.firstName,
-  //         lastName: assignedToUsers.lastName,
-  //       },
-  //       approvedBy: {
-  //         id: approvedByUsers.id,
-  //         firstName: approvedByUsers.firstName,
-  //         lastName: approvedByUsers.lastName,
-  //       },
-  //       completionApprovedBy: {
-  //         id: completionApprovedByUsers.id,
-  //         firstName: completionApprovedByUsers.firstName,
-  //         lastName: completionApprovedByUsers.lastName,
-  //       },
-  //     })
-  //     .from(tasks)
-  //     .innerJoin(users, eq(tasks.createdById, users.id))
-  //     .leftJoin(assignedToUsers, eq(tasks.assignedToId, assignedToUsers.id))
-  //     .leftJoin(approvedByUsers, eq(tasks.approvedById, approvedByUsers.id))
-  //     .leftJoin(
-  //       completionApprovedByUsers,
-  //       eq(tasks.completionApprovedById, completionApprovedByUsers.id)
-  //     )
-  //     .where(conditions.length > 0 ? and(...conditions) : undefined);
-
-  //   // Get total count using a subquery
-  //   const countQuery = this.db
-  //     .select({ count: sql<number>`count(*)` })
-  //     .from(baseQuery);
-  //   const [{ count }] = await countQuery;
-  //   const total = Number(count);
-
-  //   // Get paginated results with sorting
-  //   const sortColumn = sortBy === "title" ? tasks.title : tasks.createdAt;
-  //   const results = await baseQuery
-  //     .orderBy(sortDirection === "asc" ? asc(sortColumn) : desc(sortColumn))
-  //     .limit(pageSize)
-  //     .offset((page - 1) * pageSize);
-
-  //   // Transform results with type assertion
-  //   type TaskWithRelations = Task & {
-  //     assignedTo: { id: string; firstName: string; lastName: string } | null;
-  //     approvedBy: { id: string; firstName: string; lastName: string } | null;
-  //     completionApprovedBy: {
-  //       id: string;
-  //       firstName: string;
-  //       lastName: string;
-  //     } | null;
-  //   };
-
-  //   const transformedTasks = results.map((task: any) => ({
-  //     ...task,
-  //     assignedTo: task.assignedTo?.id ? task.assignedTo : null,
-  //     approvedBy: task.approvedBy?.id ? task.approvedBy : null,
-  //     completionApprovedBy: task.completionApprovedBy?.id
-  //       ? task.completionApprovedBy
-  //       : null,
-  //   })) as TaskWithRelations[];
-
-  //   return {
-  //     data: transformedTasks,
-  //     total,
-  //     page,
-  //     pageSize,
-  //     totalPages: Math.ceil(total / pageSize),
-  //   };
-  // }
-
   async getPaginatedTasks(options: {
     page?: number;
     pageSize?: number;
@@ -614,12 +461,12 @@ export class TaskService {
         or(eq(tasks.createdById, userId), eq(tasks.assignedToId, userId))
       );
     } else if (viewMode === "department" && departmentId) {
-      conditions.push(
-        and(
-          eq(users.departmentId, departmentId),
-          eq(tasks.requiresApproval, true)
-        )
-      );
+      conditions.push(eq(users.departmentId, departmentId));
+    }
+
+    // Add department filter for "all" view mode
+    if (viewMode === "all" && departmentId) {
+      conditions.push(eq(users.departmentId, departmentId));
     }
 
     // Add status condition

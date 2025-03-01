@@ -1,6 +1,6 @@
 import { db as dbClient } from "@/lib/db/config";
 import { departments, users } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, asc } from "drizzle-orm";
 
 export class DepartmentService {
   constructor(private db: typeof dbClient) {}
@@ -50,6 +50,23 @@ export class DepartmentService {
       return department?.headId || null;
     } catch (error) {
       console.error("Error getting department head:", error);
+      throw error;
+    }
+  }
+
+  async getAllDepartments() {
+    try {
+      const departments = await this.db.query.departments.findMany({
+        columns: {
+          id: true,
+          name: true,
+        },
+        orderBy: (departments, { asc }) => [asc(departments.name)],
+      });
+
+      return departments;
+    } catch (error) {
+      console.error("Error getting departments:", error);
       throw error;
     }
   }

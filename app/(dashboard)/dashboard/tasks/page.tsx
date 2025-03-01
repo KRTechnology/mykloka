@@ -15,6 +15,7 @@ interface SearchParams {
   search?: string;
   viewMode?: string;
   status?: string;
+  departmentId?: string;
 }
 
 export const metadata: Metadata = {
@@ -53,6 +54,14 @@ async function fetchTasks(searchParams: SearchParams, session: UserJWTPayload) {
     viewMode = "my-tasks"; // Fallback to my-tasks if user doesn't have permission
   }
 
+  // Use the selected departmentId from filters if user has view_all_tasks permission
+  // Otherwise, use the user's own departmentId for department view
+  const departmentId = session.permissions.includes("view_all_tasks")
+    ? searchParams.departmentId
+    : viewMode === "department"
+      ? session.departmentId
+      : undefined;
+
   return taskService.getPaginatedTasks({
     page: parseInt(searchParams.page || "1"),
     pageSize: parseInt(searchParams.pageSize || "10"),
@@ -61,7 +70,7 @@ async function fetchTasks(searchParams: SearchParams, session: UserJWTPayload) {
     search: searchParams.search,
     userId: session.userId,
     viewMode,
-    departmentId: session.departmentId,
+    departmentId,
     status: searchParams.status as Task["status"] | undefined,
   });
 }

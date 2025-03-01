@@ -303,3 +303,23 @@ export async function getManagersForDepartmentAction() {
     };
   }
 }
+
+export async function getDepartmentsForFilterAction() {
+  try {
+    const hasPermission = await validatePermission("view_all_tasks");
+    if (!hasPermission) {
+      throw new Error("Unauthorized");
+    }
+
+    const departments = await departmentService.getAllDepartments();
+    return { success: true, data: departments };
+  } catch (error) {
+    console.error("Error fetching departments for filter:", error);
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : "Failed to fetch departments",
+      data: [],
+    };
+  }
+}
