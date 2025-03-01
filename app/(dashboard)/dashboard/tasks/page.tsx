@@ -13,16 +13,16 @@ export default async function TasksPage() {
   const session = await getServerSession();
   if (!session) return null;
 
-  // Fetch tasks based on user role
+  // Fetch tasks based on user role and permissions
   let tasks;
-  if (session.permissions.includes("view_all_departments")) {
-    // For super admin and HR manager
+  if (session.permissions.includes("view_all_tasks")) {
+    // For super admin and HR manager - show all tasks
+    tasks = await taskService.getAllTasks();
+  } else if (session.permissions.includes("view_department_tasks")) {
+    // For department managers - show department tasks
     tasks = await taskService.getTasksByDepartment(session.departmentId!);
-  } else if (session.permissions.includes("approve_tasks")) {
-    // For department managers
-    tasks = await taskService.getPendingApprovals(session.departmentId!);
   } else {
-    // For regular employees
+    // For regular employees - show only their tasks
     tasks = await taskService.getUserTasks(session.userId);
   }
 
