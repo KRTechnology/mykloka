@@ -3,6 +3,7 @@ import { db as dbClient } from "@/lib/db/config";
 import { users } from "@/lib/db/schema";
 import { emailService } from "@/lib/email/email.service";
 import { eq } from "drizzle-orm";
+import { departmentService } from "@/lib/departments/department.service";
 
 const authService = new AuthService(dbClient);
 
@@ -26,11 +27,21 @@ export class UserService {
       throw new Error("User with this email already exists");
     }
 
+    // If department is provided, get the department head as manager
+    let managerId: string | undefined = data.managerId;
+    if (data.departmentId && !managerId) {
+      const departmentHead = await departmentService.getDepartmentHead(
+        data.departmentId
+      );
+      managerId = departmentHead || undefined;
+    }
+
     // Create user without password
     const [user] = await this.db
       .insert(users)
       .values({
         ...data,
+        managerId,
         passwordHash: "", // Will be set when user verifies email
         isActive: false,
       })

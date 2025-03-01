@@ -9,6 +9,7 @@ import { emailService } from "@/lib/email/email.service";
 import { userService } from "@/lib/users/user.service";
 import { eq } from "drizzle-orm";
 import { revalidateTag } from "next/cache";
+import { departmentService } from "@/lib/departments/department.service";
 
 export async function inviteUserAction(data: InviteUserData) {
   try {
@@ -54,11 +55,19 @@ export async function updateUserAction(data: UpdateUserData) {
       throw new Error("Unauthorized");
     }
 
+    // Get the department head if department is being updated
+    let managerId = undefined;
+    if (data.departmentId) {
+      // Only check for head if departmentId is not null
+      managerId = await departmentService.getDepartmentHead(data.departmentId);
+    }
+
     // Create update object using the schema type
     const updateData = {
       ...(data.roleId && { roleId: data.roleId }),
       ...(data.departmentId !== undefined && {
         departmentId: data.departmentId,
+        managerId: data.departmentId ? managerId : null, // Set to null if no department
       }),
       ...(data.firstName && { firstName: data.firstName }),
       ...(data.lastName && { lastName: data.lastName }),

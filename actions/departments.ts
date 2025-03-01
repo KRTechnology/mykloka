@@ -12,6 +12,7 @@ import type {
   CreateDepartmentData,
   GetDepartmentsOptions,
 } from "./types/departments";
+import { departmentService } from "@/lib/departments/department.service";
 
 const createDepartmentSchema = z.object({
   name: z.string().min(1, "Department name is required"),
@@ -88,21 +89,16 @@ export async function updateDepartmentAction(id: string, data: DepartmentData) {
 
     const validatedData = departmentSchema.parse(data);
 
-    const updatedDepartment = await db
-      .update(departments)
-      .set({
-        ...validatedData,
-        updatedAt: new Date(),
-      })
-      .where(eq(departments.id, id))
-      .returning();
-
-    if (!updatedDepartment[0]) {
-      throw new Error("Department not found");
-    }
+    // Update department and its users' managers
+    const updatedDepartment = await departmentService.updateDepartmentHead(
+      id,
+      validatedData.headId ?? null
+    );
 
     revalidateTag("departments");
-    return { success: true, data: updatedDepartment[0] };
+    revalidateTag("users"); // Also revalidate users since their managers might have changed
+
+    return { success: true, data: updatedDepartment };
   } catch (error) {
     console.error("Error updating department:", error);
     return {
