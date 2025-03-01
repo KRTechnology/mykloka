@@ -20,12 +20,15 @@ import { TaskActions } from "./task-actions";
 interface TaskListProps {
   tasks: Task[];
   user: UserJWTPayload;
-//   userId: string;
+  //   userId: string;
 }
 
 export function TaskList({ tasks, user }: TaskListProps) {
   const router = useRouter();
-  const canApproveTasks = user.permissions.includes("approve_tasks");
+  const canApproveTasks =
+    user.permissions.includes("approve_tasks") ||
+    (user.permissions.includes("approve_department_tasks") &&
+      user.departmentId);
 
   return (
     <div className="rounded-md border">
@@ -41,48 +44,59 @@ export function TaskList({ tasks, user }: TaskListProps) {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {tasks.map((task) => (
-            <TableRow key={task.id}>
-              <TableCell className="font-medium">{task.title}</TableCell>
-              <TableCell>
-                <TaskStatusBadge status={task.status} />
-              </TableCell>
-              <TableCell>
-                {task.assignedTo
-                  ? `${task.assignedTo.firstName} ${task.assignedTo.lastName}`
-                  : "Unassigned"}
-              </TableCell>
-              <TableCell>
-                {task.dueTime ? formatDate(task.dueTime) : "No due date"}
-              </TableCell>
-              <TableCell>
-                {`${task.createdBy.firstName} ${task.createdBy.lastName}`}
-              </TableCell>
-              <TableCell className="text-right">
-                <div className="flex items-center justify-end gap-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => router.push(`/dashboard/tasks/${task.id}`)}
-                  >
-                    <Eye className="h-4 w-4" />
-                  </Button>
-                  {(task.createdById === user.userId || canApproveTasks) && (
+          {tasks.map((task) => {
+            // Check if the task belongs to the manager's department
+            const isTaskInDepartment =
+              task.createdBy.departmentId === user.departmentId;
+            const canApproveThisTask =
+              user.permissions.includes("approve_tasks") ||
+              (user.permissions.includes("approve_department_tasks") &&
+                isTaskInDepartment);
+
+            return (
+              <TableRow key={task.id}>
+                <TableCell className="font-medium">{task.title}</TableCell>
+                <TableCell>
+                  <TaskStatusBadge status={task.status} />
+                </TableCell>
+                <TableCell>
+                  {task.assignedTo
+                    ? `${task.assignedTo.firstName} ${task.assignedTo.lastName}`
+                    : "Unassigned"}
+                </TableCell>
+                <TableCell>
+                  {task.dueTime ? formatDate(task.dueTime) : "No due date"}
+                </TableCell>
+                <TableCell>
+                  {`${task.createdBy.firstName} ${task.createdBy.lastName}`}
+                </TableCell>
+                <TableCell className="text-right">
+                  <div className="flex items-center justify-end gap-2">
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() =>
-                        router.push(`/dashboard/tasks/${task.id}/edit`)
-                      }
+                      onClick={() => router.push(`/dashboard/tasks/${task.id}`)}
                     >
-                      <Edit2 className="h-4 w-4" />
+                      <Eye className="h-4 w-4" />
                     </Button>
-                  )}
-                  <TaskActions task={task} canApprove={canApproveTasks} />
-                </div>
-              </TableCell>
-            </TableRow>
-          ))}
+                    {(task.createdById === user.userId ||
+                      canApproveThisTask) && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() =>
+                          router.push(`/dashboard/tasks/${task.id}/edit`)
+                        }
+                      >
+                        <Edit2 className="h-4 w-4" />
+                      </Button>
+                    )}
+                    <TaskActions task={task} canApprove={canApproveThisTask} />
+                  </div>
+                </TableCell>
+              </TableRow>
+            );
+          })}
         </TableBody>
       </Table>
     </div>

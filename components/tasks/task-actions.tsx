@@ -56,7 +56,7 @@ export function TaskActions({ task, canApprove }: TaskActionsProps) {
           </motion.div>
         )}
 
-        {/* Approval actions for managers */}
+        {/* Approval actions for managers and super admins */}
         {canApprove && task.status === "PENDING" && (
           <>
             <DropdownMenuItem
