@@ -44,10 +44,20 @@ export class TaskService {
       updatedAt: new Date(),
     };
 
-    if (status === "APPROVED") {
+    // When moving from PENDING to IN_PROGRESS, record the initial approver
+    if (status === "IN_PROGRESS") {
       updates.approvedById = userId;
       updates.approvalDate = new Date();
-    } else if (status === "COMPLETED") {
+    }
+
+    // When giving final approval (COMPLETED to APPROVED), record the completion approver
+    if (status === "APPROVED") {
+      updates.completionApprovedById = userId;
+      updates.completionApprovalDate = new Date();
+    }
+
+    // When task is completed by assignee
+    if (status === "COMPLETED") {
       updates.completedAt = new Date();
     }
 

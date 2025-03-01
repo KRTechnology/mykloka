@@ -10,10 +10,16 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { UserJWTPayload } from "@/lib/auth/auth.service";
 import { Task } from "@/lib/tasks/types";
 import { formatDate } from "@/lib/utils/format";
-import { Edit2, Eye } from "lucide-react";
+import { Edit2, Eye, Info } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { TaskActions } from "./task-actions";
 
@@ -57,7 +63,40 @@ export function TaskList({ tasks, user }: TaskListProps) {
               <TableRow key={task.id}>
                 <TableCell className="font-medium">{task.title}</TableCell>
                 <TableCell>
-                  <TaskStatusBadge status={task.status} />
+                  <div className="flex items-center gap-2">
+                    <TaskStatusBadge status={task.status} />
+                    {(task.approvedBy || task.completionApprovedBy) && (
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button variant="ghost" className="h-4 w-4 p-0">
+                              <Info className="h-3 w-3" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <div className="space-y-2 text-xs">
+                              {task.approvedBy && (
+                                <p>
+                                  Initially approved by{" "}
+                                  {`${task.approvedBy.firstName} ${task.approvedBy.lastName}`}
+                                  <br />
+                                  on {formatDate(task.approvalDate!)}
+                                </p>
+                              )}
+                              {task.completionApprovedBy && (
+                                <p>
+                                  Completion verified by{" "}
+                                  {`${task.completionApprovedBy.firstName} ${task.completionApprovedBy.lastName}`}
+                                  <br />
+                                  on {formatDate(task.completionApprovalDate!)}
+                                </p>
+                              )}
+                            </div>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    )}
+                  </div>
                 </TableCell>
                 <TableCell>
                   {task.assignedTo
