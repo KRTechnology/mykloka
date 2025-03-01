@@ -31,10 +31,6 @@ interface TaskListProps {
 
 export function TaskList({ tasks, user }: TaskListProps) {
   const router = useRouter();
-  const canApproveTasks =
-    user.permissions.includes("approve_tasks") ||
-    (user.permissions.includes("approve_department_tasks") &&
-      user.departmentId);
 
   return (
     <div className="rounded-md border">
