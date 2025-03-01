@@ -7,33 +7,31 @@ export class DepartmentService {
 
   async updateDepartmentHead(departmentId: string, headId: string | null) {
     try {
-      // Start a transaction
-      return await this.db.transaction(async (tx) => {
-        // 1. Update the department head
-        const [updatedDepartment] = await tx
-          .update(departments)
-          .set({
-            headId,
-            updatedAt: new Date(),
-          })
-          .where(eq(departments.id, departmentId))
-          .returning();
+      // 1. Update the department head first
+      const [updatedDepartment] = await this.db
+        .update(departments)
+        .set({
+          headId,
+          updatedAt: new Date(),
+        })
+        .where(eq(departments.id, departmentId))
+        .returning();
 
-        if (!updatedDepartment) {
-          throw new Error("Department not found");
-        }
+      if (!updatedDepartment) {
+        throw new Error("Department not found");
+      }
 
-        // 2. Update all users in the department to have the new head as their manager
-        await tx
-          .update(users)
-          .set({
-            managerId: headId,
-            updatedAt: new Date(),
-          })
-          .where(eq(users.departmentId, departmentId));
+      // 2. Then update all users in the department to have the new head as their manager
+      // If this fails, at least the department head is updated correctly
+      await this.db
+        .update(users)
+        .set({
+          managerId: headId,
+          updatedAt: new Date(),
+        })
+        .where(eq(users.departmentId, departmentId));
 
-        return updatedDepartment;
-      });
+      return updatedDepartment;
     } catch (error) {
       console.error("Error updating department head:", error);
       throw error;
@@ -53,6 +51,26 @@ export class DepartmentService {
     } catch (error) {
       console.error("Error getting department head:", error);
       throw error;
+    }
+  }
+
+  // New method to update users' managers for a department
+  async updateDepartmentUsersManager(
+    departmentId: string,
+    managerId: string | null
+  ) {
+    try {
+      await this.db
+        .update(users)
+        .set({
+          managerId,
+          updatedAt: new Date(),
+        })
+        .where(eq(users.departmentId, departmentId));
+    } catch (error) {
+      console.error("Error updating department users' manager:", error);
+      // Log the error but don't throw, as this is a secondary operation
+      // This way, if updating users fails, it won't affect the department head update
     }
   }
 }
