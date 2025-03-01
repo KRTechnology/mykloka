@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { getAttendanceRecordsAction } from "@/actions/attendance/get-records";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -9,13 +11,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { format } from "date-fns";
-import { motion, AnimatePresence } from "framer-motion";
-import { Skeleton } from "@/components/ui/skeleton";
-import { getAttendanceRecordsAction } from "@/actions/attendance/get-records";
+import { formatTimeWithOffset } from "@/lib/utils/format";
+import { AnimatePresence, motion } from "framer-motion";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { startOfDay, endOfDay } from "date-fns";
 
 interface AttendanceListProps {
   viewMode: "personal" | "department" | "all";
@@ -126,14 +125,11 @@ export function AttendanceList({
                     {record.user.firstName} {record.user.lastName}
                   </TableCell>
                   <TableCell>
-                    {format(new Date(record.attendance.clockInTime), "hh:mm a")}
+                    {formatTimeWithOffset(record.attendance.clockInTime)}
                   </TableCell>
                   <TableCell>
                     {record.attendance.clockOutTime
-                      ? format(
-                          new Date(record.attendance.clockOutTime),
-                          "hh:mm a"
-                        )
+                      ? formatTimeWithOffset(record.attendance.clockOutTime)
                       : "---"}
                   </TableCell>
                   <TableCell>

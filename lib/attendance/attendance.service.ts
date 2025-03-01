@@ -35,8 +35,13 @@ class AttendanceService {
       throw new Error("User ID is required");
     }
 
+    // Adjust for timezone offset
+    const localClockInTime = new Date(
+      data.clockInTime.getTime() + data.clockInTime.getTimezoneOffset() * 60000
+    );
+
     const clockInHour =
-      data.clockInTime.getHours() + data.clockInTime.getMinutes() / 60;
+      localClockInTime.getHours() + localClockInTime.getMinutes() / 60;
 
     // Check if trying to clock in too early
     if (clockInHour < EARLIEST_CLOCK_IN) {
