@@ -29,6 +29,7 @@ type AttendanceRecord = {
     clockInTime: Date;
     clockOutTime: Date | null;
     status: "present" | "late" | "absent";
+    isRemote: boolean;
   };
   user: {
     firstName: string;
@@ -98,6 +99,7 @@ export function AttendanceList({
             <TableHead>Clock In</TableHead>
             <TableHead>Clock Out</TableHead>
             <TableHead>Duration</TableHead>
+            <TableHead>Location</TableHead>
             <TableHead>Status</TableHead>
           </TableRow>
         </TableHeader>
@@ -105,7 +107,7 @@ export function AttendanceList({
           {data.length === 0 ? (
             <TableRow>
               <TableCell
-                colSpan={5}
+                colSpan={6}
                 className="text-center text-muted-foreground"
               >
                 No attendance records found
@@ -139,6 +141,15 @@ export function AttendanceList({
                           record.attendance.clockOutTime
                         )
                       : "---"}
+                  </TableCell>
+                  <TableCell>
+                    <Badge
+                      variant={
+                        record.attendance.isRemote ? "outline" : "default"
+                      }
+                    >
+                      {record.attendance.isRemote ? "Remote" : "Office"}
+                    </Badge>
                   </TableCell>
                   <TableCell>
                     <Badge
