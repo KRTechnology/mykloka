@@ -217,6 +217,13 @@ export async function getDepartmentUsersAction(
   }
 }
 
+type TeamMember = {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+};
+
 export async function getUserProfileAction(userId: string) {
   try {
     const session = await getServerSession();
@@ -258,7 +265,29 @@ export async function getUserProfileAction(userId: string) {
 
     if (!user) throw new Error("User not found");
 
-    return { success: true, data: user };
+    // If user has no subordinates but belongs to a department, get department members
+    let departmentMembers: TeamMember[] = [];
+    if (user.subordinates.length === 0 && user.department?.id) {
+      const departmentId = user.department.id;
+      departmentMembers = await db.query.users.findMany({
+        where: (users, { and, eq, ne }) =>
+          and(eq(users.departmentId, departmentId), ne(users.id, user.id)),
+        columns: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          email: true,
+        },
+      });
+    }
+
+    return {
+      success: true,
+      data: {
+        ...user,
+        departmentMembers,
+      },
+    };
   } catch (error) {
     return {
       success: false,

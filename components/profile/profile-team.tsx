@@ -25,6 +25,7 @@ interface TeamMember {
 interface ProfileTeamProps {
   manager: TeamMember | null;
   subordinates: TeamMember[];
+  departmentMembers?: TeamMember[];
   department: {
     id: string;
     name: string;
@@ -34,8 +35,15 @@ interface ProfileTeamProps {
 export function ProfileTeam({
   manager,
   subordinates,
+  departmentMembers = [],
   department,
 }: ProfileTeamProps) {
+  // Determine which members to show - either subordinates or department members
+  const teamMembers =
+    subordinates.length > 0 ? subordinates : departmentMembers;
+  const teamTitle =
+    subordinates.length > 0 ? "Team Members" : "Department Colleagues";
+
   return (
     <motion.div
       initial={{ opacity: 0, x: 20 }}
@@ -82,14 +90,14 @@ export function ProfileTeam({
               )}
             </div>
 
-            {subordinates.length > 0 && (
+            {teamMembers.length > 0 && (
               <div>
                 <h3 className="text-sm font-medium text-muted-foreground mb-2 flex items-center gap-2">
                   <Users className="h-4 w-4" />
-                  Team Members ({subordinates.length})
+                  {teamTitle} ({teamMembers.length})
                 </h3>
                 <div className="space-y-2">
-                  {subordinates.map((member) => (
+                  {teamMembers.map((member) => (
                     <HoverCard key={member.id}>
                       <HoverCardTrigger asChild>
                         <button className="text-left block">
@@ -119,7 +127,7 @@ export function ProfileTeam({
               </div>
             )}
 
-            {subordinates.length === 0 && (
+            {teamMembers.length === 0 && (
               <div className="text-muted-foreground">
                 No team members to display
               </div>

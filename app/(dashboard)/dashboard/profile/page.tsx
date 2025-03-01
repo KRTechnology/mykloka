@@ -50,6 +50,7 @@ export default async function ProfilePage() {
         <ProfileTeam
           manager={user.manager}
           subordinates={user.subordinates ?? []}
+          departmentMembers={user.departmentMembers ?? []}
           department={user.department}
         />
       </div>
