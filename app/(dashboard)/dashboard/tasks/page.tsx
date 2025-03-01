@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { unstable_noStore as noStore } from "next/cache";
 import { Metadata } from "next";
 import { Task } from "@/lib/tasks/types";
+import { UserJWTPayload } from "@/lib/auth/types";
 
 interface SearchParams {
   page?: string;
@@ -22,8 +23,35 @@ export const metadata: Metadata = {
 };
 
 // Server action to fetch tasks
-async function fetchTasks(searchParams: SearchParams, session: any) {
+async function fetchTasks(searchParams: SearchParams, session: UserJWTPayload) {
   "use server";
+
+  // Determine the view mode based on permissions
+  let viewMode = searchParams.viewMode as
+    | "all"
+    | "my-tasks"
+    | "department"
+    | undefined;
+
+  // If no view mode is specified, set default based on permissions
+  if (!viewMode) {
+    if (session.permissions.includes("view_all_tasks")) {
+      viewMode = "all";
+    } else if (session.permissions.includes("view_department_tasks")) {
+      viewMode = "department";
+    } else {
+      viewMode = "my-tasks"; // Default for regular employees
+    }
+  }
+
+  // Validate view mode permissions
+  if (
+    (viewMode === "all" && !session.permissions.includes("view_all_tasks")) ||
+    (viewMode === "department" &&
+      !session.permissions.includes("view_department_tasks"))
+  ) {
+    viewMode = "my-tasks"; // Fallback to my-tasks if user doesn't have permission
+  }
 
   return taskService.getPaginatedTasks({
     page: parseInt(searchParams.page || "1"),
@@ -32,11 +60,7 @@ async function fetchTasks(searchParams: SearchParams, session: any) {
     sortDirection: searchParams.sortDirection as "asc" | "desc" | undefined,
     search: searchParams.search,
     userId: session.userId,
-    viewMode: searchParams.viewMode as
-      | "all"
-      | "my-tasks"
-      | "department"
-      | undefined,
+    viewMode,
     departmentId: session.departmentId,
     status: searchParams.status as Task["status"] | undefined,
   });

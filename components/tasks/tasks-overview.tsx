@@ -90,6 +90,7 @@ export function TasksOverview({
         canViewDepartment={canViewDepartment}
         isLoading={isLoading}
         initialFilters={Object.fromEntries(searchParams.entries())}
+        user={user}
       />
       {tasks.data.length === 0 ? (
         <div className="flex h-[450px] shrink-0 items-center justify-center rounded-md border border-dashed">

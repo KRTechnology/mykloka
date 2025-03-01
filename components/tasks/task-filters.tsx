@@ -20,6 +20,7 @@ interface TaskFiltersProps {
   canViewDepartment: boolean;
   isLoading?: boolean;
   initialFilters: Record<string, string>;
+  user: { permissions: string[] };
 }
 
 export function TaskFilters({
@@ -27,6 +28,7 @@ export function TaskFilters({
   canViewDepartment,
   isLoading,
   initialFilters,
+  user,
 }: TaskFiltersProps) {
   const [searchQuery, setSearchQuery] = useState(initialFilters.search || "");
   const [viewMode, setViewMode] = useState<ViewMode>(
@@ -100,12 +102,14 @@ export function TaskFilters({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem
-              onClick={() => onFilterChange({ viewMode: "all" })}
-              className={viewMode === "all" ? "bg-accent" : ""}
-            >
-              All Tasks
-            </DropdownMenuItem>
+            {user.permissions.includes("view_all_tasks") && (
+              <DropdownMenuItem
+                onClick={() => onFilterChange({ viewMode: "all" })}
+                className={viewMode === "all" ? "bg-accent" : ""}
+              >
+                All Tasks
+              </DropdownMenuItem>
+            )}
             <DropdownMenuItem
               onClick={() => onFilterChange({ viewMode: "my-tasks" })}
               className={viewMode === "my-tasks" ? "bg-accent" : ""}
