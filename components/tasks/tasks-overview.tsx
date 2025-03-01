@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useState } from "react";
 import { TaskFilters } from "./task-filters";
 import { TaskList } from "./task-list";
+import { CreateTaskButton } from "./create-task-button";
 
 interface TasksOverviewProps {
   initialTasks: {
@@ -93,6 +94,7 @@ export function TasksOverview({
               ? "No tasks require your attention at the moment."
               : "You don't have any tasks yet. Create one to get started!"}
           </p>
+          <CreateTaskButton />
         </div>
       </div>
     );
@@ -100,8 +102,9 @@ export function TasksOverview({
 
   return (
     <>
-      <div className="flex items-center justify-between space-y-2">
+      <div className="flex items-center justify-between">
         <h2 className="text-3xl font-bold tracking-tight">Tasks</h2>
+        <CreateTaskButton />
       </div>
       <div className="space-y-4">
         <TaskFilters
