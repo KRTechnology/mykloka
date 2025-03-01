@@ -85,16 +85,34 @@ export async function updateTaskStatusAction(
     const session = await getServerSession();
     if (!session) throw new Error("Unauthorized");
 
+    // Get the task first to check department
+    const task = await taskService.getTaskById(id);
+    if (!task) throw new Error("Task not found");
+
     // Check permissions based on status change
     if (["APPROVED", "REJECTED"].includes(status)) {
-      const hasPermission = await validatePermission("approve_tasks");
+      const canApproveAll = await validatePermission("approve_tasks");
+      const canApproveDepartment = await validatePermission(
+        "approve_department_tasks"
+      );
+
+      // Check if user can approve this specific task
+      const isTaskInDepartment =
+        task.createdBy.departmentId === session.departmentId;
+      const hasPermission =
+        canApproveAll || (canApproveDepartment && isTaskInDepartment);
+
       if (!hasPermission) throw new Error("Unauthorized");
     }
 
-    const task = await taskService.updateTaskStatus(id, status, session.userId);
+    const updatedTask = await taskService.updateTaskStatus(
+      id,
+      status,
+      session.userId
+    );
 
     revalidateTag("tasks");
-    return { success: true, data: task };
+    return { success: true, data: updatedTask };
   } catch (error) {
     return {
       success: false,
