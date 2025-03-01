@@ -7,12 +7,12 @@ import { Task } from "@/lib/tasks/types";
 import { formatDate } from "@/lib/utils/format";
 import { motion } from "framer-motion";
 import {
-    CalendarIcon,
-    CheckCircle2,
-    Clock,
-    Edit2,
-    User,
-    XCircle,
+  CalendarIcon,
+  CheckCircle2,
+  Clock,
+  Edit2,
+  User,
+  XCircle,
 } from "lucide-react";
 import Link from "next/link";
 import { TaskActions } from "./task-actions";
@@ -35,7 +35,7 @@ export function TaskDetails({ task, user }: TaskDetailsProps) {
         <h1 className="text-3xl font-bold tracking-tight">{task.title}</h1>
         <div className="flex items-center gap-2">
           {canEdit && (
-            <Button asChild>
+            <Button asChild className="bg-kr-orange hover:bg-kr-orange/90">
               <Link href={`/dashboard/tasks/${task.id}/edit`}>
                 <Edit2 className="mr-2 h-4 w-4" />
                 Edit Task

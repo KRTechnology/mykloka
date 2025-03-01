@@ -186,7 +186,11 @@ export function TaskEditForm({ task, user }: TaskEditFormProps) {
           <Button type="button" variant="outline" onClick={() => router.back()}>
             Cancel
           </Button>
-          <Button type="submit" disabled={form.formState.isSubmitting}>
+          <Button
+            type="submit"
+            disabled={form.formState.isSubmitting}
+            className="bg-kr-orange hover:bg-kr-orange/90"
+          >
             Save Changes
           </Button>
         </div>

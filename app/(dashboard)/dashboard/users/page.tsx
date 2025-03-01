@@ -65,7 +65,7 @@ export default async function UsersPage({ searchParams }: PageProps) {
           />
           {canCreateUsers && (
             <Link href="/dashboard/users/add">
-              <Button>
+              <Button className="bg-kr-orange hover:bg-kr-orange/90">
                 <Plus className="mr-2 h-4 w-4" />
                 Add User
               </Button>

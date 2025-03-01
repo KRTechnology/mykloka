@@ -2,13 +2,43 @@ import { revalidateTag } from "next/cache";
 import { z } from "zod";
 
 export const inviteUserSchema = z.object({
-  email: z.string().email(),
-  firstName: z.string().min(1),
-  lastName: z.string().min(1),
-  roleId: z.string().uuid(),
-  departmentId: z.string().uuid().optional(),
-  managerId: z.string().uuid().optional(),
-  phoneNumber: z.string().optional(),
+  email: z
+    .string({ required_error: "Email is required" })
+    .email("Please enter a valid email address"),
+  firstName: z
+    .string({ required_error: "First name is required" })
+    .min(1, "First name cannot be empty")
+    .trim()
+    .regex(
+      /^[a-zA-Z\s-']+$/,
+      "First name can only contain letters, spaces, hyphens, and apostrophes"
+    ),
+  lastName: z
+    .string({ required_error: "Last name is required" })
+    .min(1, "Last name cannot be empty")
+    .trim()
+    .regex(
+      /^[a-zA-Z\s-']+$/,
+      "Last name can only contain letters, spaces, hyphens, and apostrophes"
+    ),
+  roleId: z
+    .string({ required_error: "Role is required" })
+    .uuid("Invalid role selected"),
+  departmentId: z
+    .string({ required_error: "Department is required" })
+    .uuid("Invalid department selected")
+    .optional()
+    .or(z.literal("")),
+  managerId: z
+    .string({ required_error: "Manager is required" })
+    .uuid("Invalid manager selected")
+    .optional()
+    .or(z.literal("")),
+  phoneNumber: z
+    .string()
+    .regex(/^\+?[1-9]\d{1,14}$/, "Please enter a valid phone number")
+    .optional()
+    .or(z.literal("")),
 });
 
 export const updateUserSchema = z
