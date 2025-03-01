@@ -113,20 +113,26 @@ export async function updateTaskStatusAction(
       const hasPermission = await checkManagerApprovalPermission();
       if (!hasPermission) throw new Error("Unauthorized");
 
-      // Allow IN_PROGRESS for both initial approval and reverting from completed
-      if (task.status !== "PENDING" && task.status !== "COMPLETED") {
-        throw new Error(
-          "Task must be pending or completed to move to in progress"
-        );
+      // Allow IN_PROGRESS for initial approval, rejected tasks, or when returning from completed
+      if (!["PENDING", "COMPLETED", "REJECTED"].includes(task.status)) {
+        throw new Error("Cannot move task to in progress from current status");
       }
     }
 
     if (status === "COMPLETED") {
-      // Only the assigned user can mark as completed
-      if (task.assignedToId !== session.userId)
+      // Allow completion by assigned user OR allow managers to reopen approved tasks
+      const isManager = await checkManagerApprovalPermission();
+      const isAssignedUser = task.assignedToId === session.userId;
+      const isReopeningApproved = task.status === "APPROVED" && isManager;
+
+      if (!isAssignedUser && !isReopeningApproved) {
         throw new Error("Only the assigned user can mark as completed");
-      if (task.status !== "IN_PROGRESS")
+      }
+
+      // Only allow COMPLETED status from IN_PROGRESS or when reopening from APPROVED
+      if (task.status !== "IN_PROGRESS" && !isReopeningApproved) {
         throw new Error("Task must be in progress before completion");
+      }
     }
 
     if (status === "REJECTED") {

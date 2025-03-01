@@ -85,15 +85,16 @@ export function TaskActions({ task, canApprove }: TaskActionsProps) {
         )}
 
         {/* Task completion by assignee */}
-        {task.status === "IN_PROGRESS" && (
-          <DropdownMenuItem
-            onClick={() => handleStatusChange("COMPLETED")}
-            disabled={isPending}
-          >
-            <Check className="mr-2 h-4 w-4 text-kr-green" />
-            Mark as Completed
-          </DropdownMenuItem>
-        )}
+        {task.status === "IN_PROGRESS" &&
+          task.assignedToId === task.assignedToId && (
+            <DropdownMenuItem
+              onClick={() => handleStatusChange("COMPLETED")}
+              disabled={isPending}
+            >
+              <Check className="mr-2 h-4 w-4 text-kr-green" />
+              Mark as Completed
+            </DropdownMenuItem>
+          )}
 
         {/* Final approval by manager (Completed -> Approved) */}
         {canApprove && task.status === "COMPLETED" && (
@@ -114,6 +115,53 @@ export function TaskActions({ task, canApprove }: TaskActionsProps) {
               Return to In Progress
             </DropdownMenuItem>
           </>
+        )}
+
+        {/* Actions for rejected tasks */}
+        {canApprove && task.status === "REJECTED" && (
+          <DropdownMenuItem
+            onClick={() => handleStatusChange("IN_PROGRESS")}
+            disabled={isPending}
+          >
+            <Play className="mr-2 h-4 w-4 text-kr-green" />
+            Restart Task
+          </DropdownMenuItem>
+        )}
+
+        {/* Actions for approved tasks */}
+        {canApprove && task.status === "APPROVED" && (
+          <DropdownMenuItem
+            onClick={() => handleStatusChange("COMPLETED")}
+            disabled={isPending}
+          >
+            <RotateCcw className="mr-2 h-4 w-4" />
+            Reopen for Review
+          </DropdownMenuItem>
+        )}
+
+        {/* Show status message for non-managers */}
+        {!canApprove && task.status === "REJECTED" && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <DropdownMenuLabel className="flex items-center text-destructive">
+              <X className="mr-2 h-4 w-4" />
+              Task Rejected
+            </DropdownMenuLabel>
+          </motion.div>
+        )}
+
+        {!canApprove && task.status === "APPROVED" && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <DropdownMenuLabel className="flex items-center text-kr-green">
+              <Check className="mr-2 h-4 w-4" />
+              Task Completed & Approved
+            </DropdownMenuLabel>
+          </motion.div>
         )}
       </DropdownMenuContent>
     </DropdownMenu>
