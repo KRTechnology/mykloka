@@ -2,91 +2,200 @@
 
 import { Button } from "@/components/ui/button";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
 import { Task } from "@/lib/tasks/types";
-import { motion } from "framer-motion";
-import { Filter } from "lucide-react";
-import { useState } from "react";
+import { ChevronDown, Search } from "lucide-react";
+import { useCallback, useState } from "react";
 
 interface TaskFiltersProps {
   tasks: Task[];
   onFilterChange: (filters: {
-    viewMode: "all" | "my-tasks" | "department";
+    viewMode?: "all" | "my-tasks" | "department";
     status?: Task["status"];
+    sortBy?: string;
+    sortDirection?: "asc" | "desc";
+    search?: string;
   }) => void;
   canViewDepartment: boolean;
+  currentFilters: {
+    viewMode: string;
+    status?: Task["status"];
+    sortBy?: string;
+    sortDirection?: "asc" | "desc";
+    search?: string;
+  };
 }
 
 export function TaskFilters({
   tasks,
   onFilterChange,
   canViewDepartment,
+  currentFilters,
 }: TaskFiltersProps) {
-  const [viewMode, setViewMode] = useState<"all" | "my-tasks" | "department">(
-    "all"
+  const [searchQuery, setSearchQuery] = useState(currentFilters.search || "");
+
+  const handleSearch = useCallback(
+    (value: string) => {
+      setSearchQuery(value);
+      onFilterChange({ search: value || undefined });
+    },
+    [onFilterChange]
   );
-  const [status, setStatus] = useState<Task["status"] | "all">("all");
 
-  const handleViewModeChange = (newMode: typeof viewMode) => {
-    setViewMode(newMode);
-    onFilterChange({
-      viewMode: newMode,
-      status: status === "all" ? undefined : status,
-    });
-  };
-
-  const handleStatusChange = (newStatus: Task["status"] | "all") => {
-    setStatus(newStatus);
-    onFilterChange({
-      viewMode,
-      status: newStatus === "all" ? undefined : newStatus,
-    });
-  };
+  const handleSort = useCallback(
+    (field: string) => {
+      const direction =
+        currentFilters.sortBy === field &&
+        currentFilters.sortDirection === "asc"
+          ? "desc"
+          : "asc";
+      onFilterChange({ sortBy: field, sortDirection: direction });
+    },
+    [currentFilters.sortBy, currentFilters.sortDirection, onFilterChange]
+  );
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: -20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="flex flex-wrap gap-4 items-center mb-6"
-    >
-      <div className="flex items-center gap-2">
-        <Filter className="h-4 w-4 text-muted-foreground" />
-        <span className="text-sm font-medium">View:</span>
-        <Select value={viewMode} onValueChange={handleViewModeChange}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Select view" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Tasks</SelectItem>
-            <SelectItem value="my-tasks">My Tasks</SelectItem>
+    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-1 items-center gap-4">
+        <div className="relative flex-1">
+          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search tasks..."
+            value={searchQuery}
+            onChange={(e) => handleSearch(e.target.value)}
+            className="pl-8"
+          />
+        </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline">
+              View
+              <ChevronDown className="ml-2 h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem
+              onClick={() => onFilterChange({ viewMode: "all" })}
+              className={currentFilters.viewMode === "all" ? "bg-accent" : ""}
+            >
+              All Tasks
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => onFilterChange({ viewMode: "my-tasks" })}
+              className={
+                currentFilters.viewMode === "my-tasks" ? "bg-accent" : ""
+              }
+            >
+              My Tasks
+            </DropdownMenuItem>
             {canViewDepartment && (
-              <SelectItem value="department">Department Tasks</SelectItem>
+              <DropdownMenuItem
+                onClick={() => onFilterChange({ viewMode: "department" })}
+                className={
+                  currentFilters.viewMode === "department" ? "bg-accent" : ""
+                }
+              >
+                Department Tasks
+              </DropdownMenuItem>
             )}
-          </SelectContent>
-        </Select>
+          </DropdownMenuContent>
+        </DropdownMenu>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline">
+              Status
+              <ChevronDown className="ml-2 h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem
+              onClick={() => onFilterChange({ status: undefined })}
+              className={!currentFilters.status ? "bg-accent" : ""}
+            >
+              All Statuses
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => onFilterChange({ status: "PENDING" })}
+              className={currentFilters.status === "PENDING" ? "bg-accent" : ""}
+            >
+              Pending
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => onFilterChange({ status: "IN_PROGRESS" })}
+              className={
+                currentFilters.status === "IN_PROGRESS" ? "bg-accent" : ""
+              }
+            >
+              In Progress
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => onFilterChange({ status: "COMPLETED" })}
+              className={
+                currentFilters.status === "COMPLETED" ? "bg-accent" : ""
+              }
+            >
+              Completed
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => onFilterChange({ status: "APPROVED" })}
+              className={
+                currentFilters.status === "APPROVED" ? "bg-accent" : ""
+              }
+            >
+              Approved
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => onFilterChange({ status: "REJECTED" })}
+              className={
+                currentFilters.status === "REJECTED" ? "bg-accent" : ""
+              }
+            >
+              Rejected
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline">
+              Sort By
+              <ChevronDown className="ml-2 h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem
+              onClick={() => handleSort("createdAt")}
+              className={
+                currentFilters.sortBy === "createdAt" ? "bg-accent" : ""
+              }
+            >
+              Date Created{" "}
+              {currentFilters.sortBy === "createdAt" &&
+                (currentFilters.sortDirection === "asc" ? "↑" : "↓")}
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => handleSort("title")}
+              className={currentFilters.sortBy === "title" ? "bg-accent" : ""}
+            >
+              Title{" "}
+              {currentFilters.sortBy === "title" &&
+                (currentFilters.sortDirection === "asc" ? "↑" : "↓")}
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => handleSort("dueTime")}
+              className={currentFilters.sortBy === "dueTime" ? "bg-accent" : ""}
+            >
+              Due Date{" "}
+              {currentFilters.sortBy === "dueTime" &&
+                (currentFilters.sortDirection === "asc" ? "↑" : "↓")}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
-
-      <div className="flex items-center gap-2">
-        <span className="text-sm font-medium">Status:</span>
-        <Select value={status} onValueChange={handleStatusChange}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Filter by status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Statuses</SelectItem>
-            <SelectItem value="PENDING">Pending</SelectItem>
-            <SelectItem value="APPROVED">Approved</SelectItem>
-            <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
-            <SelectItem value="COMPLETED">Completed</SelectItem>
-            <SelectItem value="REJECTED">Rejected</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-    </motion.div>
+    </div>
   );
 }

@@ -16,6 +16,15 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 import { UserJWTPayload } from "@/lib/auth/auth.service";
 import { Task } from "@/lib/tasks/types";
 import { formatDate } from "@/lib/utils/format";
@@ -26,114 +35,179 @@ import { TaskActions } from "./task-actions";
 interface TaskListProps {
   tasks: Task[];
   user: UserJWTPayload;
-  //   userId: string;
+  currentPage: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
 }
 
-export function TaskList({ tasks, user }: TaskListProps) {
+export function TaskList({
+  tasks,
+  user,
+  currentPage,
+  totalPages,
+  onPageChange,
+}: TaskListProps) {
   const router = useRouter();
 
-  return (
-    <div className="rounded-md border">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Title</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Assigned To</TableHead>
-            <TableHead>Due Date</TableHead>
-            <TableHead>Created By</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {tasks.map((task) => {
-            // Check if the task belongs to the manager's department
-            const isTaskInDepartment =
-              task.createdBy.departmentId === user.departmentId;
-            const canApproveThisTask =
-              user.permissions.includes("approve_tasks") ||
-              (user.permissions.includes("approve_department_tasks") &&
-                isTaskInDepartment);
+  // Generate pagination items
+  const paginationItems = [];
+  for (let i = 1; i <= totalPages; i++) {
+    if (
+      i === 1 ||
+      i === totalPages ||
+      (i >= currentPage - 1 && i <= currentPage + 1)
+    ) {
+      paginationItems.push(
+        <PaginationItem key={i}>
+          <PaginationLink
+            onClick={() => onPageChange(i)}
+            isActive={currentPage === i}
+          >
+            {i}
+          </PaginationLink>
+        </PaginationItem>
+      );
+    } else if (i === currentPage - 2 || i === currentPage + 2) {
+      paginationItems.push(
+        <PaginationItem key={i}>
+          <PaginationEllipsis />
+        </PaginationItem>
+      );
+    }
+  }
 
-            return (
-              <TableRow key={task.id}>
-                <TableCell className="font-medium">{task.title}</TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-2">
-                    <TaskStatusBadge status={task.status} />
-                    {(task.approvedBy || task.completionApprovedBy) && (
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button variant="ghost" className="h-4 w-4 p-0">
-                              <Info className="h-3 w-3" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <div className="space-y-2 text-xs">
-                              {task.approvedBy && (
-                                <p>
-                                  Initially approved by{" "}
-                                  {`${task.approvedBy.firstName} ${task.approvedBy.lastName}`}
-                                  <br />
-                                  on {formatDate(task.approvalDate!)}
-                                </p>
-                              )}
-                              {task.completionApprovedBy && (
-                                <p>
-                                  Completion verified by{" "}
-                                  {`${task.completionApprovedBy.firstName} ${task.completionApprovedBy.lastName}`}
-                                  <br />
-                                  on {formatDate(task.completionApprovalDate!)}
-                                </p>
-                              )}
-                            </div>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    )}
-                  </div>
-                </TableCell>
-                <TableCell>
-                  {task.assignedTo
-                    ? `${task.assignedTo.firstName} ${task.assignedTo.lastName}`
-                    : "Unassigned"}
-                </TableCell>
-                <TableCell>
-                  {task.dueTime ? formatDate(task.dueTime) : "No due date"}
-                </TableCell>
-                <TableCell>
-                  {`${task.createdBy.firstName} ${task.createdBy.lastName}`}
-                </TableCell>
-                <TableCell className="text-right">
-                  <div className="flex items-center justify-end gap-2">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => router.push(`/dashboard/tasks/${task.id}`)}
-                    >
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                    {(task.createdById === user.userId ||
-                      canApproveThisTask) && (
+  return (
+    <div className="space-y-4">
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Title</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Assigned To</TableHead>
+              <TableHead>Due Date</TableHead>
+              <TableHead>Created By</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {tasks.map((task) => {
+              // Check if the task belongs to the manager's department
+              const isTaskInDepartment =
+                task.createdBy.departmentId === user.departmentId;
+              const canApproveThisTask =
+                user.permissions.includes("approve_tasks") ||
+                (user.permissions.includes("approve_department_tasks") &&
+                  isTaskInDepartment);
+
+              return (
+                <TableRow key={task.id}>
+                  <TableCell className="font-medium">{task.title}</TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <TaskStatusBadge status={task.status} />
+                      {(task.approvedBy || task.completionApprovedBy) && (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button variant="ghost" className="h-4 w-4 p-0">
+                                <Info className="h-3 w-3" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <div className="space-y-2 text-xs">
+                                {task.approvedBy && (
+                                  <p>
+                                    Initially approved by{" "}
+                                    {`${task.approvedBy.firstName} ${task.approvedBy.lastName}`}
+                                    <br />
+                                    on {formatDate(task.approvalDate!)}
+                                  </p>
+                                )}
+                                {task.completionApprovedBy && (
+                                  <p>
+                                    Completion verified by{" "}
+                                    {`${task.completionApprovedBy.firstName} ${task.completionApprovedBy.lastName}`}
+                                    <br />
+                                    on{" "}
+                                    {formatDate(task.completionApprovalDate!)}
+                                  </p>
+                                )}
+                              </div>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    {task.assignedTo
+                      ? `${task.assignedTo.firstName} ${task.assignedTo.lastName}`
+                      : "Unassigned"}
+                  </TableCell>
+                  <TableCell>
+                    {task.dueTime ? formatDate(task.dueTime) : "No due date"}
+                  </TableCell>
+                  <TableCell>
+                    {`${task.createdBy.firstName} ${task.createdBy.lastName}`}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex items-center justify-end gap-2">
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() =>
-                          router.push(`/dashboard/tasks/${task.id}/edit`)
+                          router.push(`/dashboard/tasks/${task.id}`)
                         }
                       >
-                        <Edit2 className="h-4 w-4" />
+                        <Eye className="h-4 w-4" />
                       </Button>
-                    )}
-                    <TaskActions task={task} canApprove={canApproveThisTask} />
-                  </div>
-                </TableCell>
-              </TableRow>
-            );
-          })}
-        </TableBody>
-      </Table>
+                      {(task.createdById === user.userId ||
+                        canApproveThisTask) && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() =>
+                            router.push(`/dashboard/tasks/${task.id}/edit`)
+                          }
+                        >
+                          <Edit2 className="h-4 w-4" />
+                        </Button>
+                      )}
+                      <TaskActions
+                        task={task}
+                        canApprove={canApproveThisTask}
+                      />
+                    </div>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </div>
+
+      {totalPages > 1 && (
+        <div className="mt-4">
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  onClick={() => onPageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                />
+              </PaginationItem>
+              {paginationItems}
+              <PaginationItem>
+                <PaginationNext
+                  onClick={() => onPageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        </div>
+      )}
     </div>
   );
 }

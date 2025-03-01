@@ -6,13 +6,20 @@ import { UserJWTPayload } from "@/lib/auth/auth.service";
 import { Task } from "@/lib/tasks/types";
 import { AnimatePresence, motion } from "framer-motion";
 import { ClipboardList } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { CreateTaskButton } from "./create-task-button";
 import { TaskFilters } from "./task-filters";
 import { TaskList } from "./task-list";
 
 interface TasksOverviewProps {
-  tasks: Task[];
+  initialTasks: {
+    data: Task[];
+    total: number;
+    page: number;
+    pageSize: number;
+    totalPages: number;
+  };
   user: UserJWTPayload;
 }
 
@@ -21,42 +28,73 @@ type ViewMode = "all" | "my-tasks" | "department";
 interface Filters {
   viewMode: ViewMode;
   status?: Task["status"];
+  page?: number;
+  sortBy?: string;
+  sortDirection?: "asc" | "desc";
+  search?: string;
 }
 
-export function TasksOverview({ tasks, user }: TasksOverviewProps) {
+export function TasksOverview({ initialTasks, user }: TasksOverviewProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const [tasks, setTasks] = useState(initialTasks);
+
   const [filters, setFilters] = useState<Filters>({
-    viewMode: "all",
-    status: undefined,
+    viewMode: (searchParams.get("viewMode") as ViewMode) || "all",
+    status: (searchParams.get("status") as Task["status"]) || undefined,
+    page: parseInt(searchParams.get("page") || "1"),
+    sortBy: searchParams.get("sortBy") || "createdAt",
+    sortDirection:
+      (searchParams.get("sortDirection") as "asc" | "desc") || "desc",
+    search: searchParams.get("search") || undefined,
   });
 
   const canViewDepartment = user.permissions.includes("view_department");
 
-  const filteredTasks = useMemo(() => {
-    let filtered = [...tasks];
+  // Update URL when filters change
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (filters.viewMode) params.set("viewMode", filters.viewMode);
+    if (filters.status) params.set("status", filters.status);
+    if (filters.page) params.set("page", filters.page.toString());
+    if (filters.sortBy) params.set("sortBy", filters.sortBy);
+    if (filters.sortDirection)
+      params.set("sortDirection", filters.sortDirection);
+    if (filters.search) params.set("search", filters.search);
 
-    // Apply view mode filter
-    if (filters.viewMode === "my-tasks") {
-      filtered = filtered.filter(
-        (task) =>
-          task.createdById === user.userId || task.assignedToId === user.userId
-      );
-    } else if (filters.viewMode === "department" && canViewDepartment) {
-      filtered = filtered.filter(
-        (task) => task.requiresApproval && task.status === "PENDING"
-      );
-    }
+    router.push(`${pathname}?${params.toString()}`);
+  }, [filters, pathname, router]);
 
-    // Apply status filter
-    if (filters.status) {
-      filtered = filtered.filter((task) => task.status === filters.status);
-    }
+  // Update tasks when URL params change
+  useEffect(() => {
+    const fetchTasks = async () => {
+      const params = new URLSearchParams(searchParams);
+      const response = await fetch(`/api/tasks?${params.toString()}`);
+      if (response.ok) {
+        const data = await response.json();
+        setTasks(data);
+      }
+    };
 
-    return filtered;
-  }, [tasks, filters, user.userId, canViewDepartment]);
+    fetchTasks();
+  }, [searchParams]);
+
+  const handlePageChange = useCallback((page: number) => {
+    setFilters((prev) => ({ ...prev, page }));
+  }, []);
+
+  const handleFilterChange = useCallback((newFilters: Partial<Filters>) => {
+    setFilters((prev) => ({
+      ...prev,
+      ...newFilters,
+      page: 1, // Reset to first page when filters change
+    }));
+  }, []);
 
   const canApproveTasks = user.permissions.includes("approve_tasks");
 
-  if (tasks.length === 0) {
+  if (tasks.data.length === 0) {
     return (
       <Card>
         <CardContent className="flex flex-col items-center justify-center py-16">
@@ -78,19 +116,26 @@ export function TasksOverview({ tasks, user }: TasksOverviewProps) {
   return (
     <div className="space-y-4">
       <TaskFilters
-        tasks={tasks}
-        onFilterChange={setFilters}
+        tasks={tasks.data}
+        onFilterChange={handleFilterChange}
         canViewDepartment={canViewDepartment}
+        currentFilters={filters}
       />
 
       <AnimatePresence mode="wait">
         <motion.div
-          key={`${filters.viewMode}-${filters.status}`}
+          key={`${filters.viewMode}-${filters.status}-${filters.page}`}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
         >
-          <TaskList tasks={filteredTasks} user={user} />
+          <TaskList
+            tasks={tasks.data}
+            user={user}
+            currentPage={tasks.page}
+            totalPages={tasks.totalPages}
+            onPageChange={handlePageChange}
+          />
         </motion.div>
       </AnimatePresence>
     </div>
