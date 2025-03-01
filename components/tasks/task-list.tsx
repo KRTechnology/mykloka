@@ -109,16 +109,41 @@ export function TaskStatusBadge({ status }: { status: Task["status"] }) {
     {
       label: string;
       variant: "default" | "secondary" | "destructive" | "outline" | "success";
+      className?: string;
     }
   > = {
-    PENDING: { label: "Pending", variant: "secondary" },
-    IN_PROGRESS: { label: "In Progress", variant: "default" },
-    COMPLETED: { label: "Completed", variant: "success" },
-    APPROVED: { label: "Approved", variant: "success" },
-    REJECTED: { label: "Rejected", variant: "destructive" },
+    PENDING: {
+      label: "Pending",
+      variant: "secondary",
+      className:
+        "bg-yellow-100 text-yellow-800 hover:bg-yellow-100/80 border-yellow-200",
+    },
+    IN_PROGRESS: {
+      label: "In Progress",
+      variant: "default",
+      className:
+        "bg-blue-100 text-blue-800 hover:bg-blue-100/80 border-blue-200",
+    },
+    COMPLETED: {
+      label: "Completed",
+      variant: "outline",
+      className:
+        "bg-orange-100 text-orange-800 hover:bg-orange-100/80 border-orange-200",
+    },
+    APPROVED: {
+      label: "Approved",
+      variant: "success",
+      className:
+        "bg-green-100 text-green-800 hover:bg-green-100/80 border-green-200",
+    },
+    REJECTED: {
+      label: "Rejected",
+      variant: "destructive",
+      className: "bg-red-100 text-red-800 hover:bg-red-100/80 border-red-200",
+    },
   };
 
-  const { label, variant } = variants[status];
+  const { label, className } = variants[status];
 
-  return <Badge variant={variant}>{label}</Badge>;
+  return <Badge className={className}>{label}</Badge>;
 }
