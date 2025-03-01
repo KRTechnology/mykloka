@@ -28,7 +28,14 @@ export function TaskActions({ task, canApprove }: TaskActionsProps) {
       const result = await updateTaskStatusAction(task.id, status);
 
       if (result.success) {
-        toast.success("Task status updated successfully");
+        const messages: Record<Task["status"], string> = {
+          PENDING: "Task status updated",
+          IN_PROGRESS: "Task approved and ready to start",
+          COMPLETED: "Task marked as completed",
+          APPROVED: "Task completion verified and approved",
+          REJECTED: "Task rejected",
+        };
+        toast.success(messages[status]);
       } else {
         toast.error(result.error || "Failed to update task status");
       }
@@ -44,6 +51,7 @@ export function TaskActions({ task, canApprove }: TaskActionsProps) {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
+        {/* Initial approval by manager (Pending -> In Progress) */}
         {task.status === "PENDING" && !canApprove && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
@@ -51,20 +59,19 @@ export function TaskActions({ task, canApprove }: TaskActionsProps) {
           >
             <DropdownMenuLabel className="flex items-center text-muted-foreground">
               <Clock className="mr-2 h-4 w-4 text-kr-yellow" />
-              Awaiting Approval
+              Awaiting Manager Approval
             </DropdownMenuLabel>
           </motion.div>
         )}
 
-        {/* Approval actions for managers and super admins */}
         {canApprove && task.status === "PENDING" && (
           <>
             <DropdownMenuItem
-              onClick={() => handleStatusChange("APPROVED")}
+              onClick={() => handleStatusChange("IN_PROGRESS")}
               disabled={isPending}
             >
               <Play className="mr-2 h-4 w-4 text-kr-green" />
-              Approve Task
+              Approve to Start
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => handleStatusChange("REJECTED")}
@@ -77,8 +84,8 @@ export function TaskActions({ task, canApprove }: TaskActionsProps) {
           </>
         )}
 
-        {/* Actions for task owners/assignees */}
-        {task.status === "APPROVED" && (
+        {/* Task completion by assignee */}
+        {task.status === "IN_PROGRESS" && (
           <DropdownMenuItem
             onClick={() => handleStatusChange("COMPLETED")}
             disabled={isPending}
@@ -88,15 +95,25 @@ export function TaskActions({ task, canApprove }: TaskActionsProps) {
           </DropdownMenuItem>
         )}
 
-        {/* Managers can revert completed tasks */}
+        {/* Final approval by manager (Completed -> Approved) */}
         {canApprove && task.status === "COMPLETED" && (
-          <DropdownMenuItem
-            onClick={() => handleStatusChange("IN_PROGRESS")}
-            disabled={isPending}
-          >
-            <RotateCcw className="mr-2 h-4 w-4" />
-            Revert to In Progress
-          </DropdownMenuItem>
+          <>
+            <DropdownMenuItem
+              onClick={() => handleStatusChange("APPROVED")}
+              disabled={isPending}
+            >
+              <Check className="mr-2 h-4 w-4 text-kr-green" />
+              Verify & Approve Completion
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => handleStatusChange("IN_PROGRESS")}
+              disabled={isPending}
+              className="text-muted-foreground"
+            >
+              <RotateCcw className="mr-2 h-4 w-4" />
+              Return to In Progress
+            </DropdownMenuItem>
+          </>
         )}
       </DropdownMenuContent>
     </DropdownMenu>

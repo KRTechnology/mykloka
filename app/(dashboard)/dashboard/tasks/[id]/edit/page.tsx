@@ -31,7 +31,9 @@ export default async function EditTaskPage({ params }: EditTaskPageProps) {
   // Check if user can edit this task
   const canEdit =
     task.createdById === session.userId ||
-    session.permissions.includes("approve_tasks");
+    session.permissions.includes("approve_tasks") ||
+    session.permissions.includes("create_tasks_for_others") ||
+    session.permissions.includes("approve_department_tasks");
 
   if (!canEdit) {
     notFound();

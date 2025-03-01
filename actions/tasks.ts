@@ -85,18 +85,56 @@ export async function updateTaskStatusAction(
     const session = await getServerSession();
     if (!session) throw new Error("Unauthorized");
 
-    // Get the task first to check department
+    // Get the task first to check department and current status
     const task = await taskService.getTaskById(id);
     if (!task) throw new Error("Task not found");
 
-    // Check permissions based on status change
-    if (["APPROVED", "REJECTED"].includes(status)) {
+    // Check permissions based on status change and current status
+    if (status === "APPROVED") {
+      // For final approval of completed tasks
       const canApproveAll = await validatePermission("approve_tasks");
       const canApproveDepartment = await validatePermission(
         "approve_department_tasks"
       );
+      const isTaskInDepartment =
+        task.createdBy.departmentId === session.departmentId;
+      const hasPermission =
+        canApproveAll || (canApproveDepartment && isTaskInDepartment);
 
-      // Check if user can approve this specific task
+      if (!hasPermission) throw new Error("Unauthorized");
+      if (task.status !== "COMPLETED")
+        throw new Error("Task must be completed before final approval");
+    }
+
+    if (status === "IN_PROGRESS") {
+      // For initial task approval (moving from PENDING to IN_PROGRESS)
+      const canApproveAll = await validatePermission("approve_tasks");
+      const canApproveDepartment = await validatePermission(
+        "approve_department_tasks"
+      );
+      const isTaskInDepartment =
+        task.createdBy.departmentId === session.departmentId;
+      const hasPermission =
+        canApproveAll || (canApproveDepartment && isTaskInDepartment);
+
+      if (!hasPermission) throw new Error("Unauthorized");
+      if (task.status !== "PENDING")
+        throw new Error("Only pending tasks can be approved to start");
+    }
+
+    if (status === "COMPLETED") {
+      // Only the assigned user can mark as completed
+      if (task.assignedToId !== session.userId)
+        throw new Error("Only the assigned user can mark as completed");
+      if (task.status !== "IN_PROGRESS")
+        throw new Error("Task must be in progress before completion");
+    }
+
+    if (status === "REJECTED") {
+      const canApproveAll = await validatePermission("approve_tasks");
+      const canApproveDepartment = await validatePermission(
+        "approve_department_tasks"
+      );
       const isTaskInDepartment =
         task.createdBy.departmentId === session.departmentId;
       const hasPermission =
