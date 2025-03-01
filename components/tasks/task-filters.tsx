@@ -9,40 +9,41 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Task } from "@/lib/tasks/types";
-import { ChevronDown, Search } from "lucide-react";
+import { ChevronDown, Loader2, Search } from "lucide-react";
 import { useCallback, useState } from "react";
+import { cn } from "@/lib/utils";
+
+type ViewMode = "all" | "my-tasks" | "department";
 
 interface TaskFiltersProps {
-  tasks: Task[];
-  onFilterChange: (filters: {
-    viewMode?: "all" | "my-tasks" | "department";
-    status?: Task["status"];
-    sortBy?: string;
-    sortDirection?: "asc" | "desc";
-    search?: string;
-  }) => void;
+  onFilterChange: (filters: Record<string, string | null>) => void;
   canViewDepartment: boolean;
-  currentFilters: {
-    viewMode: string;
-    status?: Task["status"];
-    sortBy?: string;
-    sortDirection?: "asc" | "desc";
-    search?: string;
-  };
+  isLoading?: boolean;
+  initialFilters: Record<string, string>;
 }
 
 export function TaskFilters({
-  tasks,
   onFilterChange,
   canViewDepartment,
-  currentFilters,
+  isLoading,
+  initialFilters,
 }: TaskFiltersProps) {
-  const [searchQuery, setSearchQuery] = useState(currentFilters.search || "");
+  const [searchQuery, setSearchQuery] = useState(initialFilters.search || "");
+  const [viewMode, setViewMode] = useState<ViewMode>(
+    (initialFilters.viewMode as ViewMode) || "all"
+  );
+  const [status, setStatus] = useState<Task["status"] | undefined>(
+    initialFilters.status as Task["status"]
+  );
+  const [sortBy, setSortBy] = useState(initialFilters.sortBy || "createdAt");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">(
+    (initialFilters.sortDirection as "asc" | "desc") || "desc"
+  );
 
   const handleSearch = useCallback(
     (value: string) => {
       setSearchQuery(value);
-      onFilterChange({ search: value || undefined });
+      onFilterChange({ search: value || null });
     },
     [onFilterChange]
   );
@@ -50,13 +51,10 @@ export function TaskFilters({
   const handleSort = useCallback(
     (field: string) => {
       const direction =
-        currentFilters.sortBy === field &&
-        currentFilters.sortDirection === "asc"
-          ? "desc"
-          : "asc";
+        sortBy === field && sortDirection === "asc" ? "desc" : "asc";
       onFilterChange({ sortBy: field, sortDirection: direction });
     },
-    [currentFilters.sortBy, currentFilters.sortDirection, onFilterChange]
+    [sortBy, sortDirection, onFilterChange]
   );
 
   return (
@@ -68,37 +66,43 @@ export function TaskFilters({
             placeholder="Search tasks..."
             value={searchQuery}
             onChange={(e) => handleSearch(e.target.value)}
-            className="pl-8"
+            className={cn("pl-8", isLoading && "opacity-50")}
+            disabled={isLoading}
           />
+          {isLoading && (
+            <div className="absolute right-2 top-2.5">
+              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+            </div>
+          )}
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline">
+            <Button variant="outline" disabled={isLoading}>
               View
-              <ChevronDown className="ml-2 h-4 w-4" />
+              {isLoading ? (
+                <Loader2 className="ml-2 h-4 w-4 animate-spin" />
+              ) : (
+                <ChevronDown className="ml-2 h-4 w-4" />
+              )}
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem
               onClick={() => onFilterChange({ viewMode: "all" })}
-              className={currentFilters.viewMode === "all" ? "bg-accent" : ""}
+              className={viewMode === "all" ? "bg-accent" : ""}
             >
               All Tasks
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => onFilterChange({ viewMode: "my-tasks" })}
-              className={
-                currentFilters.viewMode === "my-tasks" ? "bg-accent" : ""
-              }
+              className={viewMode === "my-tasks" ? "bg-accent" : ""}
             >
               My Tasks
             </DropdownMenuItem>
             {canViewDepartment && (
               <DropdownMenuItem
                 onClick={() => onFilterChange({ viewMode: "department" })}
-                className={
-                  currentFilters.viewMode === "department" ? "bg-accent" : ""
-                }
+                className={viewMode === "department" ? "bg-accent" : ""}
               >
                 Department Tasks
               </DropdownMenuItem>
@@ -107,53 +111,49 @@ export function TaskFilters({
         </DropdownMenu>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline">
+            <Button variant="outline" disabled={isLoading}>
               Status
-              <ChevronDown className="ml-2 h-4 w-4" />
+              {isLoading ? (
+                <Loader2 className="ml-2 h-4 w-4 animate-spin" />
+              ) : (
+                <ChevronDown className="ml-2 h-4 w-4" />
+              )}
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem
-              onClick={() => onFilterChange({ status: undefined })}
-              className={!currentFilters.status ? "bg-accent" : ""}
+              onClick={() => onFilterChange({ status: null })}
+              className={!status ? "bg-accent" : ""}
             >
               All Statuses
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => onFilterChange({ status: "PENDING" })}
-              className={currentFilters.status === "PENDING" ? "bg-accent" : ""}
+              className={status === "PENDING" ? "bg-accent" : ""}
             >
               Pending
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => onFilterChange({ status: "IN_PROGRESS" })}
-              className={
-                currentFilters.status === "IN_PROGRESS" ? "bg-accent" : ""
-              }
+              className={status === "IN_PROGRESS" ? "bg-accent" : ""}
             >
               In Progress
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => onFilterChange({ status: "COMPLETED" })}
-              className={
-                currentFilters.status === "COMPLETED" ? "bg-accent" : ""
-              }
+              className={status === "COMPLETED" ? "bg-accent" : ""}
             >
               Completed
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => onFilterChange({ status: "APPROVED" })}
-              className={
-                currentFilters.status === "APPROVED" ? "bg-accent" : ""
-              }
+              className={status === "APPROVED" ? "bg-accent" : ""}
             >
               Approved
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => onFilterChange({ status: "REJECTED" })}
-              className={
-                currentFilters.status === "REJECTED" ? "bg-accent" : ""
-              }
+              className={status === "REJECTED" ? "bg-accent" : ""}
             >
               Rejected
             </DropdownMenuItem>
@@ -161,37 +161,36 @@ export function TaskFilters({
         </DropdownMenu>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline">
+            <Button variant="outline" disabled={isLoading}>
               Sort By
-              <ChevronDown className="ml-2 h-4 w-4" />
+              {isLoading ? (
+                <Loader2 className="ml-2 h-4 w-4 animate-spin" />
+              ) : (
+                <ChevronDown className="ml-2 h-4 w-4" />
+              )}
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem
               onClick={() => handleSort("createdAt")}
-              className={
-                currentFilters.sortBy === "createdAt" ? "bg-accent" : ""
-              }
+              className={sortBy === "createdAt" ? "bg-accent" : ""}
             >
               Date Created{" "}
-              {currentFilters.sortBy === "createdAt" &&
-                (currentFilters.sortDirection === "asc" ? "↑" : "↓")}
+              {sortBy === "createdAt" && (sortDirection === "asc" ? "↑" : "↓")}
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => handleSort("title")}
-              className={currentFilters.sortBy === "title" ? "bg-accent" : ""}
+              className={sortBy === "title" ? "bg-accent" : ""}
             >
               Title{" "}
-              {currentFilters.sortBy === "title" &&
-                (currentFilters.sortDirection === "asc" ? "↑" : "↓")}
+              {sortBy === "title" && (sortDirection === "asc" ? "↑" : "↓")}
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => handleSort("dueTime")}
-              className={currentFilters.sortBy === "dueTime" ? "bg-accent" : ""}
+              className={sortBy === "dueTime" ? "bg-accent" : ""}
             >
               Due Date{" "}
-              {currentFilters.sortBy === "dueTime" &&
-                (currentFilters.sortDirection === "asc" ? "↑" : "↓")}
+              {sortBy === "dueTime" && (sortDirection === "asc" ? "↑" : "↓")}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

@@ -38,6 +38,7 @@ interface TaskListProps {
   currentPage: number;
   totalPages: number;
   onPageChange: (page: number) => void;
+  isLoading?: boolean;
 }
 
 export function TaskList({
@@ -46,6 +47,7 @@ export function TaskList({
   currentPage,
   totalPages,
   onPageChange,
+  isLoading,
 }: TaskListProps) {
   const router = useRouter();
 

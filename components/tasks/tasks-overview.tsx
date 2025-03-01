@@ -1,14 +1,9 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
 import { UserJWTPayload } from "@/lib/auth/auth.service";
 import { Task } from "@/lib/tasks/types";
-import { AnimatePresence, motion } from "framer-motion";
-import { ClipboardList } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { CreateTaskButton } from "./create-task-button";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useCallback, useState } from "react";
 import { TaskFilters } from "./task-filters";
 import { TaskList } from "./task-list";
 
@@ -21,6 +16,16 @@ interface TasksOverviewProps {
     totalPages: number;
   };
   user: UserJWTPayload;
+  fetchTasks: (
+    searchParams: any,
+    session: UserJWTPayload
+  ) => Promise<{
+    data: Task[];
+    total: number;
+    page: number;
+    pageSize: number;
+    totalPages: number;
+  }>;
 }
 
 type ViewMode = "all" | "my-tasks" | "department";
@@ -34,110 +39,86 @@ interface Filters {
   search?: string;
 }
 
-export function TasksOverview({ initialTasks, user }: TasksOverviewProps) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
+export function TasksOverview({
+  initialTasks,
+  user,
+  fetchTasks,
+}: TasksOverviewProps) {
   const [tasks, setTasks] = useState(initialTasks);
+  const [isLoading, setIsLoading] = useState(false);
+  const searchParams = useSearchParams();
+  const router = useRouter();
 
-  const [filters, setFilters] = useState<Filters>({
-    viewMode: (searchParams.get("viewMode") as ViewMode) || "all",
-    status: (searchParams.get("status") as Task["status"]) || undefined,
-    page: parseInt(searchParams.get("page") || "1"),
-    sortBy: searchParams.get("sortBy") || "createdAt",
-    sortDirection:
-      (searchParams.get("sortDirection") as "asc" | "desc") || "desc",
-    search: searchParams.get("search") || undefined,
-  });
+  const handleSearch = useCallback(
+    async (params: Record<string, string | null>) => {
+      setIsLoading(true);
+      try {
+        // Update URL with new search params
+        const newSearchParams = new URLSearchParams(searchParams);
+        Object.entries(params).forEach(([key, value]) => {
+          if (value) {
+            newSearchParams.set(key, value);
+          } else {
+            newSearchParams.delete(key);
+          }
+        });
 
-  const canViewDepartment = user.permissions.includes("view_department");
+        // Update the URL without triggering a navigation
+        router.replace(`?${newSearchParams.toString()}`, { scroll: false });
 
-  // Update URL when filters change
-  useEffect(() => {
-    const params = new URLSearchParams();
-    if (filters.viewMode) params.set("viewMode", filters.viewMode);
-    if (filters.status) params.set("status", filters.status);
-    if (filters.page) params.set("page", filters.page.toString());
-    if (filters.sortBy) params.set("sortBy", filters.sortBy);
-    if (filters.sortDirection)
-      params.set("sortDirection", filters.sortDirection);
-    if (filters.search) params.set("search", filters.search);
-
-    router.push(`${pathname}?${params.toString()}`);
-  }, [filters, pathname, router]);
-
-  // Update tasks when URL params change
-  useEffect(() => {
-    const fetchTasks = async () => {
-      const params = new URLSearchParams(searchParams);
-      const response = await fetch(`/api/tasks?${params.toString()}`);
-      if (response.ok) {
-        const data = await response.json();
-        setTasks(data);
+        // Fetch tasks with new params
+        const newTasks = await fetchTasks(
+          Object.fromEntries(newSearchParams.entries()),
+          user
+        );
+        setTasks(newTasks);
+      } catch (error) {
+        console.error("Error fetching tasks:", error);
+      } finally {
+        setIsLoading(false);
       }
-    };
+    },
+    [searchParams, router, fetchTasks, user]
+  );
 
-    fetchTasks();
-  }, [searchParams]);
-
-  const handlePageChange = useCallback((page: number) => {
-    setFilters((prev) => ({ ...prev, page }));
-  }, []);
-
-  const handleFilterChange = useCallback((newFilters: Partial<Filters>) => {
-    setFilters((prev) => ({
-      ...prev,
-      ...newFilters,
-      page: 1, // Reset to first page when filters change
-    }));
-  }, []);
-
-  const canApproveTasks = user.permissions.includes("approve_tasks");
+  const canViewDepartment = user.permissions.includes("view_department_tasks");
 
   if (tasks.data.length === 0) {
     return (
-      <Card>
-        <CardContent className="flex flex-col items-center justify-center py-16">
-          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-muted">
-            <ClipboardList className="h-10 w-10 text-muted-foreground" />
-          </div>
+      <div className="flex h-[450px] shrink-0 items-center justify-center rounded-md border border-dashed">
+        <div className="mx-auto flex max-w-[420px] flex-col items-center justify-center text-center">
           <h3 className="mt-4 text-lg font-semibold">No tasks found</h3>
-          <p className="mb-4 mt-2 text-center text-sm text-muted-foreground">
-            {canApproveTasks
+          <p className="mb-4 mt-2 text-sm text-muted-foreground">
+            {user.permissions.includes("approve_tasks")
               ? "No tasks require your attention at the moment."
               : "You don't have any tasks yet. Create one to get started!"}
           </p>
-          <CreateTaskButton />
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     );
   }
 
   return (
-    <div className="space-y-4">
-      <TaskFilters
-        tasks={tasks.data}
-        onFilterChange={handleFilterChange}
-        canViewDepartment={canViewDepartment}
-        currentFilters={filters}
-      />
-
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={`${filters.viewMode}-${filters.status}-${filters.page}`}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-        >
-          <TaskList
-            tasks={tasks.data}
-            user={user}
-            currentPage={tasks.page}
-            totalPages={tasks.totalPages}
-            onPageChange={handlePageChange}
-          />
-        </motion.div>
-      </AnimatePresence>
-    </div>
+    <>
+      <div className="flex items-center justify-between space-y-2">
+        <h2 className="text-3xl font-bold tracking-tight">Tasks</h2>
+      </div>
+      <div className="space-y-4">
+        <TaskFilters
+          onFilterChange={handleSearch}
+          isLoading={isLoading}
+          initialFilters={Object.fromEntries(searchParams)}
+          canViewDepartment={canViewDepartment}
+        />
+        <TaskList
+          tasks={tasks.data}
+          currentPage={tasks.page}
+          totalPages={tasks.totalPages}
+          onPageChange={(page) => handleSearch({ page: page.toString() })}
+          isLoading={isLoading}
+          user={user}
+        />
+      </div>
+    </>
   );
 }
