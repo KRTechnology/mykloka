@@ -84,35 +84,27 @@ export function TasksOverview({
 
   const canViewDepartment = user.permissions.includes("view_department_tasks");
 
-  if (tasks.data.length === 0) {
-    return (
-      <div className="flex h-[450px] shrink-0 items-center justify-center rounded-md border border-dashed">
-        <div className="mx-auto flex max-w-[420px] flex-col items-center justify-center text-center">
-          <h3 className="mt-4 text-lg font-semibold">No tasks found</h3>
-          <p className="mb-4 mt-2 text-sm text-muted-foreground">
-            {user.permissions.includes("approve_tasks")
-              ? "No tasks require your attention at the moment."
-              : "You don't have any tasks yet. Create one to get started!"}
-          </p>
-          <CreateTaskButton />
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <>
-      <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-bold tracking-tight">Tasks</h2>
-        <CreateTaskButton />
-      </div>
-      <div className="space-y-4">
-        <TaskFilters
-          onFilterChange={handleSearch}
-          isLoading={isLoading}
-          initialFilters={Object.fromEntries(searchParams)}
-          canViewDepartment={canViewDepartment}
-        />
+    <div className="space-y-4">
+      <TaskFilters
+        onFilterChange={handleSearch}
+        canViewDepartment={canViewDepartment}
+        isLoading={isLoading}
+        initialFilters={Object.fromEntries(searchParams.entries())}
+      />
+      {tasks.data.length === 0 ? (
+        <div className="flex h-[450px] shrink-0 items-center justify-center rounded-md border border-dashed">
+          <div className="mx-auto flex max-w-[420px] flex-col items-center justify-center text-center">
+            <h3 className="mt-4 text-lg font-semibold">No tasks found</h3>
+            <p className="mb-4 mt-2 text-sm text-muted-foreground">
+              {user.permissions.includes("approve_tasks")
+                ? "No tasks require your attention at the moment."
+                : "You don't have any tasks yet. Create one to get started!"}
+            </p>
+            <CreateTaskButton />
+          </div>
+        </div>
+      ) : (
         <TaskList
           tasks={tasks.data}
           currentPage={tasks.page}
@@ -121,7 +113,7 @@ export function TasksOverview({
           isLoading={isLoading}
           user={user}
         />
-      </div>
-    </>
+      )}
+    </div>
   );
 }

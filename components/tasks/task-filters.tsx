@@ -10,7 +10,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Task } from "@/lib/tasks/types";
 import { ChevronDown, Loader2, Search } from "lucide-react";
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 
 type ViewMode = "all" | "my-tasks" | "department";
@@ -39,11 +39,33 @@ export function TaskFilters({
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">(
     (initialFilters.sortDirection as "asc" | "desc") || "desc"
   );
+  const [isSearching, setIsSearching] = useState(false);
+  const searchTimeout = useRef<number | undefined>(undefined);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (searchTimeout.current) {
+        window.clearTimeout(searchTimeout.current);
+      }
+    };
+  }, []);
 
   const handleSearch = useCallback(
     (value: string) => {
       setSearchQuery(value);
-      onFilterChange({ search: value || null });
+      setIsSearching(true);
+
+      // Clear existing timeout
+      if (searchTimeout.current) {
+        window.clearTimeout(searchTimeout.current);
+      }
+
+      // Set new timeout to debounce the search
+      searchTimeout.current = window.setTimeout(() => {
+        onFilterChange({ search: value || null });
+        setIsSearching(false);
+      }, 500);
     },
     [onFilterChange]
   );
@@ -59,17 +81,17 @@ export function TaskFilters({
 
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-      <div className="flex flex-1 items-center gap-4">
-        <div className="relative flex-1">
+      <div className="flex flex-1 items-center gap-4 flex-wrap">
+        <div className="relative flex-1 min-w-[200px]">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search tasks..."
             value={searchQuery}
             onChange={(e) => handleSearch(e.target.value)}
-            className={cn("pl-8", isLoading && "opacity-50")}
-            disabled={isLoading}
+            className={cn("pl-8", isSearching && "opacity-50")}
+            disabled={isSearching}
           />
-          {isLoading && (
+          {isSearching && (
             <div className="absolute right-2 top-2.5">
               <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
             </div>
@@ -79,11 +101,7 @@ export function TaskFilters({
           <DropdownMenuTrigger asChild>
             <Button variant="outline" disabled={isLoading}>
               View
-              {isLoading ? (
-                <Loader2 className="ml-2 h-4 w-4 animate-spin" />
-              ) : (
-                <ChevronDown className="ml-2 h-4 w-4" />
-              )}
+              <ChevronDown className="ml-2 h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
@@ -113,11 +131,7 @@ export function TaskFilters({
           <DropdownMenuTrigger asChild>
             <Button variant="outline" disabled={isLoading}>
               Status
-              {isLoading ? (
-                <Loader2 className="ml-2 h-4 w-4 animate-spin" />
-              ) : (
-                <ChevronDown className="ml-2 h-4 w-4" />
-              )}
+              <ChevronDown className="ml-2 h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
@@ -163,11 +177,7 @@ export function TaskFilters({
           <DropdownMenuTrigger asChild>
             <Button variant="outline" disabled={isLoading}>
               Sort By
-              {isLoading ? (
-                <Loader2 className="ml-2 h-4 w-4 animate-spin" />
-              ) : (
-                <ChevronDown className="ml-2 h-4 w-4" />
-              )}
+              <ChevronDown className="ml-2 h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
