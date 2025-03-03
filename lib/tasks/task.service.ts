@@ -1,6 +1,6 @@
 import { db as dbClient } from "@/lib/db/config";
 import { tasks, users } from "@/lib/db/schema";
-import { and, asc, desc, eq, ilike, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, ilike, or, sql, isNotNull } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { type CreateTaskInput, type Task, type UpdateTaskData } from "./types";
 
@@ -479,7 +479,15 @@ export class TaskService {
       conditions.push(
         or(
           ilike(tasks.title, `%${search}%`),
-          ilike(tasks.description || "", `%${search}%`)
+          ilike(tasks.description || "", `%${search}%`),
+          and(
+            isNotNull(tasks.assignedToId),
+            or(
+              ilike(assignedToUsers.firstName, `%${search}%`),
+              ilike(assignedToUsers.lastName, `%${search}%`),
+              sql<boolean>`concat(${assignedToUsers.firstName}, ' ', ${assignedToUsers.lastName}) ilike ${`%${search}%`}`
+            )
+          )
         )
       );
     }
