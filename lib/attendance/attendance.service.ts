@@ -14,7 +14,7 @@ type AttendanceStatus =
 
 export type AttendanceRecord = typeof attendance.$inferSelect;
 
-const EARLIEST_CLOCK_IN = 6; // 6:00 AM
+const EARLIEST_CLOCK_IN = 6; // 7:00 AM
 const LATE_AFTER = 8.5; // 8:30 AM
 
 class AttendanceService {
