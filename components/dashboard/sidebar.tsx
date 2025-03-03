@@ -61,7 +61,8 @@ const menuItems: MenuItem[] = [
     title: "Users",
     icon: Users,
     href: "/dashboard/users",
-    permissions: ["view_users", "create_users"],
+    permissions: ["create_users"],
+    // permissions: ["view_users", "create_users"],
   },
   {
     title: "Attendance",
