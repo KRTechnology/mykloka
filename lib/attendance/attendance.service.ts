@@ -45,7 +45,7 @@ class AttendanceService {
 
     // Check if trying to clock in too early
     if (clockInHour < EARLIEST_CLOCK_IN) {
-      throw new Error("Cannot clock in before 6:00 AM");
+      throw new Error("Cannot clock in before 7:00 AM");
     }
 
     // Determine if late

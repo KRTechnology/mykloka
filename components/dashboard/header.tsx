@@ -18,11 +18,11 @@ import { authAPI } from "@/lib/api/auth";
 import { UserJWTPayload } from "@/lib/auth/auth.service";
 import { AnimatePresence, motion } from "framer-motion";
 import { Bell, User } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { LoadingSpinner } from "../ui/loading-spinner";
-import Link from "next/link";
 
 interface HeaderProps {
   user: UserJWTPayload & { userId: string };
