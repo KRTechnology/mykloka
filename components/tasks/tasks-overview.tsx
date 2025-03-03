@@ -3,11 +3,11 @@
 import { UserJWTPayload } from "@/lib/auth/auth.service";
 import { Task } from "@/lib/tasks/types";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { useCallback, useState, useEffect, useMemo } from "react";
+import { useCallback, useState, useEffect } from "react";
 import { TaskFilters } from "./task-filters";
 import { TaskList } from "./task-list";
 import { CreateTaskButton } from "./create-task-button";
-import { TasksContext } from "@/contexts/TasksContext";
+import { TasksProvider } from "@/contexts/TasksContext";
 
 interface TasksOverviewProps {
   initialTasks: {
@@ -51,25 +51,6 @@ export function TasksOverview({
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
-
-  // Function to refresh tasks
-  const refreshTasks = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      const params = Object.fromEntries(searchParams.entries());
-      const newTasks = await fetchTasks(params, user);
-      setTasks(newTasks);
-    } catch (error) {
-      console.error("Error refreshing tasks:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [searchParams, user, fetchTasks]);
-
-  // Listen for URL changes to refresh tasks
-  useEffect(() => {
-    refreshTasks();
-  }, [searchParams, refreshTasks]);
 
   const handleSearch = useCallback(
     async (params: Record<string, string | null>) => {
@@ -116,19 +97,28 @@ export function TasksOverview({
     [searchParams, router, fetchTasks, user, pathname]
   );
 
-  // Expose refresh function to child components
-  const contextValue = useMemo(
-    () => ({
-      refreshTasks,
-      isLoading,
-    }),
-    [refreshTasks, isLoading]
-  );
+  // Listen for URL changes to refresh tasks
+  useEffect(() => {
+    const refreshData = async () => {
+      try {
+        setIsLoading(true);
+        const params = Object.fromEntries(searchParams.entries());
+        const newTasks = await fetchTasks(params, user);
+        setTasks(newTasks);
+      } catch (error) {
+        console.error("Error refreshing tasks:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    refreshData();
+  }, [searchParams, fetchTasks, user]);
 
   const canViewDepartment = user.permissions.includes("view_department_tasks");
 
   return (
-    <TasksContext.Provider value={contextValue}>
+    <TasksProvider>
       <div className="space-y-4">
         <TaskFilters
           onFilterChange={handleSearch}
@@ -160,6 +150,6 @@ export function TasksOverview({
           />
         )}
       </div>
-    </TasksContext.Provider>
+    </TasksProvider>
   );
 }

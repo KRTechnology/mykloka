@@ -4,6 +4,7 @@ import { getServerSession } from "@/lib/auth/auth";
 import { taskService } from "@/lib/tasks/task.service";
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
+import TaskDetailsWrapper from "./task-details-wrapper";
 
 interface TaskPageProps {
   params: Promise<{
@@ -44,7 +45,7 @@ export default async function TaskPage({ params }: TaskPageProps) {
       <div className="mb-8">
         <BackButton href="/dashboard/tasks" />
       </div>
-      <TaskDetails task={task} user={session} />
+      <TaskDetailsWrapper task={task} user={session} />
     </div>
   );
 }
