@@ -4,10 +4,10 @@ import { z } from "zod";
 
 export const createTaskSchema = z.object({
   title: z.string().min(1, "Title is required"),
-  description: z.string().optional(),
+  description: z.string().min(1, "Description is required"),
   assignedToId: z.string().uuid(),
-  startTime: z.date().optional(),
-  dueTime: z.date().optional(),
+  startTime: z.date().optional().nullable(),
+  dueTime: z.date().optional().nullable(),
   requiresApproval: z.boolean().optional(),
 });
 
