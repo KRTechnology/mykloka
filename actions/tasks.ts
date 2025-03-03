@@ -3,8 +3,8 @@
 import { validatePermission } from "@/lib/auth/auth";
 import { getServerSession } from "@/lib/auth/auth";
 import { taskService } from "@/lib/tasks/task.service";
-import { createTaskSchema, updateTaskSchema } from "@/lib/tasks/types";
-import { revalidateTag } from "next/cache";
+import { createTaskSchema, updateTaskSchema, Task } from "@/lib/tasks/types";
+import { revalidateTag, revalidatePath } from "next/cache";
 
 export async function createTaskAction(data: FormData) {
   try {
@@ -37,6 +37,7 @@ export async function createTaskAction(data: FormData) {
     });
 
     revalidateTag("tasks");
+    revalidatePath("/dashboard/tasks");
     return { success: true, data: task };
   } catch (error) {
     console.error("Error creating task:", error);
@@ -68,6 +69,7 @@ export async function updateTaskAction(id: string, data: FormData) {
     const task = await taskService.updateTask(id, validatedData);
 
     revalidateTag("tasks");
+    revalidatePath("/dashboard/tasks");
     return { success: true, data: task };
   } catch (error) {
     return {
@@ -77,78 +79,122 @@ export async function updateTaskAction(id: string, data: FormData) {
   }
 }
 
+// Helper function to validate task status transitions
+function validateTaskStatusTransition(
+  currentStatus: Task["status"],
+  newStatus: Task["status"],
+  isManager: boolean,
+  isAssignee: boolean
+): { isValid: boolean; error?: string } {
+  // Status transition rules
+  const transitions: Record<
+    Task["status"],
+    {
+      allowedStatuses: Task["status"][];
+      requiredRole: "manager" | "assignee" | "both";
+    }[]
+  > = {
+    PENDING: [
+      { allowedStatuses: ["IN_PROGRESS", "REJECTED"], requiredRole: "manager" },
+    ],
+    IN_PROGRESS: [{ allowedStatuses: ["COMPLETED"], requiredRole: "assignee" }],
+    COMPLETED: [
+      { allowedStatuses: ["APPROVED", "IN_PROGRESS"], requiredRole: "manager" },
+    ],
+    REJECTED: [{ allowedStatuses: ["IN_PROGRESS"], requiredRole: "manager" }],
+    APPROVED: [{ allowedStatuses: ["COMPLETED"], requiredRole: "manager" }],
+  };
+
+  const allowedTransitions = transitions[currentStatus];
+  if (!allowedTransitions) {
+    return { isValid: false, error: "Invalid current status" };
+  }
+
+  // Find a valid transition rule
+  const validTransition = allowedTransitions.find((t) =>
+    t.allowedStatuses.includes(newStatus)
+  );
+
+  if (!validTransition) {
+    return {
+      isValid: false,
+      error: `Cannot transition from ${currentStatus} to ${newStatus}`,
+    };
+  }
+
+  // Check if user has the required role for this transition
+  const hasRequiredRole =
+    validTransition.requiredRole === "both"
+      ? isManager && isAssignee
+      : validTransition.requiredRole === "manager"
+        ? isManager
+        : isAssignee;
+
+  if (!hasRequiredRole) {
+    return {
+      isValid: false,
+      error: `Only ${validTransition.requiredRole} can perform this action`,
+    };
+  }
+
+  return { isValid: true };
+}
+
 export async function updateTaskStatusAction(
   id: string,
-  status: "PENDING" | "IN_PROGRESS" | "COMPLETED" | "APPROVED" | "REJECTED"
+  newStatus: Task["status"]
 ) {
   try {
     const session = await getServerSession();
     if (!session) throw new Error("Unauthorized");
 
-    // Get the task first to check department and current status
-    const task = await taskService.getTaskById(id);
-    if (!task) throw new Error("Task not found");
-
-    // Helper function to check manager approval permissions
-    const checkManagerApprovalPermission = async () => {
-      const canApproveAll = await validatePermission("approve_tasks");
-      const canApproveDepartment = await validatePermission(
-        "approve_department_tasks"
-      );
-      const isTaskInDepartment =
-        task.createdBy.departmentId === session.departmentId;
-      return canApproveAll || (canApproveDepartment && isTaskInDepartment);
-    };
-
-    // Check permissions based on status change and current status
-    if (status === "APPROVED") {
-      // For final approval of completed tasks
-      const hasPermission = await checkManagerApprovalPermission();
-      if (!hasPermission) throw new Error("Unauthorized");
-      if (task.status !== "COMPLETED")
-        throw new Error("Task must be completed before final approval");
+    // Get the current task
+    const currentTask = await taskService.getTaskById(id);
+    if (!currentTask) {
+      throw new Error("Task not found");
     }
 
-    if (status === "IN_PROGRESS") {
-      const hasPermission = await checkManagerApprovalPermission();
-      if (!hasPermission) throw new Error("Unauthorized");
+    // Check basic permissions
+    const isManager = session.permissions.includes("approve_tasks");
+    const isAssignee = currentTask.assignedToId === session.userId;
 
-      // Allow IN_PROGRESS for initial approval, rejected tasks, or when returning from completed
-      if (!["PENDING", "COMPLETED", "REJECTED"].includes(task.status)) {
-        throw new Error("Cannot move task to in progress from current status");
-      }
+    // Check department manager permissions
+    const isDepartmentManager =
+      session.permissions.includes("view_department_tasks") &&
+      session.departmentId === currentTask.createdBy.departmentId;
+
+    // Validate if user can modify this task
+    if (!isManager && !isAssignee && !isDepartmentManager) {
+      throw new Error("You don't have permission to modify this task");
     }
 
-    if (status === "COMPLETED") {
-      // Allow completion by assigned user OR allow managers to reopen approved tasks
-      const isManager = await checkManagerApprovalPermission();
-      const isAssignedUser = task.assignedToId === session.userId;
-      const isReopeningApproved = task.status === "APPROVED" && isManager;
+    // Validate status transition
+    const { isValid, error } = validateTaskStatusTransition(
+      currentTask.status,
+      newStatus,
+      isManager || isDepartmentManager,
+      isAssignee
+    );
 
-      if (!isAssignedUser && !isReopeningApproved) {
-        throw new Error("Only the assigned user can mark as completed");
-      }
-
-      // Only allow COMPLETED status from IN_PROGRESS or when reopening from APPROVED
-      if (task.status !== "IN_PROGRESS" && !isReopeningApproved) {
-        throw new Error("Task must be in progress before completion");
-      }
+    if (!isValid) {
+      throw new Error(error || "Invalid status transition");
     }
 
-    if (status === "REJECTED") {
-      const hasPermission = await checkManagerApprovalPermission();
-      if (!hasPermission) throw new Error("Unauthorized");
-    }
-
+    // Update task status
     const updatedTask = await taskService.updateTaskStatus(
       id,
-      status,
+      newStatus,
       session.userId
     );
 
+    // Revalidate both the tag and the paths
     revalidateTag("tasks");
+    revalidatePath("/dashboard/tasks");
+    revalidatePath("/api/tasks");
+
     return { success: true, data: updatedTask };
   } catch (error) {
+    console.error("Error updating task status:", error);
     return {
       success: false,
       error:
@@ -168,6 +214,7 @@ export async function approveTaskCompletionAction(id: string) {
     const task = await taskService.approveCompletion(id, session.userId);
 
     revalidateTag("tasks");
+    revalidatePath("/dashboard/tasks");
     return { success: true, data: task };
   } catch (error) {
     return {

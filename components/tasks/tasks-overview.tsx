@@ -2,11 +2,12 @@
 
 import { UserJWTPayload } from "@/lib/auth/auth.service";
 import { Task } from "@/lib/tasks/types";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useState } from "react";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
+import { useCallback, useState, useEffect, useMemo } from "react";
 import { TaskFilters } from "./task-filters";
 import { TaskList } from "./task-list";
 import { CreateTaskButton } from "./create-task-button";
+import { TasksContext } from "@/contexts/TasksContext";
 
 interface TasksOverviewProps {
   initialTasks: {
@@ -49,6 +50,26 @@ export function TasksOverview({
   const [isLoading, setIsLoading] = useState(false);
   const searchParams = useSearchParams();
   const router = useRouter();
+  const pathname = usePathname();
+
+  // Function to refresh tasks
+  const refreshTasks = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const params = Object.fromEntries(searchParams.entries());
+      const newTasks = await fetchTasks(params, user);
+      setTasks(newTasks);
+    } catch (error) {
+      console.error("Error refreshing tasks:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [searchParams, user, fetchTasks]);
+
+  // Listen for URL changes to refresh tasks
+  useEffect(() => {
+    refreshTasks();
+  }, [searchParams, refreshTasks]);
 
   const handleSearch = useCallback(
     async (params: Record<string, string | null>) => {
@@ -76,7 +97,7 @@ export function TasksOverview({
         });
 
         // Update the URL without forcing a re-render
-        router.replace(`?${newSearchParams.toString()}`, {
+        router.replace(`${pathname}?${newSearchParams.toString()}`, {
           scroll: false,
         });
 
@@ -92,42 +113,53 @@ export function TasksOverview({
         setIsLoading(false);
       }
     },
-    [searchParams, router, fetchTasks, user]
+    [searchParams, router, fetchTasks, user, pathname]
+  );
+
+  // Expose refresh function to child components
+  const contextValue = useMemo(
+    () => ({
+      refreshTasks,
+      isLoading,
+    }),
+    [refreshTasks, isLoading]
   );
 
   const canViewDepartment = user.permissions.includes("view_department_tasks");
 
   return (
-    <div className="space-y-4">
-      <TaskFilters
-        onFilterChange={handleSearch}
-        canViewDepartment={canViewDepartment}
-        isLoading={isLoading}
-        initialFilters={Object.fromEntries(searchParams.entries())}
-        user={user}
-      />
-      {tasks.data.length === 0 ? (
-        <div className="flex h-[450px] shrink-0 items-center justify-center rounded-md border border-dashed">
-          <div className="mx-auto flex max-w-[420px] flex-col items-center justify-center text-center">
-            <h3 className="mt-4 text-lg font-semibold">No tasks found</h3>
-            <p className="mb-4 mt-2 text-sm text-muted-foreground">
-              {user.permissions.includes("approve_tasks")
-                ? "No tasks require your attention at the moment."
-                : "You don't have any tasks yet. Create one to get started!"}
-            </p>
-            <CreateTaskButton />
-          </div>
-        </div>
-      ) : (
-        <TaskList
-          tasks={tasks.data}
-          currentPage={tasks.page}
-          totalPages={tasks.totalPages}
-          onPageChange={(page) => handleSearch({ page: page.toString() })}
+    <TasksContext.Provider value={contextValue}>
+      <div className="space-y-4">
+        <TaskFilters
+          onFilterChange={handleSearch}
+          canViewDepartment={canViewDepartment}
           isLoading={isLoading}
+          initialFilters={Object.fromEntries(searchParams.entries())}
           user={user}
         />
-      )}
-    </div>
+        {tasks.data.length === 0 ? (
+          <div className="flex h-[450px] shrink-0 items-center justify-center rounded-md border border-dashed">
+            <div className="mx-auto flex max-w-[420px] flex-col items-center justify-center text-center">
+              <h3 className="mt-4 text-lg font-semibold">No tasks found</h3>
+              <p className="mb-4 mt-2 text-sm text-muted-foreground">
+                {user.permissions.includes("approve_tasks")
+                  ? "No tasks require your attention at the moment."
+                  : "You don't have any tasks yet. Create one to get started!"}
+              </p>
+              <CreateTaskButton />
+            </div>
+          </div>
+        ) : (
+          <TaskList
+            tasks={tasks.data}
+            currentPage={tasks.page}
+            totalPages={tasks.totalPages}
+            onPageChange={(page) => handleSearch({ page: page.toString() })}
+            isLoading={isLoading}
+            user={user}
+          />
+        )}
+      </div>
+    </TasksContext.Provider>
   );
 }

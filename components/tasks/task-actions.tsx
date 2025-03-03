@@ -9,11 +9,12 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useTasksContext } from "@/contexts/TasksContext";
 import { Task } from "@/lib/tasks/types";
+import { motion } from "framer-motion";
 import { Check, Clock, MoreHorizontal, Play, RotateCcw, X } from "lucide-react";
 import { useTransition } from "react";
 import { toast } from "sonner";
-import { motion } from "framer-motion";
 
 interface TaskActionsProps {
   task: Task;
@@ -22,22 +23,33 @@ interface TaskActionsProps {
 
 export function TaskActions({ task, canApprove }: TaskActionsProps) {
   const [isPending, startTransition] = useTransition();
+  const { refreshTasks } = useTasksContext();
 
   const handleStatusChange = (status: Task["status"]) => {
-    startTransition(async () => {
-      const result = await updateTaskStatusAction(task.id, status);
+    if (isPending) return; // Prevent multiple submissions
 
-      if (result.success) {
-        const messages: Record<Task["status"], string> = {
-          PENDING: "Task status updated",
-          IN_PROGRESS: "Task approved and ready to start",
-          COMPLETED: "Task marked as completed",
-          APPROVED: "Task completion verified and approved",
-          REJECTED: "Task rejected",
-        };
-        toast.success(messages[status]);
-      } else {
-        toast.error(result.error || "Failed to update task status");
+    startTransition(async () => {
+      try {
+        const result = await updateTaskStatusAction(task.id, status);
+
+        if (result.success) {
+          const messages: Record<Task["status"], string> = {
+            PENDING: "Task status updated",
+            IN_PROGRESS: "Task approved and ready to start",
+            COMPLETED: "Task marked as completed",
+            APPROVED: "Task completion verified and approved",
+            REJECTED: "Task rejected",
+          };
+          toast.success(messages[status]);
+
+          // Refresh tasks using context
+          await refreshTasks();
+        } else {
+          toast.error(result.error || "Failed to update task status");
+        }
+      } catch (error) {
+        console.error("Error updating task status:", error);
+        toast.error("An error occurred while updating the task");
       }
     });
   };
@@ -45,7 +57,7 @@ export function TaskActions({ task, canApprove }: TaskActionsProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="h-8 w-8 p-0">
+        <Button variant="ghost" className="h-8 w-8 p-0" disabled={isPending}>
           <span className="sr-only">Open menu</span>
           <MoreHorizontal className="h-4 w-4" />
         </Button>

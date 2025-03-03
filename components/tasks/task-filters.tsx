@@ -10,10 +10,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Task } from "@/lib/tasks/types";
-import { ChevronDown, Search, Loader2 } from "lucide-react";
+import { ChevronDown, Search } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { cn } from "@/lib/utils";
-import { motion } from "framer-motion";
 
 type ViewMode = "all" | "my-tasks" | "department";
 
