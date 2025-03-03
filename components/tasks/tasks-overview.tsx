@@ -53,8 +53,20 @@ export function TasksOverview({
   const handleSearch = useCallback(
     async (params: Record<string, string | null>) => {
       try {
-        // Update URL with new search params without triggering a navigation
+        setIsLoading(true);
+
+        // Create new search params from current state
         const newSearchParams = new URLSearchParams(searchParams);
+
+        // If any filter is changing (not page), reset to page 1
+        const isChangingFilters = Object.keys(params).some(
+          (key) => key !== "page"
+        );
+        if (isChangingFilters) {
+          newSearchParams.set("page", "1");
+        }
+
+        // Update other params
         Object.entries(params).forEach(([key, value]) => {
           if (value) {
             newSearchParams.set(key, value);
@@ -76,6 +88,8 @@ export function TasksOverview({
         setTasks(newTasks);
       } catch (error) {
         console.error("Error fetching tasks:", error);
+      } finally {
+        setIsLoading(false);
       }
     },
     [searchParams, router, fetchTasks, user]

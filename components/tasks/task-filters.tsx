@@ -1,5 +1,6 @@
 "use client";
 
+import { getDepartmentsForFilterAction } from "@/actions/departments";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -9,10 +10,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Task } from "@/lib/tasks/types";
-import { ChevronDown, Loader2, Search } from "lucide-react";
-import { useCallback, useRef, useState, useEffect } from "react";
-import { cn } from "@/lib/utils";
-import { getDepartmentsForFilterAction } from "@/actions/departments";
+import { ChevronDown, Search } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 type ViewMode = "all" | "my-tasks" | "department";
 
