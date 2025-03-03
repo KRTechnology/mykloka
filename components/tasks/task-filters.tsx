@@ -10,8 +10,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Task } from "@/lib/tasks/types";
-import { ChevronDown, Search } from "lucide-react";
+import { ChevronDown, Search, Loader2 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
 
 type ViewMode = "all" | "my-tasks" | "department";
 
@@ -50,7 +52,6 @@ export function TaskFilters({
   const [selectedDepartment, setSelectedDepartment] = useState<string | null>(
     initialFilters.departmentId || null
   );
-  const [isSearching, setIsSearching] = useState(false);
   const searchTimeout = useRef<number | undefined>(undefined);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -74,10 +75,10 @@ export function TaskFilters({
         window.clearTimeout(searchTimeout.current);
       }
 
-      // Set new timeout to debounce the search
+      // Set new timeout to debounce the search (2.5 seconds)
       searchTimeout.current = window.setTimeout(() => {
         onFilterChange({ search: value || null });
-      }, 200);
+      }, 1000);
     },
     [onFilterChange]
   );
@@ -193,7 +194,7 @@ export function TaskFilters({
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" disabled={isLoading}>
+            <Button variant="outline">
               {getViewModeDisplay()}
               <ChevronDown className="ml-2 h-4 w-4" />
             </Button>
@@ -225,7 +226,7 @@ export function TaskFilters({
         </DropdownMenu>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" disabled={isLoading}>
+            <Button variant="outline">
               {getStatusDisplay()}
               <ChevronDown className="ml-2 h-4 w-4" />
             </Button>
@@ -273,7 +274,7 @@ export function TaskFilters({
           departments.length > 0 && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" disabled={isLoading}>
+                <Button variant="outline">
                   {getDepartmentDisplay()}
                   <ChevronDown className="ml-2 h-4 w-4" />
                 </Button>
@@ -301,7 +302,7 @@ export function TaskFilters({
           )}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" disabled={isLoading}>
+            <Button variant="outline">
               {getSortDisplay()}
               <ChevronDown className="ml-2 h-4 w-4" />
             </Button>
@@ -330,7 +331,7 @@ export function TaskFilters({
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-        <Button variant="outline" onClick={resetFilters} disabled={isLoading}>
+        <Button variant="outline" onClick={resetFilters}>
           Reset Filters
         </Button>
       </div>

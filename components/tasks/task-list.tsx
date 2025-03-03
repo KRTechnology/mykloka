@@ -31,6 +31,9 @@ import { formatDate } from "@/lib/utils/format";
 import { Edit2, Eye, Info } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { TaskActions } from "./task-actions";
+import { Skeleton } from "@/components/ui/skeleton";
+import { motion } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 interface TaskListProps {
   tasks: Task[];
@@ -80,7 +83,24 @@ export function TaskList({
 
   return (
     <div className="space-y-4">
-      <div className="rounded-md border">
+      <div className="relative rounded-md border">
+        {isLoading && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 z-20 rounded-md bg-background/50 backdrop-blur-[1px]"
+          >
+            <div className="flex h-full items-center justify-center">
+              <div className="flex items-center space-x-4">
+                <div className="h-6 w-6 animate-spin rounded-full border-b-2 border-kr-orange" />
+                <span className="text-sm text-muted-foreground">
+                  Loading...
+                </span>
+              </div>
+            </div>
+          </motion.div>
+        )}
         <Table>
           <TableHeader>
             <TableRow>
@@ -92,7 +112,7 @@ export function TaskList({
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
-          <TableBody>
+          <TableBody className={cn(isLoading && "opacity-50")}>
             {tasks.map((task) => {
               // Check if the task belongs to the manager's department
               const isTaskInDepartment =
@@ -196,14 +216,14 @@ export function TaskList({
               <PaginationItem>
                 <PaginationPrevious
                   onClick={() => onPageChange(currentPage - 1)}
-                  disabled={currentPage === 1}
+                  disabled={currentPage === 1 || isLoading}
                 />
               </PaginationItem>
               {paginationItems}
               <PaginationItem>
                 <PaginationNext
                   onClick={() => onPageChange(currentPage + 1)}
-                  disabled={currentPage === totalPages}
+                  disabled={currentPage === totalPages || isLoading}
                 />
               </PaginationItem>
             </PaginationContent>
