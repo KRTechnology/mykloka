@@ -1,16 +1,14 @@
+import { CreateTaskButton } from "@/components/tasks/create-task-button";
 import { TasksOverview } from "@/components/tasks/tasks-overview";
+import { Heading } from "@/components/ui/heading";
+import { Separator } from "@/components/ui/separator";
 import { getServerSession } from "@/lib/auth/auth";
 import { UserJWTPayload } from "@/lib/auth/types";
 import { taskService } from "@/lib/tasks/task.service";
 import { Task } from "@/lib/tasks/types";
-import { Button } from "@/components/ui/button";
-import { Heading } from "@/components/ui/heading";
-import { Separator } from "@/components/ui/separator";
-import { Plus } from "lucide-react";
 import { Metadata } from "next";
 import { unstable_noStore as noStore } from "next/cache";
 import { redirect } from "next/navigation";
-import { CreateTaskButton } from "@/components/tasks/create-task-button";
 
 interface SearchParams {
   page?: string;
