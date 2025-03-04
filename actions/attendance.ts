@@ -9,20 +9,20 @@ export async function clockInAction(data: {
   longitude: number;
   address: string;
   isRemote: boolean;
+  clockInTime: Date;
 }) {
   try {
     if (!data.userId) {
       throw new Error("User ID is required");
     }
 
-    // Create a date object with the current time
-    const clockInTime = new Date();
-    // Set seconds and milliseconds to 0 for cleaner time
-    clockInTime.setSeconds(0, 0);
+    // Add one hour to the clock in time
+    const adjustedTime = new Date(data.clockInTime);
+    adjustedTime.setHours(adjustedTime.getHours() + 1);
 
     const record = await attendanceService.clockIn({
       userId: data.userId,
-      clockInTime,
+      clockInTime: adjustedTime,
       clockInLocation: { x: data.longitude, y: data.latitude },
       clockInAddress: data.address,
       isRemote: data.isRemote,
@@ -45,15 +45,15 @@ export async function clockOutAction(data: {
   longitude: number;
   address: string;
   isRemote: boolean;
+  clockOutTime: Date;
 }) {
   try {
-    // Create a date object with the current time
-    const clockOutTime = new Date();
-    // Set seconds and milliseconds to 0 for cleaner time
-    clockOutTime.setSeconds(0, 0);
+    // Add one hour to the clock out time
+    const adjustedTime = new Date(data.clockOutTime);
+    adjustedTime.setHours(adjustedTime.getHours() + 1);
 
     const record = await attendanceService.clockOut(data.attendanceId, {
-      clockOutTime,
+      clockOutTime: adjustedTime,
       clockOutLocation: { x: data.longitude, y: data.latitude },
       clockOutAddress: data.address,
       isRemote: data.isRemote,

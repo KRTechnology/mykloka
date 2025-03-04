@@ -129,6 +129,11 @@ export function AttendanceDialog({
 
     setIsPending(true);
     try {
+      // Get the current browser time
+      const currentBrowserTime = new Date();
+      // Set seconds and milliseconds to 0 for cleaner time
+      currentBrowserTime.setSeconds(0, 0);
+
       const result =
         mode === "in"
           ? await clockInAction({
@@ -137,6 +142,7 @@ export function AttendanceDialog({
               longitude: location.longitude,
               address: location.address,
               isRemote: !location.isWithinRadius,
+              clockInTime: currentBrowserTime,
             })
           : await clockOutAction({
               attendanceId: attendanceId!,
@@ -144,6 +150,7 @@ export function AttendanceDialog({
               longitude: location.longitude,
               address: location.address,
               isRemote: !location.isWithinRadius,
+              clockOutTime: currentBrowserTime,
             });
 
       if (result.success) {
