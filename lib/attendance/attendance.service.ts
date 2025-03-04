@@ -3,6 +3,7 @@ import { db } from "@/lib/db/config";
 import { attendance } from "@/lib/db/schema";
 import { users } from "@/lib/db/schema/users";
 import { endOfDay, format, startOfDay, startOfWeek, endOfWeek } from "date-fns";
+import { formatInTimeZone, getTimezoneOffset } from "date-fns-tz";
 import { and, between, desc, eq, isNotNull, sql } from "drizzle-orm";
 import { AttendanceStreak, AverageTimings } from "./types";
 
@@ -16,12 +17,26 @@ export type AttendanceRecord = typeof attendance.$inferSelect;
 
 const EARLIEST_CLOCK_IN = 6; // 7:00 AM
 const LATE_AFTER = 8.5; // 8:30 AM
+const TIMEZONE = "Africa/Lagos"; // WAT timezone
 
 class AttendanceService {
   private db;
 
   constructor() {
     this.db = db;
+  }
+
+  private convertToUTC(date: Date): Date {
+    // Get the timezone offset in milliseconds
+    const tzOffset = getTimezoneOffset(TIMEZONE, date);
+    // Subtract the offset to get UTC time
+    return new Date(date.getTime() - tzOffset);
+  }
+
+  private getHourInWAT(date: Date): number {
+    const timeString = formatInTimeZone(date, TIMEZONE, "HH:mm");
+    const [hours, minutes] = timeString.split(":").map(Number);
+    return hours + minutes / 60;
   }
 
   async clockIn(data: {
@@ -35,28 +50,27 @@ class AttendanceService {
       throw new Error("User ID is required");
     }
 
-    // Adjust for timezone offset
-    const localClockInTime = new Date(
-      data.clockInTime.getTime() + data.clockInTime.getTimezoneOffset() * 60000
-    );
+    // Convert the local time to UTC for storage
+    const utcClockInTime = this.convertToUTC(data.clockInTime);
 
-    const clockInHour =
-      localClockInTime.getHours() + localClockInTime.getMinutes() / 60;
+    // Get the hour in WAT for status check
+    const clockInHour = this.getHourInWAT(data.clockInTime);
 
     // Check if trying to clock in too early
-    if (clockInHour < EARLIEST_CLOCK_IN) {
-      throw new Error("Cannot clock in before 7:00 AM");
-    }
+    // if (clockInHour < EARLIEST_CLOCK_IN) {
+    //   throw new Error("Cannot clock in before 7:00 AM");
+    // }
 
     // Determine if late
     const status = clockInHour > LATE_AFTER ? "late" : "present";
 
-    const { clockInLocation, ...rest } = data;
+    const { clockInLocation, clockInTime, ...rest } = data;
 
     const [record] = await this.db
       .insert(attendance)
       .values({
         ...rest,
+        clockInTime: utcClockInTime,
         status,
         clockInLocation: [clockInLocation.x, clockInLocation.y] as [
           number,
@@ -77,12 +91,16 @@ class AttendanceService {
       isRemote: boolean;
     }
   ) {
-    const { clockOutLocation, ...rest } = data;
+    // Convert the local time to UTC for storage
+    const utcClockOutTime = this.convertToUTC(data.clockOutTime);
+
+    const { clockOutLocation, clockOutTime, ...rest } = data;
 
     const [record] = await this.db
       .update(attendance)
       .set({
         ...rest,
+        clockOutTime: utcClockOutTime,
         clockOutLocation: [clockOutLocation.x, clockOutLocation.y] as [
           number,
           number,

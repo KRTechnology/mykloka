@@ -16,6 +16,8 @@ import { Icons } from "@/components/ui/icons";
 import { isWithinOfficeRadius } from "@/lib/utils/geo";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { cn } from "@/lib/utils";
+import { formatInTimeZone } from "date-fns-tz";
+import { enGB } from "date-fns/locale";
 
 interface AttendanceDialogProps {
   isOpen: boolean;
@@ -31,6 +33,8 @@ interface LocationState {
   address: string;
   isWithinRadius: boolean;
 }
+
+const TIMEZONE = "Africa/Lagos";
 
 export function AttendanceDialog({
   isOpen,
@@ -54,6 +58,16 @@ export function AttendanceDialog({
 
     return () => clearInterval(timer);
   }, []);
+
+  // Format time in WAT
+  const formatTimeInWAT = (date: Date) => {
+    return formatInTimeZone(date, TIMEZONE, "hh:mm:ss a", { locale: enGB });
+  };
+
+  // Format date in WAT
+  const formatDateInWAT = (date: Date) => {
+    return formatInTimeZone(date, TIMEZONE, "MMMM d, yyyy", { locale: enGB });
+  };
 
   useEffect(() => {
     async function getLocation() {
@@ -176,10 +190,10 @@ export function AttendanceDialog({
               initial={{ scale: 1.1 }}
               animate={{ scale: 1 }}
             >
-              {currentTime.toLocaleTimeString()}
+              {formatTimeInWAT(currentTime)}
             </motion.div>
             <p className="mt-2 text-sm text-muted-foreground">
-              {currentTime.toLocaleDateString()}
+              {formatDateInWAT(currentTime)}
             </p>
           </div>
 
