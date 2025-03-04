@@ -61,12 +61,21 @@ export function AttendanceDialog({
 
   // Format time in WAT
   const formatTimeInWAT = (date: Date) => {
-    return formatInTimeZone(date, TIMEZONE, "hh:mm:ss a", { locale: enGB });
+    return date.toLocaleTimeString("en-GB", {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: true,
+    });
   };
 
   // Format date in WAT
   const formatDateInWAT = (date: Date) => {
-    return formatInTimeZone(date, TIMEZONE, "MMMM d, yyyy", { locale: enGB });
+    return date.toLocaleDateString("en-GB", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
   };
 
   useEffect(() => {

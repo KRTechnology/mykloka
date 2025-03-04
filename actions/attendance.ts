@@ -15,8 +15,10 @@ export async function clockInAction(data: {
       throw new Error("User ID is required");
     }
 
-    // Create a date object in WAT timezone
+    // Create a date object with the current time
     const clockInTime = new Date();
+    // Set seconds and milliseconds to 0 for cleaner time
+    clockInTime.setSeconds(0, 0);
 
     const record = await attendanceService.clockIn({
       userId: data.userId,
@@ -45,8 +47,10 @@ export async function clockOutAction(data: {
   isRemote: boolean;
 }) {
   try {
-    // Create a date object in WAT timezone
+    // Create a date object with the current time
     const clockOutTime = new Date();
+    // Set seconds and milliseconds to 0 for cleaner time
+    clockOutTime.setSeconds(0, 0);
 
     const record = await attendanceService.clockOut(data.attendanceId, {
       clockOutTime,

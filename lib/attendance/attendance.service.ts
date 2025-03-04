@@ -3,7 +3,7 @@ import { db } from "@/lib/db/config";
 import { attendance } from "@/lib/db/schema";
 import { users } from "@/lib/db/schema/users";
 import { endOfDay, format, startOfDay, startOfWeek, endOfWeek } from "date-fns";
-import { formatInTimeZone, getTimezoneOffset } from "date-fns-tz";
+import { formatInTimeZone } from "date-fns-tz";
 import { and, between, desc, eq, isNotNull, sql } from "drizzle-orm";
 import { AttendanceStreak, AverageTimings } from "./types";
 
@@ -26,17 +26,8 @@ class AttendanceService {
     this.db = db;
   }
 
-  private convertToUTC(date: Date): Date {
-    // Get the timezone offset in milliseconds
-    const tzOffset = getTimezoneOffset(TIMEZONE, date);
-    // Subtract the offset to get UTC time
-    return new Date(date.getTime() - tzOffset);
-  }
-
-  private getHourInWAT(date: Date): number {
-    const timeString = formatInTimeZone(date, TIMEZONE, "HH:mm");
-    const [hours, minutes] = timeString.split(":").map(Number);
-    return hours + minutes / 60;
+  private getHourFromDate(date: Date): number {
+    return date.getHours() + date.getMinutes() / 60;
   }
 
   async clockIn(data: {
@@ -50,11 +41,8 @@ class AttendanceService {
       throw new Error("User ID is required");
     }
 
-    // Convert the local time to UTC for storage
-    const utcClockInTime = this.convertToUTC(data.clockInTime);
-
-    // Get the hour in WAT for status check
-    const clockInHour = this.getHourInWAT(data.clockInTime);
+    // Get the hour for status check
+    const clockInHour = this.getHourFromDate(data.clockInTime);
 
     // Check if trying to clock in too early
     // if (clockInHour < EARLIEST_CLOCK_IN) {
@@ -70,7 +58,7 @@ class AttendanceService {
       .insert(attendance)
       .values({
         ...rest,
-        clockInTime: utcClockInTime,
+        clockInTime,
         status,
         clockInLocation: [clockInLocation.x, clockInLocation.y] as [
           number,
@@ -91,16 +79,13 @@ class AttendanceService {
       isRemote: boolean;
     }
   ) {
-    // Convert the local time to UTC for storage
-    const utcClockOutTime = this.convertToUTC(data.clockOutTime);
-
     const { clockOutLocation, clockOutTime, ...rest } = data;
 
     const [record] = await this.db
       .update(attendance)
       .set({
         ...rest,
-        clockOutTime: utcClockOutTime,
+        clockOutTime,
         clockOutLocation: [clockOutLocation.x, clockOutLocation.y] as [
           number,
           number,
