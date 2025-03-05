@@ -2,8 +2,7 @@ import { cache } from "@/lib/cache";
 import { db } from "@/lib/db/config";
 import { attendance } from "@/lib/db/schema";
 import { users } from "@/lib/db/schema/users";
-import { endOfDay, format, startOfDay, startOfWeek, endOfWeek } from "date-fns";
-import { formatInTimeZone } from "date-fns-tz";
+import { endOfDay, endOfWeek, format, startOfDay, startOfWeek } from "date-fns";
 import { and, between, desc, eq, isNotNull, sql } from "drizzle-orm";
 import { AttendanceStreak, AverageTimings } from "./types";
 
@@ -49,9 +48,9 @@ class AttendanceService {
       throw new Error("Cannot clock in before 6:00 AM");
     }
 
+    // console.log({ clockInHour: clockInHour - 1, lateAfter: LATE_AFTER });
     // Determine if late (comparing against the adjusted time)
-    // Since we add 1 hour later, subtract 1 from LATE_AFTER for the check
-    const status = clockInHour > LATE_AFTER - 1 ? "late" : "present";
+    const status = clockInHour > LATE_AFTER ? "late" : "present";
 
     const { clockInLocation, clockInTime, ...rest } = data;
 
