@@ -109,13 +109,16 @@ export function AttendanceDialog({
   }, [isOpen]);
 
   async function getAddressFromCoords(latitude: number, longitude: number) {
-    const API_KEY = process.env.NEXT_PUBLIC_GEOCODE_API_KEY;
-    const url = `https://api.opencagedata.com/geocode/v1/json?q=${latitude}+${longitude}&key=${API_KEY}`;
+    const API_KEY = process.env.NEXT_PUBLIC_GEOAPIFY_API_KEY;
+    const url = `https://api.geoapify.com/v1/geocode/reverse?lat=${latitude}&lon=${longitude}&apiKey=${API_KEY}`;
 
     try {
       const response = await fetch(url);
       const data = await response.json();
-      return data.results[0].formatted;
+
+      // Get the formatted address from the first feature's properties
+      const formattedAddress = data.features[0]?.properties?.formatted;
+      return formattedAddress || "Address not found";
     } catch (error) {
       console.error("Error getting address:", error);
       return null;
