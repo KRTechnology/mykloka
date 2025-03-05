@@ -16,7 +16,6 @@ export type AttendanceRecord = typeof attendance.$inferSelect;
 
 const EARLIEST_CLOCK_IN = 6; // 6:00 AM
 const LATE_AFTER = 8.5; // 8:30 AM
-const TIMEZONE = "Africa/Lagos"; // WAT timezone
 
 class AttendanceService {
   private db;
@@ -44,7 +43,7 @@ class AttendanceService {
     const clockInHour = this.getHourFromDate(data.clockInTime);
 
     // Since we're adding 1 hour later, check if current time is before 5 AM (which will become 6 AM)
-    if (clockInHour < EARLIEST_CLOCK_IN - 1) {
+    if (clockInHour < EARLIEST_CLOCK_IN) {
       throw new Error("Cannot clock in before 6:00 AM");
     }
 
