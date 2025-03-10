@@ -3,6 +3,15 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+import {
   Table,
   TableBody,
   TableCell,
@@ -16,24 +25,14 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationEllipsis,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
 import { UserJWTPayload } from "@/lib/auth/auth.service";
 import { Task } from "@/lib/tasks/types";
+import { cn } from "@/lib/utils";
 import { formatDate } from "@/lib/utils/format";
+import { motion } from "framer-motion";
 import { Edit2, Eye, Info } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { TaskActions } from "./task-actions";
-import { Skeleton } from "@/components/ui/skeleton";
-import { motion } from "framer-motion";
-import { cn } from "@/lib/utils";
 
 interface TaskListProps {
   tasks: Task[];
