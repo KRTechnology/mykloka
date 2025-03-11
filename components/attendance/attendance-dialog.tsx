@@ -14,7 +14,7 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { cn } from "@/lib/utils";
 import { isWithinOfficeRadius } from "@/lib/utils/geo";
 import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 interface AttendanceDialogProps {
@@ -32,8 +32,6 @@ interface LocationState {
   isWithinRadius: boolean;
 }
 
-const TIMEZONE = "Africa/Lagos";
-
 export function AttendanceDialog({
   isOpen,
   onClose,
@@ -48,6 +46,19 @@ export function AttendanceDialog({
 
   const OFFICE_LAT = Number(process.env.NEXT_PUBLIC_OFFICE_LAT);
   const OFFICE_LONG = Number(process.env.NEXT_PUBLIC_OFFICE_LONG);
+
+  // Check if today is an onsite day (Monday or Friday)
+  const isOnsiteDay = useMemo(() => {
+    const today = new Date().getDay();
+    return today === 1 || today === 5; // 1 is Monday, 5 is Friday
+  }, []);
+
+  // Determine if clock in should be disabled
+  const shouldDisableClockIn = useMemo(() => {
+    if (!location || isLoadingLocation) return true;
+    if (isOnsiteDay && !location.isWithinRadius) return true;
+    return false;
+  }, [location, isLoadingLocation, isOnsiteDay]);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -170,20 +181,40 @@ export function AttendanceDialog({
     }
   }
 
-  const locationAlert = location && !location.isWithinRadius && (
+  const locationAlert = location && (
     <motion.div
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -10 }}
       transition={{ duration: 0.2 }}
     >
-      <Alert className="mb-4 border-kr-yellow/50 bg-kr-yellow/10">
-        <Icons.alertTriangle className="h-4 w-4 text-kr-yellow" />
-        <AlertDescription className="text-sm ml-2">
-          You are currently away from the office. Your attendance will be marked
-          as remote.
-        </AlertDescription>
-      </Alert>
+      {!location.isWithinRadius && (
+        <Alert
+          className={cn(
+            "mb-4 border-kr-yellow/50",
+            isOnsiteDay ? "bg-destructive/10" : "bg-kr-yellow/10"
+          )}
+        >
+          <Icons.alertTriangle
+            className={cn(
+              "h-4 w-4",
+              isOnsiteDay ? "text-destructive" : "text-kr-yellow"
+            )}
+          />
+          <AlertDescription className="text-sm ml-2">
+            {isOnsiteDay ? (
+              <>
+                You must be within office premises to clock in on{" "}
+                {new Date().toLocaleDateString("en-US", { weekday: "long" })}s.
+                Please ensure you are at the office before attempting to clock
+                in.
+              </>
+            ) : (
+              "You are currently away from the office. Your attendance will be marked as remote."
+            )}
+          </AlertDescription>
+        </Alert>
+      )}
     </motion.div>
   );
 
@@ -254,13 +285,32 @@ export function AttendanceDialog({
             </Button>
             <Button
               onClick={handleSubmit}
-              disabled={isPending || isLoadingLocation || !location}
-              className="bg-kr-orange hover:bg-kr-orange/90"
+              disabled={
+                isPending ||
+                isLoadingLocation ||
+                !location ||
+                shouldDisableClockIn
+              }
+              className={cn(
+                "relative",
+                shouldDisableClockIn && isOnsiteDay
+                  ? "bg-destructive hover:bg-destructive/90"
+                  : "bg-kr-orange hover:bg-kr-orange/90"
+              )}
             >
               {isPending ? (
                 <LoadingSpinner />
               ) : (
-                <>Confirm Clock {mode === "in" ? "In" : "Out"}</>
+                <>
+                  {shouldDisableClockIn && isOnsiteDay ? (
+                    <div className="flex items-center space-x-2">
+                      <Icons.x className="h-4 w-4" />
+                      <span>Must Be Onsite</span>
+                    </div>
+                  ) : (
+                    <>Confirm Clock {mode === "in" ? "In" : "Out"}</>
+                  )}
+                </>
               )}
             </Button>
           </div>

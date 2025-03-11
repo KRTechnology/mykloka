@@ -4,6 +4,7 @@ import {
   MapPin,
   Moon,
   SunMedium,
+  X,
   type Icon as LucideIcon,
   AlertTriangle,
 } from "lucide-react";
@@ -17,4 +18,5 @@ export const Icons = {
   mapPin: MapPin,
   mailCheck: MailCheck,
   alertTriangle: AlertTriangle,
+  x: X,
 } satisfies Record<string, Icon>;
