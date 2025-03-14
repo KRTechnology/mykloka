@@ -46,6 +46,9 @@ export function AttendanceDialog({
 
   const OFFICE_LAT = Number(process.env.NEXT_PUBLIC_OFFICE_LAT);
   const OFFICE_LONG = Number(process.env.NEXT_PUBLIC_OFFICE_LONG);
+  const ACCEPTABLE_DISTANCE = Number(
+    process.env.NEXT_PUBLIC_ACCEPTABLE_DISTANCE_AWAY_FROM_THE_OFFICE
+  );
 
   // Check if today is an onsite day (Monday or Friday)
   const isOnsiteDay = useMemo(() => {
@@ -102,7 +105,8 @@ export function AttendanceDialog({
           latitude,
           longitude,
           OFFICE_LAT,
-          OFFICE_LONG
+          OFFICE_LONG,
+          ACCEPTABLE_DISTANCE
         );
 
         setLocation({ latitude, longitude, address, isWithinRadius });
