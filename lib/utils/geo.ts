@@ -31,7 +31,7 @@ export function isWithinOfficeRadius(
   userLong: number,
   officeLat: number,
   officeLong: number,
-  radiusKm: number = 0.6 // 300 meters
+  radiusKm: number = 0.6 // 600 meters
 ): boolean {
   const distance = calculateDistance(userLat, userLong, officeLat, officeLong);
   return distance <= radiusKm;
