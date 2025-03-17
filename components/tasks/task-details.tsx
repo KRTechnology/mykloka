@@ -42,7 +42,7 @@ export function TaskDetails({ task, user }: TaskDetailsProps) {
               </Link>
             </Button>
           )}
-          <TaskActions task={task} canApprove={canApproveTasks} />
+          <TaskActions task={task} canApprove={canApproveTasks} user={user} />
         </div>
       </div>
 

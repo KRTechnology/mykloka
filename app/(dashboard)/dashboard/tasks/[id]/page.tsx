@@ -1,4 +1,3 @@
-import { TaskDetails } from "@/components/tasks/task-details";
 import { BackButton } from "@/components/ui/back-button";
 import { getServerSession } from "@/lib/auth/auth";
 import { taskService } from "@/lib/tasks/task.service";
