@@ -7,7 +7,7 @@ import { db } from "@/lib/db/config";
 import { users } from "@/lib/db/schema";
 import { emailService } from "@/lib/email/email.service";
 import { userService } from "@/lib/users/user.service";
-import { eq } from "drizzle-orm";
+import { eq, ne, and } from "drizzle-orm";
 import { revalidateTag } from "next/cache";
 import { departmentService } from "@/lib/departments/department.service";
 
@@ -293,6 +293,56 @@ export async function getUserProfileAction(userId: string) {
       success: false,
       error:
         error instanceof Error ? error.message : "Failed to fetch user profile",
+    };
+  }
+}
+
+export async function getUsersForTaskAssignmentAction() {
+  try {
+    const session = await getServerSession();
+    if (!session) throw new Error("Unauthorized");
+
+    // Check permissions to determine which users to fetch
+    const isSuperAdmin =
+      session.permissions.includes("view_all_tasks") &&
+      session.permissions.includes("create_tasks_for_others");
+    const isDepartmentManager =
+      session.permissions.includes("view_department_tasks") &&
+      session.permissions.includes("create_tasks_for_department");
+
+    if (!isSuperAdmin && !isDepartmentManager) {
+      // Regular users can only create tasks for themselves
+      return { success: true, data: [] };
+    }
+
+    // Build the where conditions
+    const whereConditions = [
+      eq(users.isActive, true),
+      ne(users.id, session.userId),
+    ];
+
+    // Add department filter for department managers
+    if (isDepartmentManager && !isSuperAdmin && session.departmentId) {
+      whereConditions.push(eq(users.departmentId, session.departmentId));
+    }
+
+    const assignableUsers = await db
+      .select({
+        id: users.id,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        email: users.email,
+        departmentId: users.departmentId,
+      })
+      .from(users)
+      .where(and(...whereConditions));
+
+    return { success: true, data: assignableUsers };
+  } catch (error) {
+    console.error("Error fetching users for task assignment:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to fetch users",
     };
   }
 }

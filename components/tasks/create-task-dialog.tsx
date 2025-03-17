@@ -1,6 +1,7 @@
 "use client";
 
 import { createTaskAction } from "@/actions/tasks";
+import { getUsersForTaskAssignmentAction } from "@/actions/users";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -25,7 +26,15 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { UserJWTPayload } from "@/lib/auth/types";
 import { createTaskSchema } from "@/lib/tasks/types";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -33,6 +42,7 @@ import { format } from "date-fns";
 import { motion } from "framer-motion";
 import { CalendarIcon, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -40,10 +50,11 @@ import { z } from "zod";
 interface CreateTaskDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  user: UserJWTPayload;
 }
 
-// Remove assignedToId from the form schema since it's handled on the server
-const formSchema = createTaskSchema.omit({ assignedToId: true }).refine(
+// Include assignedToId in the form schema
+const formSchema = createTaskSchema.refine(
   (data) => {
     // If both dates are provided, ensure due date is not before start date
     if (data.startTime && data.dueTime) {
@@ -59,26 +70,67 @@ const formSchema = createTaskSchema.omit({ assignedToId: true }).refine(
 );
 type FormData = z.infer<typeof formSchema>;
 
+interface AssignableUser {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  departmentId: string | null;
+}
+
 export function CreateTaskDialog({
   open,
   onOpenChange,
+  user,
 }: CreateTaskDialogProps) {
   const router = useRouter();
+  const [assignableUsers, setAssignableUsers] = useState<AssignableUser[]>([]);
+  const [isLoadingUsers, setIsLoadingUsers] = useState(false);
+
+  const canAssignToOthers =
+    user.permissions.includes("create_tasks_for_others") ||
+    user.permissions.includes("create_tasks_for_department");
+
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       title: "",
       description: "",
+      assignedToId: user.userId, // Default to current user
       startTime: null,
       dueTime: null,
     },
   });
 
+  // Fetch assignable users when dialog opens
+  useEffect(() => {
+    if (open && canAssignToOthers) {
+      fetchAssignableUsers();
+    }
+  }, [open, canAssignToOthers]);
+
+  async function fetchAssignableUsers() {
+    setIsLoadingUsers(true);
+    try {
+      const result = await getUsersForTaskAssignmentAction();
+      if (result.success) {
+        setAssignableUsers(result.data || []);
+      } else {
+        toast.error(result.error || "Failed to fetch users");
+      }
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      toast.error("Failed to load assignable users");
+    } finally {
+      setIsLoadingUsers(false);
+    }
+  }
+
   async function onSubmit(data: FormData) {
     try {
       const formData = new FormData();
       Object.entries(data).forEach(([key, value]) => {
-        if (value) {
+        if (value !== null && value !== undefined) {
           if (value instanceof Date) {
             formData.append(key, value.toISOString());
           } else {
@@ -157,6 +209,52 @@ export function CreateTaskDialog({
                 )}
               />
             </motion.div>
+
+            {canAssignToOthers && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.15 }}
+              >
+                <FormField
+                  control={form.control}
+                  name="assignedToId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Assign To</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a user" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value={user.userId}>
+                            Me ({user.firstName} {user.lastName})
+                          </SelectItem>
+                          {isLoadingUsers ? (
+                            <div className="flex items-center justify-center py-2">
+                              <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                              <span>Loading users...</span>
+                            </div>
+                          ) : (
+                            assignableUsers.map((user) => (
+                              <SelectItem key={user.id} value={user.id}>
+                                {user.firstName} {user.lastName}
+                              </SelectItem>
+                            ))
+                          )}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </motion.div>
+            )}
 
             <div className="grid grid-cols-2 gap-4">
               <motion.div

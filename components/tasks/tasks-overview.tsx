@@ -136,7 +136,7 @@ export function TasksOverview({
                   ? "No tasks require your attention at the moment."
                   : "You don't have any tasks yet. Create one to get started!"}
               </p>
-              <CreateTaskButton />
+              <CreateTaskButton user={user} />
             </div>
           </div>
         ) : (

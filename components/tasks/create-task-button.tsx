@@ -4,9 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { useState } from "react";
 import { CreateTaskDialog } from "./create-task-dialog";
+import { UserJWTPayload } from "@/lib/auth/types";
 
+interface CreateTaskButtonProps {
+  user: UserJWTPayload;
+}
 
-export function CreateTaskButton() {
+export function CreateTaskButton({ user }: CreateTaskButtonProps) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -18,7 +22,7 @@ export function CreateTaskButton() {
         <Plus className="mr-2 h-4 w-4" />
         Create Task
       </Button>
-      <CreateTaskDialog open={open} onOpenChange={setOpen} />
+      <CreateTaskDialog open={open} onOpenChange={setOpen} user={user} />
     </>
   );
 }

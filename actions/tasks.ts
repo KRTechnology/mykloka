@@ -5,6 +5,9 @@ import { getServerSession } from "@/lib/auth/auth";
 import { taskService } from "@/lib/tasks/task.service";
 import { createTaskSchema, updateTaskSchema, Task } from "@/lib/tasks/types";
 import { revalidateTag, revalidatePath } from "next/cache";
+import { eq } from "drizzle-orm";
+import { db } from "@/lib/db/config";
+import { users } from "@/lib/db/schema";
 
 export async function createTaskAction(data: FormData) {
   try {
@@ -15,8 +18,7 @@ export async function createTaskAction(data: FormData) {
     const rawData = {
       title: data.get("title") as string,
       description: data.get("description") as string,
-      // Assign the task to the creator by default
-      assignedToId: session.userId,
+      assignedToId: data.get("assignedToId") as string,
       startTime: data.get("startTime")
         ? new Date(data.get("startTime") as string)
         : undefined,
@@ -24,6 +26,37 @@ export async function createTaskAction(data: FormData) {
         ? new Date(data.get("dueTime") as string)
         : undefined,
     };
+
+    // Validate permissions for assigning tasks to others
+    if (rawData.assignedToId && rawData.assignedToId !== session.userId) {
+      const canAssignToOthers = session.permissions.includes(
+        "create_tasks_for_others"
+      );
+      const canAssignToDepartment = session.permissions.includes(
+        "create_tasks_for_department"
+      );
+
+      if (!canAssignToOthers && !canAssignToDepartment) {
+        throw new Error("You don't have permission to assign tasks to others");
+      }
+
+      // If user can only assign to department members, verify the assignee is in their department
+      if (!canAssignToOthers && canAssignToDepartment) {
+        // Get the assignee's department
+        const assignee = await db.query.users.findFirst({
+          where: eq(users.id, rawData.assignedToId),
+          columns: {
+            departmentId: true,
+          },
+        });
+
+        if (!assignee || assignee.departmentId !== session.departmentId) {
+          throw new Error(
+            "You can only assign tasks to members of your department"
+          );
+        }
+      }
+    }
 
     const validatedData = createTaskSchema.parse(rawData);
 
