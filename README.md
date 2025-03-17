@@ -92,16 +92,16 @@ npm run dev
 # Todos
 
 
-- [  ] Forgot password and reset password.
+- [x] Forgot password and reset password.
 - [  ] Create single user page.
 - [x] Add an isLate flag to the attendance table.
 - [  ] Get all late attendance for a duration of time.
 - [  ] Edit/Update User Roles and Permissions.
 - [  ] Edit/Update User Profile, Departments.
 - [x] Setup clock in/out.
-- [  ] Setup task management.
+- [x] Setup task management.
 - [x] Setup role management.
 - [  ] Setup permission management.
 - [  ] Setup dashboard.
-- [  ] Setup static page for Tasks.
+- [x] Setup static page for Tasks.
 - [  ] Implement 404 Not Found page.
