@@ -1,7 +1,9 @@
 "use client";
 
+import { updateTaskStatusAction } from "@/actions/tasks";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Pagination,
   PaginationContent,
@@ -30,8 +32,10 @@ import { Task } from "@/lib/tasks/types";
 import { cn } from "@/lib/utils";
 import { formatDate } from "@/lib/utils/format";
 import { motion } from "framer-motion";
-import { Edit2, Eye, Info } from "lucide-react";
+import { Check, Edit2, Eye, Info, Play } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { toast } from "sonner";
 import { TaskActions } from "./task-actions";
 
 interface TaskListProps {
@@ -52,6 +56,63 @@ export function TaskList({
   isLoading,
 }: TaskListProps) {
   const router = useRouter();
+  const [selectedTasks, setSelectedTasks] = useState<Set<string>>(new Set());
+
+  // Check if user has permission to approve tasks
+  const canApproveTasks =
+    user.permissions.includes("approve_tasks") ||
+    user.permissions.includes("approve_department_tasks");
+
+  // Get the common status of selected tasks
+  const selectedTasksStatus =
+    selectedTasks.size > 0
+      ? tasks.find((task) => selectedTasks.has(task.id))?.status
+      : null;
+
+  // Handle bulk status change
+  const handleBulkStatusChange = async (newStatus: Task["status"]) => {
+    if (selectedTasks.size === 0) return;
+
+    try {
+      const promises = Array.from(selectedTasks).map((taskId) =>
+        updateTaskStatusAction(taskId, newStatus)
+      );
+
+      const results = await Promise.all(promises);
+      const hasErrors = results.some((result) => !result.success);
+
+      if (hasErrors) {
+        toast.error("Some tasks failed to update");
+      } else {
+        toast.success(`Successfully updated ${selectedTasks.size} tasks`);
+        setSelectedTasks(new Set());
+        router.refresh();
+      }
+    } catch (error) {
+      console.error("Error updating tasks:", error);
+      toast.error("Failed to update tasks");
+    }
+  };
+
+  // Handle task selection
+  const handleTaskSelect = (taskId: string) => {
+    const newSelected = new Set(selectedTasks);
+    if (newSelected.has(taskId)) {
+      newSelected.delete(taskId);
+    } else {
+      newSelected.add(taskId);
+    }
+    setSelectedTasks(newSelected);
+  };
+
+  // Handle select all
+  const handleSelectAll = () => {
+    if (selectedTasks.size === tasks.length) {
+      setSelectedTasks(new Set());
+    } else {
+      setSelectedTasks(new Set(tasks.map((task) => task.id)));
+    }
+  };
 
   // Generate pagination items
   const paginationItems = [];
@@ -82,6 +143,60 @@ export function TaskList({
 
   return (
     <div className="space-y-4">
+      {selectedTasks.size > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-center justify-between rounded-md border bg-muted/50 p-4"
+        >
+          <div className="flex items-center gap-4">
+            <span className="text-sm font-medium">
+              {selectedTasks.size} task{selectedTasks.size !== 1 ? "s" : ""}{" "}
+              selected
+            </span>
+            {selectedTasksStatus === "PENDING" && canApproveTasks && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleBulkStatusChange("IN_PROGRESS")}
+                className="gap-2"
+              >
+                <Play className="h-4 w-4" />
+                Approve Selected
+              </Button>
+            )}
+            {selectedTasksStatus === "COMPLETED" && canApproveTasks && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleBulkStatusChange("APPROVED")}
+                className="gap-2"
+              >
+                <Check className="h-4 w-4" />
+                Approve Selected
+              </Button>
+            )}
+            {selectedTasksStatus === "IN_PROGRESS" && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleBulkStatusChange("COMPLETED")}
+                className="gap-2"
+              >
+                <Check className="h-4 w-4" />
+                Mark Selected as Completed
+              </Button>
+            )}
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setSelectedTasks(new Set())}
+          >
+            Clear Selection
+          </Button>
+        </motion.div>
+      )}
       <div className="relative rounded-md border">
         {isLoading && (
           <motion.div
@@ -103,6 +218,12 @@ export function TaskList({
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-[50px]">
+                <Checkbox
+                  checked={selectedTasks.size === tasks.length}
+                  onCheckedChange={handleSelectAll}
+                />
+              </TableHead>
               <TableHead>Title</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Assigned To</TableHead>
@@ -123,6 +244,12 @@ export function TaskList({
 
               return (
                 <TableRow key={task.id}>
+                  <TableCell>
+                    <Checkbox
+                      checked={selectedTasks.has(task.id)}
+                      onCheckedChange={() => handleTaskSelect(task.id)}
+                    />
+                  </TableCell>
                   <TableCell className="font-medium">{task.title}</TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
