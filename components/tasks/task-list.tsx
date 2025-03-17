@@ -198,6 +198,7 @@ export function TaskList({
                       <TaskActions
                         task={task}
                         canApprove={canApproveThisTask}
+                        user={user}
                       />
                     </div>
                   </TableCell>

@@ -201,6 +201,20 @@ export async function updateTaskStatusAction(
       throw new Error("You don't have permission to modify this task");
     }
 
+    // Prevent department managers from approving their own tasks
+    // Super admins (with approve_tasks permission) can still approve their own tasks
+    if (
+      isDepartmentManager &&
+      !isManager &&
+      isAssignee &&
+      (newStatus === "APPROVED" ||
+        (currentTask.status === "PENDING" && newStatus === "IN_PROGRESS"))
+    ) {
+      throw new Error(
+        "Department managers cannot approve their own tasks. Please ask another manager to approve this task."
+      );
+    }
+
     // Validate status transition
     const { isValid, error } = validateTaskStatusTransition(
       currentTask.status,
