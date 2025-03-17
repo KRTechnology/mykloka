@@ -91,6 +91,7 @@ async function seedRoles() {
 
         // Attendance Management
         "view_department_attendance",
+        "view_own_attendance",
         "create_attendance",
         "view_department_attendance_reports",
 

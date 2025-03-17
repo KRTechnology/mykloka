@@ -223,12 +223,12 @@ class AttendanceService {
     const endOfDay = new Date(date);
     endOfDay.setHours(23, 59, 59, 999);
 
-    console.log("Getting daily stats for:", {
-      date: date.toISOString(),
-      startOfDay: startOfDay.toISOString(),
-      endOfDay: endOfDay.toISOString(),
-      options,
-    });
+    // console.log("Getting daily stats for:", {
+    //   date: date.toISOString(),
+    //   startOfDay: startOfDay.toISOString(),
+    //   endOfDay: endOfDay.toISOString(),
+    //   options,
+    // });
 
     // Get all users that should be counted
     const usersQuery = this.db.select().from(users);

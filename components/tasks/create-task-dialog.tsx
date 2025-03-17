@@ -43,7 +43,20 @@ interface CreateTaskDialogProps {
 }
 
 // Remove assignedToId from the form schema since it's handled on the server
-const formSchema = createTaskSchema.omit({ assignedToId: true });
+const formSchema = createTaskSchema.omit({ assignedToId: true }).refine(
+  (data) => {
+    // If both dates are provided, ensure due date is not before start date
+    if (data.startTime && data.dueTime) {
+      return data.dueTime >= data.startTime;
+    }
+    // If one or both dates are not provided, validation passes
+    return true;
+  },
+  {
+    message: "Due date cannot be before start date",
+    path: ["dueTime"],
+  }
+);
 type FormData = z.infer<typeof formSchema>;
 
 export function CreateTaskDialog({
@@ -180,7 +193,16 @@ export function CreateTaskDialog({
                           <Calendar
                             mode="single"
                             selected={field.value ?? undefined}
-                            onSelect={field.onChange}
+                            onSelect={(date) => {
+                              field.onChange(date);
+
+                              // Check if due date needs to be adjusted
+                              const dueDate = form.getValues("dueTime");
+                              if (dueDate && date && dueDate < date) {
+                                // If due date is before the new start date, update it
+                                form.setValue("dueTime", date);
+                              }
+                            }}
                             disabled={(date) =>
                               date <
                                 new Date(new Date().setHours(0, 0, 0, 0)) ||
@@ -204,45 +226,71 @@ export function CreateTaskDialog({
                 <FormField
                   control={form.control}
                   name="dueTime"
-                  render={({ field }) => (
-                    <FormItem className="flex flex-col">
-                      <FormLabel>Due Date</FormLabel>
-                      <Popover modal={true}>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant={"outline"}
-                              className={cn(
-                                "w-full pl-3 text-left font-normal",
-                                !field.value && "text-muted-foreground"
-                              )}
-                            >
-                              {field.value ? (
-                                format(field.value, "PPP")
-                              ) : (
-                                <span>Pick a date</span>
-                              )}
-                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={field.value ?? undefined}
-                            onSelect={field.onChange}
-                            disabled={(date) =>
-                              date <
-                                new Date(new Date().setHours(0, 0, 0, 0)) ||
-                              date < new Date("1900-01-01")
-                            }
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+                  render={({ field }) => {
+                    // Watch the start date to update the helper text
+                    const startDate = form.watch("startTime");
+
+                    return (
+                      <FormItem className="flex flex-col">
+                        <FormLabel>Due Date</FormLabel>
+                        <Popover modal={true}>
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant={"outline"}
+                                className={cn(
+                                  "w-full pl-3 text-left font-normal",
+                                  !field.value && "text-muted-foreground"
+                                )}
+                              >
+                                {field.value ? (
+                                  format(field.value, "PPP")
+                                ) : (
+                                  <span>Pick a date</span>
+                                )}
+                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={field.value ?? undefined}
+                              onSelect={field.onChange}
+                              disabled={(date) => {
+                                // Get the start date from form
+                                const startDate = form.getValues("startTime");
+
+                                // Disable dates before today
+                                const isBeforeToday =
+                                  date <
+                                  new Date(new Date().setHours(0, 0, 0, 0));
+
+                                // Disable dates before start date (if start date is selected)
+                                const isBeforeStartDate = startDate
+                                  ? date < startDate
+                                  : false;
+
+                                return (
+                                  isBeforeToday ||
+                                  isBeforeStartDate ||
+                                  date < new Date("1900-01-01")
+                                );
+                              }}
+                              initialFocus
+                            />
+                          </PopoverContent>
+                        </Popover>
+                        {startDate && (
+                          <p className="text-xs text-muted-foreground mt-1">
+                            Must be on or after start date (
+                            {format(startDate, "PP")})
+                          </p>
+                        )}
+                        <FormMessage />
+                      </FormItem>
+                    );
+                  }}
                 />
               </motion.div>
             </div>
