@@ -38,6 +38,29 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { TaskActions } from "./task-actions";
 
+// Custom styled checkbox that uses kr-orange for checked state
+function KrCheckbox({
+  checked,
+  onCheckedChange,
+  ...props
+}: {
+  checked?: boolean;
+  onCheckedChange?: (checked: boolean) => void;
+  [key: string]: any;
+}) {
+  return (
+    <Checkbox
+      checked={checked}
+      onCheckedChange={onCheckedChange}
+      className={cn(
+        "data-[state=checked]:bg-kr-orange data-[state=checked]:border-kr-orange",
+        props.className
+      )}
+      {...props}
+    />
+  );
+}
+
 interface TaskListProps {
   tasks: Task[];
   user: UserJWTPayload;
@@ -219,8 +242,10 @@ export function TaskList({
           <TableHeader>
             <TableRow>
               <TableHead className="w-[50px]">
-                <Checkbox
-                  checked={selectedTasks.size === tasks.length}
+                <KrCheckbox
+                  checked={
+                    selectedTasks.size === tasks.length && tasks.length > 0
+                  }
                   onCheckedChange={handleSelectAll}
                 />
               </TableHead>
@@ -245,7 +270,7 @@ export function TaskList({
               return (
                 <TableRow key={task.id}>
                   <TableCell>
-                    <Checkbox
+                    <KrCheckbox
                       checked={selectedTasks.has(task.id)}
                       onCheckedChange={() => handleTaskSelect(task.id)}
                     />
