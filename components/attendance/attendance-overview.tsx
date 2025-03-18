@@ -141,42 +141,45 @@ export function AttendanceOverview({
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <StatsCard
-          title="Present Today"
-          value={stats?.present || 0}
-          total={stats?.total || 0}
-          icon={UserCheck}
-          isLoading={isLoading}
-          className="border-green-100 dark:border-green-900"
-          valueClassName="text-kr-green"
-        />
-        <StatsCard
-          title="Late Today"
-          value={stats?.late || 0}
-          total={stats?.total || 0}
-          icon={Clock}
-          isLoading={isLoading}
-          className="border-yellow-100 dark:border-yellow-900"
-          valueClassName="text-yellow-500"
-        />
-        <StatsCard
-          title="Absent Today"
-          value={stats?.absent || 0}
-          total={stats?.total || 0}
-          icon={UserX}
-          isLoading={isLoading}
-          className="border-red-100 dark:border-red-900"
-          valueClassName="text-destructive"
-        />
-        <StatsCard
-          title="Total Employees"
-          value={stats?.total || 0}
-          total={stats?.total || 0}
-          icon={Users}
-          isLoading={isLoading}
-        />
-      </div>
+      {/* Only show stats cards if user can view department or all */}
+      {(canViewDepartment || canViewAll) && (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <StatsCard
+            title="Present Today"
+            value={stats?.present || 0}
+            total={stats?.total || 0}
+            icon={UserCheck}
+            isLoading={isLoading}
+            className="border-green-100 dark:border-green-900"
+            valueClassName="text-kr-green"
+          />
+          <StatsCard
+            title="Late Today"
+            value={stats?.late || 0}
+            total={stats?.total || 0}
+            icon={Clock}
+            isLoading={isLoading}
+            className="border-yellow-100 dark:border-yellow-900"
+            valueClassName="text-yellow-500"
+          />
+          <StatsCard
+            title="Absent Today"
+            value={stats?.absent || 0}
+            total={stats?.total || 0}
+            icon={UserX}
+            isLoading={isLoading}
+            className="border-red-100 dark:border-red-900"
+            valueClassName="text-destructive"
+          />
+          <StatsCard
+            title="Total Employees"
+            value={stats?.total || 0}
+            total={stats?.total || 0}
+            icon={Users}
+            isLoading={isLoading}
+          />
+        </div>
+      )}
 
       <Card>
         <CardHeader>
