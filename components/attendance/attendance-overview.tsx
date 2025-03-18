@@ -18,7 +18,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { differenceInDays, format } from "date-fns";
 import { motion } from "framer-motion";
-import { AlertTriangle, Clock, UserCheck, UserX } from "lucide-react";
+import { Users, Clock, UserCheck, UserX } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { AttendanceFilter } from "./attendance-filter";
@@ -50,8 +50,6 @@ export function AttendanceOverview({
     absent: number;
     total: number;
   } | null>(null);
-
-  //   const { toast } = useToast();
 
   useEffect(() => {
     async function fetchStats() {
@@ -175,7 +173,7 @@ export function AttendanceOverview({
           title="Total Employees"
           value={stats?.total || 0}
           total={stats?.total || 0}
-          icon={AlertTriangle}
+          icon={Users}
           isLoading={isLoading}
         />
       </div>
