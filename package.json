@@ -15,7 +15,8 @@
     "db:drop": "npx drizzle-kit drop",
     "seed:roles": "dotenv -e .env.local -- tsx scripts/seed-roles.ts",
     "seed:admin": "dotenv -e .env.local -- tsx scripts/seed-super-admin.ts",
-    "seed:departments": "dotenv -e .env.local -- tsx scripts/seed-departments.ts"
+    "seed:departments": "dotenv -e .env.local -- tsx scripts/seed-departments.ts",
+    "seed:locations": "dotenv -e .env.local -- tsx scripts/seed-work-locations.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
