@@ -19,7 +19,7 @@ export function calculateDistance(
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   const distance = R * c;
 
-  return distance;
+  return distance / 1000;
 }
 
 function toRad(value: number): number {
@@ -34,10 +34,5 @@ export function isWithinOfficeRadius(
   radiusKm: number = 0.75 // 600 meters
 ): boolean {
   const distance = calculateDistance(userLat, userLong, officeLat, officeLong);
-  console.log({
-    distance,
-    radiusKm,
-    isWithinOfficeRadius: distance <= radiusKm,
-  });
   return distance <= radiusKm;
 }
