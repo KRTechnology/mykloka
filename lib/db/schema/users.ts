@@ -6,9 +6,17 @@ import {
   uuid,
   varchar,
   type AnyPgColumn,
+  pgEnum,
 } from "drizzle-orm/pg-core";
 import { departments } from "./departments";
 import { roles } from "./roles";
+import { workLocations } from "./work-locations";
+
+export const workStructureEnum = pgEnum("work_structure", [
+  "FULLY_REMOTE",
+  "HYBRID",
+  "FULLY_ONSITE",
+]);
 
 export const users = pgTable("users", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -27,6 +35,13 @@ export const users = pgTable("users", {
     (): AnyPgColumn => departments.id,
     { onDelete: "set null" }
   ),
+  workLocationId: uuid("work_location_id").references(
+    (): AnyPgColumn => workLocations.id,
+    { onDelete: "set null" }
+  ),
+  workStructure: workStructureEnum("work_structure")
+    .notNull()
+    .default("HYBRID"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
   isActive: boolean("is_active").default(true).notNull(),
@@ -49,5 +64,9 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   }),
   subordinates: many(users, {
     relationName: "userToManager",
+  }),
+  workLocation: one(workLocations, {
+    fields: [users.workLocationId],
+    references: [workLocations.id],
   }),
 }));

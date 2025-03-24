@@ -23,6 +23,11 @@ interface AttendanceDialogProps {
   userId: string;
   mode: "in" | "out";
   attendanceId?: string;
+  workStructure: "FULLY_REMOTE" | "HYBRID" | "FULLY_ONSITE";
+  workLocation?: {
+    coordinates: [number, number];
+    radiusInMeters: number;
+  } | null;
 }
 
 interface LocationState {
@@ -38,17 +43,13 @@ export function AttendanceDialog({
   userId,
   mode,
   attendanceId,
+  workStructure,
+  workLocation,
 }: AttendanceDialogProps) {
   const [isPending, setIsPending] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [location, setLocation] = useState<LocationState | null>(null);
   const [isLoadingLocation, setIsLoadingLocation] = useState(true);
-
-  const OFFICE_LAT = Number(process.env.NEXT_PUBLIC_OFFICE_LAT);
-  const OFFICE_LONG = Number(process.env.NEXT_PUBLIC_OFFICE_LONG);
-  const ACCEPTABLE_DISTANCE = Number(
-    process.env.NEXT_PUBLIC_ACCEPTABLE_DISTANCE_AWAY_FROM_THE_OFFICE
-  );
 
   // Check if today is an onsite day (Monday or Friday)
   const isOnsiteDay = useMemo(() => {
@@ -59,9 +60,20 @@ export function AttendanceDialog({
   // Determine if clock in should be disabled
   const shouldDisableClockIn = useMemo(() => {
     if (!location || isLoadingLocation) return true;
-    if (isOnsiteDay && !location.isWithinRadius) return true;
+
+    // For fully remote workers, location doesn't matter
+    if (workStructure === "FULLY_REMOTE") return false;
+
+    // For hybrid workers on onsite days, they must be at their work location
+    if (workStructure === "HYBRID" && isOnsiteDay && !location.isWithinRadius)
+      return true;
+
+    // For fully onsite workers, they must always be at their work location
+    if (workStructure === "FULLY_ONSITE" && !location.isWithinRadius)
+      return true;
+
     return false;
-  }, [location, isLoadingLocation, isOnsiteDay]);
+  }, [location, isLoadingLocation, workStructure, isOnsiteDay]);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -101,13 +113,17 @@ export function AttendanceDialog({
 
         const { latitude, longitude } = position.coords;
         const address = await getAddressFromCoords(latitude, longitude);
-        const isWithinRadius = isWithinOfficeRadius(
-          latitude,
-          longitude,
-          OFFICE_LAT,
-          OFFICE_LONG,
-          ACCEPTABLE_DISTANCE
-        );
+
+        let isWithinRadius = false;
+        if (workLocation) {
+          isWithinRadius = isWithinOfficeRadius(
+            latitude,
+            longitude,
+            workLocation.coordinates[0],
+            workLocation.coordinates[1],
+            workLocation.radiusInMeters
+          );
+        }
 
         setLocation({ latitude, longitude, address, isWithinRadius });
       } catch (error) {
@@ -121,7 +137,7 @@ export function AttendanceDialog({
     if (isOpen) {
       getLocation();
     }
-  }, [isOpen]);
+  }, [isOpen, workLocation]);
 
   async function getAddressFromCoords(latitude: number, longitude: number) {
     const API_KEY = process.env.NEXT_PUBLIC_GEOAPIFY_API_KEY;
@@ -192,29 +208,37 @@ export function AttendanceDialog({
       exit={{ opacity: 0, y: -10 }}
       transition={{ duration: 0.2 }}
     >
-      {!location.isWithinRadius && (
+      {!location.isWithinRadius && workStructure !== "FULLY_REMOTE" && (
         <Alert
           className={cn(
             "mb-4 border-kr-yellow/50",
-            isOnsiteDay ? "bg-destructive/10" : "bg-kr-yellow/10"
+            workStructure === "FULLY_ONSITE" ||
+              (workStructure === "HYBRID" && isOnsiteDay)
+              ? "bg-destructive/10"
+              : "bg-kr-yellow/10"
           )}
         >
           <Icons.alertTriangle
             className={cn(
               "h-4 w-4",
-              isOnsiteDay ? "text-destructive" : "text-kr-yellow"
+              workStructure === "FULLY_ONSITE" ||
+                (workStructure === "HYBRID" && isOnsiteDay)
+                ? "text-destructive"
+                : "text-kr-yellow"
             )}
           />
           <AlertDescription className="text-sm ml-2">
-            {isOnsiteDay ? (
+            {workStructure === "FULLY_ONSITE" ? (
+              "You must be at your designated work location to clock in."
+            ) : workStructure === "HYBRID" && isOnsiteDay ? (
               <>
-                You must be within office premises to clock in on{" "}
+                You must be at your designated work location to clock in on{" "}
                 {new Date().toLocaleDateString("en-US", { weekday: "long" })}s.
                 Please ensure you are at the office before attempting to clock
                 in.
               </>
             ) : (
-              "You are currently away from the office. Your attendance will be marked as remote."
+              "You are currently away from your designated work location. Your attendance will be marked as remote."
             )}
           </AlertDescription>
         </Alert>
@@ -297,7 +321,7 @@ export function AttendanceDialog({
               }
               className={cn(
                 "relative",
-                shouldDisableClockIn && isOnsiteDay
+                shouldDisableClockIn
                   ? "bg-destructive hover:bg-destructive/90"
                   : "bg-kr-orange hover:bg-kr-orange/90"
               )}
@@ -306,10 +330,10 @@ export function AttendanceDialog({
                 <LoadingSpinner />
               ) : (
                 <>
-                  {shouldDisableClockIn && isOnsiteDay ? (
+                  {shouldDisableClockIn ? (
                     <div className="flex items-center space-x-2">
                       <Icons.x className="h-4 w-4" />
-                      <span>Must Be Onsite</span>
+                      <span>Must Be At Work Location</span>
                     </div>
                   ) : (
                     <>Confirm Clock {mode === "in" ? "In" : "Out"}</>
