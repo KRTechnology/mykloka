@@ -115,6 +115,9 @@ export function AttendanceDialog({
         const address = await getAddressFromCoords(latitude, longitude);
 
         let isWithinRadius = false;
+        console.log({
+          workLocation,
+        });
         if (workLocation) {
           isWithinRadius = isWithinOfficeRadius(
             latitude,
