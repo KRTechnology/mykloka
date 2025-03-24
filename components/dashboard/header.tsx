@@ -25,7 +25,7 @@ import { toast } from "sonner";
 import { LoadingSpinner } from "../ui/loading-spinner";
 
 interface HeaderProps {
-  user: UserJWTPayload & { userId: string };
+  user: UserJWTPayload;
 }
 
 interface AttendanceStatus {
@@ -211,6 +211,8 @@ export function Header({ user }: HeaderProps) {
           userId={user.userId}
           mode={isClockedIn ? "out" : "in"}
           attendanceId={attendanceId}
+          workStructure={user.workStructure}
+          workLocation={user.workLocation}
         />
       )}
     </div>

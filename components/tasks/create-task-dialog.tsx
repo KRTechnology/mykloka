@@ -34,7 +34,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { UserJWTPayload } from "@/lib/auth/types";
+import { UserJWTPayload } from "@/lib/auth/auth.service";
 import { createTaskSchema } from "@/lib/tasks/types";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";

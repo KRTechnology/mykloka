@@ -40,19 +40,3 @@ export type Permission =
   | "manage_roles"
   | "view_system_reports"
   | "manage_system_settings";
-
-export type UserJWTPayload = {
-  userId: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  role: {
-    id: string;
-    name: string;
-  };
-  roleId: string;
-  roleName: string;
-  permissions: Permission[];
-  departmentId?: string;
-  managerId?: string;
-};

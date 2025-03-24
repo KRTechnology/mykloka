@@ -2,8 +2,8 @@
 
 import { TaskDetails } from "@/components/tasks/task-details";
 import { TasksProvider } from "@/contexts/TasksContext";
+import { UserJWTPayload } from "@/lib/auth/auth.service";
 import { Task } from "@/lib/tasks/types";
-import { UserJWTPayload } from "@/lib/auth/types";
 
 interface TaskDetailsWrapperProps {
   task: Task;

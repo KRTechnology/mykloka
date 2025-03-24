@@ -10,17 +10,17 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useTasksContext } from "@/contexts/TasksContext";
-import { UserJWTPayload } from "@/lib/auth/types";
+import { UserJWTPayload } from "@/lib/auth/auth.service";
 import { Task } from "@/lib/tasks/types";
 import { motion } from "framer-motion";
 import {
   Check,
   Clock,
+  Info,
   MoreHorizontal,
   Play,
   RotateCcw,
   X,
-  Info,
 } from "lucide-react";
 import { useTransition } from "react";
 import { toast } from "sonner";

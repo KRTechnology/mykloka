@@ -1,10 +1,10 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { UserJWTPayload } from "@/lib/auth/auth.service";
 import { Plus } from "lucide-react";
 import { useState } from "react";
 import { CreateTaskDialog } from "./create-task-dialog";
-import { UserJWTPayload } from "@/lib/auth/types";
 
 interface CreateTaskButtonProps {
   user: UserJWTPayload;

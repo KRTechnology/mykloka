@@ -1,12 +1,11 @@
-import { eq } from "drizzle-orm";
-import { SignJWT, jwtVerify, JWTPayload } from "jose";
-import { nanoid } from "nanoid";
 import { hash, verify } from "argon2";
-import { Permission } from "./types";
-import { roles, users } from "../db/schema";
-import { emailVerificationTokens } from "../db/schema/email-verification";
+import { eq } from "drizzle-orm";
+import { SignJWT, jwtVerify } from "jose";
+import { nanoid } from "nanoid";
 import { db as dbClient } from "../db/config";
-// import {  } from "drizzle-orm";
+import { users } from "../db/schema";
+import { emailVerificationTokens } from "../db/schema/email-verification";
+import { Permission } from "./types";
 
 export interface UserJWTPayload {
   userId: string;
@@ -22,6 +21,11 @@ export interface UserJWTPayload {
   permissions: Permission[];
   departmentId?: string;
   managerId?: string;
+  workStructure: "FULLY_REMOTE" | "HYBRID" | "FULLY_ONSITE";
+  workLocation?: {
+    coordinates: [number, number];
+    radiusInMeters: number;
+  } | null;
   [key: string]: unknown;
 }
 
@@ -148,6 +152,8 @@ export class AuthService {
       permissions: user.role.permissions as Permission[],
       departmentId: user.departmentId ?? undefined,
       managerId: user.managerId ?? undefined,
+      workStructure: "FULLY_REMOTE",
+      workLocation: null,
     };
 
     const token = await new SignJWT(payload)

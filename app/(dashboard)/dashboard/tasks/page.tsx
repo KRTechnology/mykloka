@@ -3,7 +3,7 @@ import { TasksOverview } from "@/components/tasks/tasks-overview";
 import { Heading } from "@/components/ui/heading";
 import { Separator } from "@/components/ui/separator";
 import { getServerSession } from "@/lib/auth/auth";
-import { UserJWTPayload } from "@/lib/auth/types";
+import { UserJWTPayload } from "@/lib/auth/auth.service";
 import { taskService } from "@/lib/tasks/task.service";
 import { Task } from "@/lib/tasks/types";
 import { Metadata } from "next";
