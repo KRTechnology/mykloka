@@ -124,12 +124,20 @@ export class AuthService {
         roleId: true,
         departmentId: true,
         managerId: true,
+        workLocationId: true,
+        workStructure: true,
       },
       with: {
         role: {
           columns: {
             name: true,
             permissions: true,
+          },
+        },
+        workLocation: {
+          columns: {
+            coordinates: true,
+            radiusInMeters: true,
           },
         },
       },
@@ -152,8 +160,13 @@ export class AuthService {
       permissions: user.role.permissions as Permission[],
       departmentId: user.departmentId ?? undefined,
       managerId: user.managerId ?? undefined,
-      workStructure: "FULLY_REMOTE",
-      workLocation: null,
+      workStructure: user.workStructure,
+      workLocation: user.workLocation
+        ? {
+            coordinates: user.workLocation.coordinates as [number, number],
+            radiusInMeters: user.workLocation.radiusInMeters,
+          }
+        : null,
     };
 
     const token = await new SignJWT(payload)
