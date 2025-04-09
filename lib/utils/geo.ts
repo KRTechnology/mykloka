@@ -41,7 +41,9 @@ export function isWithinOfficeRadius(
     officeLat,
     officeLong
   );
+
   // Convert radius from meters to kilometers
   const radiusInKm = radiusInMeters / 1000;
+
   return distanceInKm <= radiusInKm;
 }

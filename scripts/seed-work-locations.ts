@@ -20,7 +20,7 @@ async function seedWorkLocations() {
       address:
         "Plot 2 & 3, Water Corporation Dr, Victoria Island, Annex 106104, Lagos",
       coordinates: sql`point(3.4453496806934245, 6.423763400177621)`,
-      radiusInMeters: 1,
+      radiusInMeters: 1000,
       isActive: true,
     })
     .returning();
@@ -33,7 +33,7 @@ async function seedWorkLocations() {
       address:
         "No 3 Atbara Street, off Cairo Street, Ademola Adetokunbo Crescent, Wuse 2, Abuja",
       coordinates: sql`point(7.480407097138789, 9.077727558108839)`,
-      radiusInMeters: 1,
+      radiusInMeters: 1000,
       isActive: true,
     })
     .returning();
