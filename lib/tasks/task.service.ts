@@ -3,9 +3,106 @@ import { tasks, users } from "@/lib/db/schema";
 import { and, asc, desc, eq, ilike, isNotNull, or, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { type CreateTaskInput, type Task, type UpdateTaskData } from "./types";
+import { emailService } from "@/lib/email/email.service";
 
 export class TaskService {
   constructor(private db: typeof dbClient) {}
+
+  private async sendTaskNotifications(
+    taskId: string,
+    actionType:
+      | "created"
+      | "completed"
+      | "in_progress"
+      | "approved"
+      | "rejected",
+    rejectionReason?: string
+  ) {
+    try {
+      // Get the full task with relations
+      const task = await this.getTaskById(taskId);
+      if (!task) return;
+
+      // Get the manager's email if the task was created by a subordinate
+      if (actionType === "created" || actionType === "completed") {
+        const subordinate = await this.db.query.users.findFirst({
+          where: eq(users.id, task.createdById),
+          columns: {
+            managerId: true,
+            firstName: true,
+            lastName: true,
+          },
+        });
+
+        if (subordinate?.managerId) {
+          const manager = await this.db.query.users.findFirst({
+            where: eq(users.id, subordinate.managerId),
+            columns: {
+              email: true,
+              firstName: true,
+              lastName: true,
+            },
+          });
+
+          if (manager) {
+            await emailService.sendTaskManagerNotification({
+              managerEmail: manager.email,
+              taskTitle: task.title,
+              taskDescription: task.description || "",
+              subordinateName: `${subordinate.firstName} ${subordinate.lastName}`,
+              taskLink: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/tasks/${task.id}`,
+              actionType,
+              dueDate: task.dueTime?.toISOString(),
+            });
+          }
+        }
+      }
+
+      // Get the subordinate's email if the task status was changed by a manager
+      if (
+        actionType === "in_progress" ||
+        actionType === "approved" ||
+        actionType === "rejected"
+      ) {
+        const subordinateId = task.assignedToId || task.createdById;
+        const subordinate = await this.db.query.users.findFirst({
+          where: eq(users.id, subordinateId),
+          columns: {
+            email: true,
+            firstName: true,
+            lastName: true,
+          },
+        });
+
+        const managerId = task.approvedById || task.completionApprovedById;
+        if (!managerId) return;
+
+        const manager = await this.db.query.users.findFirst({
+          where: eq(users.id, managerId),
+          columns: {
+            firstName: true,
+            lastName: true,
+          },
+        });
+
+        if (subordinate && manager) {
+          await emailService.sendTaskSubordinateNotification({
+            subordinateEmail: subordinate.email,
+            taskTitle: task.title,
+            taskDescription: task.description || "",
+            managerName: `${manager.firstName} ${manager.lastName}`,
+            taskLink: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/tasks/${task.id}`,
+            actionType,
+            dueDate: task.dueTime?.toISOString(),
+            rejectionReason,
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Error sending task notifications:", error);
+      // Don't throw the error as we don't want to fail the task operation
+    }
+  }
 
   async createTask(data: CreateTaskInput) {
     const [task] = await this.db
@@ -16,6 +113,9 @@ export class TaskService {
         requiresApproval: data.requiresApproval ?? true,
       })
       .returning();
+
+    // Send notification to manager
+    await this.sendTaskNotifications(task.id, "created");
 
     return task;
   }
@@ -61,6 +161,17 @@ export class TaskService {
       .set(updates)
       .where(eq(tasks.id, id))
       .returning();
+
+    // Send appropriate notifications based on status change
+    if (status === "COMPLETED") {
+      await this.sendTaskNotifications(task.id, "completed");
+    } else if (status === "IN_PROGRESS") {
+      await this.sendTaskNotifications(task.id, "in_progress");
+    } else if (status === "APPROVED") {
+      await this.sendTaskNotifications(task.id, "approved");
+    } else if (status === "REJECTED") {
+      await this.sendTaskNotifications(task.id, "rejected");
+    }
 
     return task;
   }

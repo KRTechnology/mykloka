@@ -1,14 +1,11 @@
-import { Suspense } from "react";
+import { getDashboardStatsAction } from "@/actions/dashboard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Users, Clock, ClipboardList, Building2 } from "lucide-react";
-import { getDashboardStatsAction } from "@/actions/dashboard";
-import { QuickLinks } from "../../../components/dashboard/quick-links";
-import { RecentActivity } from "../../../components/dashboard/recent-activity";
-import { WeeklyAttendanceChart } from "../../../components/dashboard/weekly-attendance-chart";
-import { TaskOverview } from "../../../components/dashboard/task-overview";
 import { getServerSession } from "@/lib/auth/auth";
+import { Building2, ClipboardList, Clock, Users } from "lucide-react";
 import { redirect } from "next/navigation";
+import { Suspense } from "react";
+import { QuickLinks } from "../../../components/dashboard/quick-links";
 
 function StatCard({
   title,
