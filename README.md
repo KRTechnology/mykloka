@@ -19,7 +19,7 @@ A modern, role-based HR management system built with Next.js 14, featuring real-
 - ⏰ Attendance Tracking
   - Clock in/out functionality
   - Attendance history
-  - Manager oversight
+  - Manager oversight.
 
 - ✅ Task Management
   - Create and assign tasks
