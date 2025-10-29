@@ -568,7 +568,7 @@ Users can have three work structure types:
 
 - `present`: Clocked in before 8:30 AM
 - `late`: Clocked in after 8:30 AM
-- `absent`: No attendance record for the day
+- `absent`: No attendance record for the day.
 
 ### Task Approval Workflow
 
