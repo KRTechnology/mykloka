@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
         headers: {
           "Content-Type": "application/json",
         },
-      }
+      },
     );
 
     // Set cookie in the response
@@ -51,9 +51,10 @@ export async function POST(request: NextRequest) {
           headers: {
             "Content-Type": "application/json",
           },
-        }
+        },
       );
     }
+    console.log(error);
     return NextResponse.json(
       { error: "Invalid credentials" },
       {
@@ -61,7 +62,7 @@ export async function POST(request: NextRequest) {
         headers: {
           "Content-Type": "application/json",
         },
-      }
+      },
     );
   }
 }
