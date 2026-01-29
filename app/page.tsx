@@ -206,7 +206,7 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-      <div className="bg-[#ebe9e9] pb-10">
+      <div className="bg-[#ebe9e9] pb-10 block md:hidden">
         <div className="bg-[#F5F5F5] p-4 md:p-10 md:pr-0 w-full md:w-1/2">
           <Image
             src={landingPageBanner_2}
