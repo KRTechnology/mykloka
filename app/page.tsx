@@ -29,6 +29,7 @@ export default function HomePage() {
           </div>
 
           {/* Navigation Links - Hidden on mobile */}
+          {/* Nav */}
           <nav className="hidden md:flex items-center gap-8 font-bold text-gray-800">
             <Link
               href="#features"
