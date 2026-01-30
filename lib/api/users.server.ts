@@ -87,7 +87,7 @@ export async function inviteUserAction(userData: InviteUserData) {
     throw new Error(data?.error || "Failed to invite user");
   }
 
-  revalidateTag("users");
+  revalidateTag("users", "default");
   return res.json();
 }
 
@@ -104,7 +104,7 @@ export async function updateUserAction(userId: string, data: Partial<User>) {
     throw new Error("Failed to update user");
   }
 
-  revalidateTag("users");
+  revalidateTag("users", "default");
   return res.json();
 }
 
@@ -117,6 +117,6 @@ export async function deleteUserAction(userId: string) {
     throw new Error("Failed to delete user");
   }
 
-  revalidateTag("users");
+  revalidateTag("users", "default");
   return res.json();
 }

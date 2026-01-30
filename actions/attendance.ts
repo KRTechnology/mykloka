@@ -28,7 +28,7 @@ export async function clockInAction(data: {
       isRemote: data.isRemote,
     });
 
-    revalidateTag("attendance");
+    revalidateTag("attendance", "default");
     return { success: true, data: record };
   } catch (error) {
     console.error("Error clocking in:", error);
@@ -59,7 +59,7 @@ export async function clockOutAction(data: {
       isRemote: data.isRemote,
     });
 
-    revalidateTag("attendance");
+    revalidateTag("attendance", "default");
     return { success: true, data: record };
   } catch (error) {
     console.error("Error clocking out:", error);

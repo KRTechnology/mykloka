@@ -22,7 +22,7 @@ export interface Department {
 }
 
 export async function getAllDepartments(
-  options: TypeGetDepartmentsOptions = {}
+  options: TypeGetDepartmentsOptions = {},
 ) {
   const result = await getDepartmentsAction(options);
   if (!result.success) {
@@ -46,11 +46,11 @@ export async function getAllDepartments(
 }
 
 export async function getAllDepartmentsForDropdown(
-  baseUrl?: string
+  baseUrl?: string,
 ): Promise<{ data: Department[] }> {
   const url = new URL(
     "/api/departments",
-    baseUrl || process.env.NEXT_PUBLIC_APP_URL || ""
+    baseUrl || process.env.NEXT_PUBLIC_APP_URL || "",
   );
   url.searchParams.set("dropdown", "true");
 
@@ -79,7 +79,7 @@ export async function getAllDepartmentsForDropdown(
 //     throw new Error(error.error || "Failed to create department");
 //   }
 
-//   revalidateTag("departments");
+//   revalidateTag("departments","default");
 //   return res.json();
 // }
 
@@ -96,7 +96,7 @@ export async function getAllDepartmentsForDropdown(
 //     throw new Error("Failed to update department");
 //   }
 
-//   revalidateTag("departments");
+//   revalidateTag("departments","default");
 //   return res.json();
 // }
 
@@ -109,7 +109,7 @@ export async function getAllDepartmentsForDropdown(
 //     throw new Error("Failed to delete department");
 //   }
 
-//   revalidateTag("departments");
+//   revalidateTag("departments","default");
 //   return res.json();
 // }
 

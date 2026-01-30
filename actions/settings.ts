@@ -43,7 +43,7 @@ export async function updateNotificationSettingsAction({
       })
       .returning();
 
-    revalidateTag("user-settings");
+    revalidateTag("user-settings", "default");
     return { success: true, data: updatedSettings };
   } catch (error) {
     console.error("Error updating notification settings:", error);
@@ -85,7 +85,7 @@ export async function updateAccountSettingsAction({
         .where(eq(users.id, userId));
     }
 
-    revalidateTag("user-settings");
+    revalidateTag("user-settings", "default");
     return { success: true };
   } catch (error) {
     console.error("Error updating account settings:", error);

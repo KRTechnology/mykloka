@@ -30,10 +30,10 @@ export async function createTaskAction(data: FormData) {
     // Validate permissions for assigning tasks to others
     if (rawData.assignedToId && rawData.assignedToId !== session.userId) {
       const canAssignToOthers = session.permissions.includes(
-        "create_tasks_for_others"
+        "create_tasks_for_others",
       );
       const canAssignToDepartment = session.permissions.includes(
-        "create_tasks_for_department"
+        "create_tasks_for_department",
       );
 
       if (!canAssignToOthers && !canAssignToDepartment) {
@@ -52,7 +52,7 @@ export async function createTaskAction(data: FormData) {
 
         if (!assignee || assignee.departmentId !== session.departmentId) {
           throw new Error(
-            "You can only assign tasks to members of your department"
+            "You can only assign tasks to members of your department",
           );
         }
       }
@@ -69,7 +69,7 @@ export async function createTaskAction(data: FormData) {
       requiresApproval,
     });
 
-    revalidateTag("tasks");
+    revalidateTag("tasks", "default");
     revalidatePath("/dashboard/tasks");
     return { success: true, data: task };
   } catch (error) {
@@ -101,7 +101,7 @@ export async function updateTaskAction(id: string, data: FormData) {
     const validatedData = updateTaskSchema.parse(rawData);
     const task = await taskService.updateTask(id, validatedData);
 
-    revalidateTag("tasks");
+    revalidateTag("tasks", "default");
     revalidatePath("/dashboard/tasks");
     return { success: true, data: task };
   } catch (error) {
@@ -117,7 +117,7 @@ function validateTaskStatusTransition(
   currentStatus: Task["status"],
   newStatus: Task["status"],
   isManager: boolean,
-  isAssignee: boolean
+  isAssignee: boolean,
 ): { isValid: boolean; error?: string } {
   // Status transition rules
   const transitions: Record<
@@ -145,7 +145,7 @@ function validateTaskStatusTransition(
 
   // Find a valid transition rule
   const validTransition = allowedTransitions.find((t) =>
-    t.allowedStatuses.includes(newStatus)
+    t.allowedStatuses.includes(newStatus),
   );
 
   if (!validTransition) {
@@ -175,7 +175,7 @@ function validateTaskStatusTransition(
 
 export async function updateTaskStatusAction(
   id: string,
-  newStatus: Task["status"]
+  newStatus: Task["status"],
 ) {
   try {
     const session = await getServerSession();
@@ -211,7 +211,7 @@ export async function updateTaskStatusAction(
         (currentTask.status === "PENDING" && newStatus === "IN_PROGRESS"))
     ) {
       throw new Error(
-        "Department managers cannot approve their own tasks. Please ask another manager to approve this task."
+        "Department managers cannot approve their own tasks. Please ask another manager to approve this task.",
       );
     }
 
@@ -220,7 +220,7 @@ export async function updateTaskStatusAction(
       currentTask.status,
       newStatus,
       isManager || isDepartmentManager,
-      isAssignee
+      isAssignee,
     );
 
     if (!isValid) {
@@ -231,11 +231,11 @@ export async function updateTaskStatusAction(
     const updatedTask = await taskService.updateTaskStatus(
       id,
       newStatus,
-      session.userId
+      session.userId,
     );
 
     // Revalidate both the tag and the paths
-    revalidateTag("tasks");
+    revalidateTag("tasks", "default");
     revalidatePath("/dashboard/tasks");
     revalidatePath("/api/tasks");
 
@@ -260,7 +260,7 @@ export async function approveTaskCompletionAction(id: string) {
 
     const task = await taskService.approveCompletion(id, session.userId);
 
-    revalidateTag("tasks");
+    revalidateTag("tasks", "default");
     revalidatePath("/dashboard/tasks");
     return { success: true, data: task };
   } catch (error) {

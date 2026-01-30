@@ -69,7 +69,7 @@ export async function createDepartmentAction(data: CreateDepartmentData) {
       }
     }
 
-    revalidateTag("departments");
+    revalidateTag("departments", "default");
     return { success: true, data: department };
   } catch (error) {
     return {
@@ -92,11 +92,11 @@ export async function updateDepartmentAction(id: string, data: DepartmentData) {
     // Update department and its users' managers
     const updatedDepartment = await departmentService.updateDepartmentHead(
       id,
-      validatedData.headId ?? null
+      validatedData.headId ?? null,
     );
 
-    revalidateTag("departments");
-    revalidateTag("users"); // Also revalidate users since their managers might have changed
+    revalidateTag("departments", "default");
+    revalidateTag("users", "default"); // Also revalidate users since their managers might have changed
 
     return { success: true, data: updatedDepartment };
   } catch (error) {
@@ -128,7 +128,7 @@ export async function deleteDepartmentAction(id: string) {
     }
 
     // Revalidate cache
-    revalidateTag("departments");
+    revalidateTag("departments", "default");
 
     return { success: true, data: deletedDepartment[0] };
   } catch (error) {
@@ -183,14 +183,14 @@ export async function getDepartmentsAction({
         departments.updatedAt,
         head.id,
         head.firstName,
-        head.lastName
+        head.lastName,
       )
       .$dynamic();
 
     // Add search condition if provided
     if (search) {
       baseQuery = baseQuery.where(
-        sql`LOWER(${departments.name}) LIKE ${`%${search.toLowerCase()}%`}`
+        sql`LOWER(${departments.name}) LIKE ${`%${search.toLowerCase()}%`}`,
       );
     }
 
@@ -207,7 +207,7 @@ export async function getDepartmentsAction({
         : departments.createdAt;
 
     baseQuery = baseQuery.orderBy(
-      sortDirection === "desc" ? desc(sortColumn) : asc(sortColumn)
+      sortDirection === "desc" ? desc(sortColumn) : asc(sortColumn),
     );
 
     // Get total count for pagination
