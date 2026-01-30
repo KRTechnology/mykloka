@@ -1,5 +1,8 @@
-import { revalidateTag } from "next/cache";
 import { z } from "zod";
+
+// ============================================================================
+// SCHEMAS & VALIDATION
+// ============================================================================
 
 export const inviteUserSchema = z.object({
   email: z
@@ -53,6 +56,10 @@ export const updateUserSchema = z
   })
   .partial(); // Makes all fields optional for updates
 
+// ============================================================================
+// TYPES
+// ============================================================================
+
 export type InviteUserData = z.infer<typeof inviteUserSchema>;
 export type UpdateUserData = z.infer<typeof updateUserSchema>;
 
@@ -82,68 +89,9 @@ export interface PaginatedUsers {
   totalPages: number;
 }
 
-export async function getUsers(
-  baseUrl?: string,
-  options: {
-    page?: number;
-    pageSize?: number;
-    search?: string;
-    sortBy?: string;
-    sortDirection?: "asc" | "desc";
-  } = {},
-) {
-  try {
-    const { page = 1, pageSize = 10, search, sortBy, sortDirection } = options;
-
-    if (baseUrl) {
-      const queryParams = new URLSearchParams({
-        page: page.toString(),
-        pageSize: pageSize.toString(),
-        ...(search && { search }),
-        ...(sortBy && { sortBy }),
-        ...(sortDirection && { sortDirection }),
-      });
-
-      const url = `${baseUrl}/api/users?${queryParams}`;
-      const res = await fetch(url, {
-        next: {
-          tags: ["users"],
-          revalidate: 0, // Set to 0 to force revalidation on each request
-        },
-        cache: "no-store", // Disable HTTP cache
-      });
-
-      if (!res.ok) {
-        throw new Error("Failed to fetch users");
-      }
-
-      return (await res.json()) as PaginatedUsers;
-    }
-
-    const res = await fetch("/api/users", {
-      next: {
-        tags: ["users"],
-        revalidate: 0,
-      },
-      cache: "no-store",
-    });
-
-    if (!res.ok) {
-      throw new Error("Failed to fetch users");
-    }
-
-    return (await res.json()) as PaginatedUsers;
-  } catch (error) {
-    console.error("Error fetching users:", error);
-    return {
-      data: [],
-      total: 0,
-      page: 1,
-      pageSize: 10,
-      totalPages: 0,
-    };
-  }
-}
+// ============================================================================
+// CLIENT-SIDE API FUNCTIONS
+// ============================================================================
 
 export async function inviteUser(userData: InviteUserData) {
   const res = await fetch("/api/users", {
@@ -162,7 +110,6 @@ export async function inviteUser(userData: InviteUserData) {
     throw new Error(data?.error || "Failed to invite user");
   }
 
-  revalidateTag("users", "default");
   return res.json();
 }
 
@@ -179,7 +126,6 @@ export async function updateUser(userId: string, data: Partial<User>) {
     throw new Error("Failed to update user");
   }
 
-  revalidateTag("users", "default");
   return res.json();
 }
 
@@ -192,6 +138,5 @@ export async function deleteUser(userId: string) {
     throw new Error("Failed to delete user");
   }
 
-  revalidateTag("users", "default");
   return res.json();
 }
