@@ -1,7 +1,7 @@
 import { DepartmentForm } from "@/components/departments/department-form";
 import { BackButton } from "@/components/ui/back-button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getUsers } from "@/lib/api/users";
+import { getUsers } from "@/lib/api/users.server";
 import { headers } from "next/headers";
 import { Suspense } from "react";
 

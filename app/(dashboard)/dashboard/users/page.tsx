@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Heading } from "@/components/ui/heading";
 import { Separator } from "@/components/ui/separator";
 import { TableSkeleton } from "@/components/ui/table-skeleton";
-import { getUsers } from "@/lib/api/users";
+import { getUsers } from "@/lib/api/users.server";
 import { Plus } from "lucide-react";
 import { headers } from "next/headers";
 import Link from "next/link";
