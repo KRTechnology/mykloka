@@ -11,7 +11,7 @@ export const inviteUserSchema = z.object({
     .trim()
     .regex(
       /^[a-zA-Z\s-']+$/,
-      "First name can only contain letters, spaces, hyphens, and apostrophes"
+      "First name can only contain letters, spaces, hyphens, and apostrophes",
     ),
   lastName: z
     .string({ required_error: "Last name is required" })
@@ -19,7 +19,7 @@ export const inviteUserSchema = z.object({
     .trim()
     .regex(
       /^[a-zA-Z\s-']+$/,
-      "Last name can only contain letters, spaces, hyphens, and apostrophes"
+      "Last name can only contain letters, spaces, hyphens, and apostrophes",
     ),
   roleId: z
     .string({ required_error: "Role is required" })
@@ -90,7 +90,7 @@ export async function getUsers(
     search?: string;
     sortBy?: string;
     sortDirection?: "asc" | "desc";
-  } = {}
+  } = {},
 ) {
   try {
     const { page = 1, pageSize = 10, search, sortBy, sortDirection } = options;
@@ -162,7 +162,7 @@ export async function inviteUser(userData: InviteUserData) {
     throw new Error(data?.error || "Failed to invite user");
   }
 
-  revalidateTag("users");
+  revalidateTag("users", "default");
   return res.json();
 }
 
@@ -179,7 +179,7 @@ export async function updateUser(userId: string, data: Partial<User>) {
     throw new Error("Failed to update user");
   }
 
-  revalidateTag("users");
+  revalidateTag("users", "default");
   return res.json();
 }
 
@@ -192,6 +192,6 @@ export async function deleteUser(userId: string) {
     throw new Error("Failed to delete user");
   }
 
-  revalidateTag("users");
+  revalidateTag("users", "default");
   return res.json();
 }

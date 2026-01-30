@@ -26,7 +26,6 @@ export async function inviteUserAction(data: InviteUserData) {
     const user = await userService.createUser(validatedData);
 
     // Revalidate cache
-    revalidateTag("users");
 
     return { success: true, data: user };
   } catch (error) {
@@ -87,7 +86,7 @@ export async function updateUserAction(data: UpdateUserData) {
     }
 
     // Revalidate cache
-    revalidateTag("users");
+    revalidateTag("users", "default");
 
     return { success: true, data: updatedUser };
   } catch (error) {
@@ -114,7 +113,7 @@ export async function deleteUserAction(id: string) {
       throw new Error("User not found");
     }
 
-    revalidateTag("users");
+    revalidateTag("users", "default");
 
     return { success: true, data: deletedUser[0] };
   } catch (error) {
@@ -154,7 +153,7 @@ export async function resendInvitationAction(userId: string) {
     // Create new verification token
     const token = await authService.createEmailVerificationToken(
       user.email,
-      user.id
+      user.id,
     );
 
     // Generate verification link
@@ -189,7 +188,7 @@ type GetDepartmentUsersResponse =
   | { success: false; error: string };
 
 export async function getDepartmentUsersAction(
-  departmentId?: string
+  departmentId?: string,
 ): Promise<GetDepartmentUsersResponse> {
   try {
     const session = await getServerSession();
