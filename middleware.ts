@@ -4,6 +4,7 @@ import { jwtVerify } from "jose";
 
 // Add auth routes that should be accessible without a token
 const publicRoutes = [
+  "/",
   "/login",
   "/verify",
   "/reset-password",
@@ -25,7 +26,7 @@ export async function middleware(request: NextRequest) {
 
   // Check if the path is a public route
   const isPublicRoute = publicRoutes.some((route) =>
-    pathname.startsWith(route)
+    pathname.startsWith(route),
   );
   const isAuthRoute = authRoutes.some((route) => pathname.startsWith(route));
 
@@ -46,7 +47,7 @@ export async function middleware(request: NextRequest) {
     try {
       const verified = await jwtVerify(
         token.value,
-        new TextEncoder().encode(process.env.JWT_SECRET!)
+        new TextEncoder().encode(process.env.JWT_SECRET!),
       );
 
       const response = NextResponse.next();
