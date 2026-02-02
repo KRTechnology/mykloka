@@ -73,7 +73,7 @@ export default function HomePage() {
         {/* Buttons - Hidden on mobile */}
         <div className="hidden md:flex items-center gap-4">
           <Button className="bg-[#FF6F00] hover:bg-[#FF6F00]/90 text-white">
-            Log in
+            <Link href="/client-login">Log in</Link>
           </Button>
           <Button className="bg-white border border-gray-300 hover:bg-gray-100 text-gray-800">
             Sign Up
