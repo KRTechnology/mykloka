@@ -5,9 +5,6 @@ import { jwtVerify } from "jose";
 const MAIN_DOMAIN = "mysite.com";
 const PUBLIC_ROUTES = ["/login"];
 const DASHBOARD_PREFIX = "/dashboard";
-const EXCLUDED_ROUTES = ["/invalid-tenant", ...PUBLIC_ROUTES];
-
-const ALLOWED_TENANTS = ["one", "two"];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -21,47 +18,31 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  /* ─────────────────────────────
+     DOMAIN / SUBDOMAIN DETECTION
+     ───────────────────────────── */
+
   const rawHost = request.headers.get("host") || "";
-  const hostname = rawHost.split(":")[0];
+  const hostname = rawHost.split(":")[0]; // strip port
+
   const isLocalhost = hostname.endsWith("localhost");
 
   let tenant: string | null = null;
 
-  // Localhost subdomain: tenant.localhost
   if (isLocalhost) {
+    // tenant.localhost
     const parts = hostname.split(".");
     if (parts.length > 1) tenant = parts[0];
-  }
-  // Production MAIN_DOMAIN
-  else if (hostname.endsWith(`.${MAIN_DOMAIN}`)) {
+  } else if (hostname.endsWith(`.${MAIN_DOMAIN}`)) {
     tenant = hostname.replace(`.${MAIN_DOMAIN}`, "");
-  }
-  // Vercel preview / branch URL
-  else if (hostname.endsWith(".vercel.app")) {
-    const parts = hostname.split(".");
-    tenant = parts[0]; // always take first part as tenant
   }
 
   const isSubdomain = !!tenant && tenant !== "www";
 
   /* ─────────────────────────────
-     SUBDOMAIN CHECK
-  ───────────────────────────── */
-  if (isSubdomain && tenant && !EXCLUDED_ROUTES.includes(pathname)) {
-    const allowed = ALLOWED_TENANTS.includes(tenant);
-    if (!allowed) {
-      const redirectUrl = isLocalhost
-        ? `http://localhost:3000/invalid-tenant`
-        : hostname.endsWith(".vercel.app")
-          ? `https://${hostname.split(".").slice(1).join(".")}/invalid-tenant` // strip tenant from Vercel URL
-          : `https://${MAIN_DOMAIN}/invalid-tenant`;
-      return NextResponse.redirect(redirectUrl);
-    }
-  }
-
-  /* ─────────────────────────────
      AUTH TOKEN
-  ───────────────────────────── */
+     ───────────────────────────── */
+
   const token = request.cookies.get("auth_token");
   let userPayload: any = null;
 
@@ -73,12 +54,7 @@ export async function middleware(request: NextRequest) {
       );
       userPayload = verified.payload;
     } catch {
-      const redirectUrl = isLocalhost
-        ? `http://localhost:3000/login`
-        : hostname.endsWith(".vercel.app")
-          ? `https://${hostname.split(".").slice(1).join(".")}/login`
-          : `https://${MAIN_DOMAIN}/login`;
-      const res = NextResponse.redirect(redirectUrl);
+      const res = NextResponse.redirect(new URL("/login", request.url));
       res.cookies.delete("auth_token");
       return res;
     }
@@ -86,7 +62,8 @@ export async function middleware(request: NextRequest) {
 
   /* ─────────────────────────────
      SUBDOMAIN ACCESS LOCKDOWN
-  ───────────────────────────── */
+     ───────────────────────────── */
+
   if (isSubdomain) {
     const isDashboard =
       pathname === DASHBOARD_PREFIX ||
@@ -96,48 +73,25 @@ export async function middleware(request: NextRequest) {
 
     // "/" → /login
     if (pathname === "/") {
-      const redirectUrl = isLocalhost
-        ? `http://localhost:3000/login`
-        : hostname.endsWith(".vercel.app")
-          ? `https://${hostname.split(".").slice(1).join(".")}/login`
-          : `https://${MAIN_DOMAIN}/login`;
-      return NextResponse.redirect(redirectUrl);
+      return NextResponse.redirect(new URL("/login", request.url));
     }
 
     // Logged in user should NOT see login again
     if (token && pathname === "/login") {
-      const redirectUrl = isLocalhost
-        ? `http://localhost:3000/dashboard`
-        : hostname.endsWith(".vercel.app")
-          ? `https://${hostname.split(".").slice(1).join(".")}/dashboard`
-          : `https://${MAIN_DOMAIN}/dashboard`;
-      return NextResponse.redirect(redirectUrl);
+      return NextResponse.redirect(new URL("/dashboard", request.url));
     }
 
-    // Block everything except dashboard & public routes
+    // Block everything except login & dashboard
     if (!isDashboard && !isPublic) {
-      const redirectUrl = isLocalhost
-        ? `http://localhost:3000/login`
-        : hostname.endsWith(".vercel.app")
-          ? `https://${hostname.split(".").slice(1).join(".")}/login`
-          : `https://${MAIN_DOMAIN}/login`;
-      return NextResponse.redirect(redirectUrl);
+      return NextResponse.redirect(new URL("/login", request.url));
     }
 
     // Dashboard requires auth
     if (isDashboard && !token) {
-      const redirectUrl = isLocalhost
-        ? `http://localhost:3000/login`
-        : hostname.endsWith(".vercel.app")
-          ? `https://${hostname.split(".").slice(1).join(".")}/login`
-          : `https://${MAIN_DOMAIN}/login`;
-      return NextResponse.redirect(redirectUrl);
+      return NextResponse.redirect(new URL("/login", request.url));
     }
   }
 
-  /* ─────────────────────────────
-     ATTACH HEADERS
-  ───────────────────────────── */
   const response = NextResponse.next();
 
   if (userPayload) {
