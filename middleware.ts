@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { jwtVerify } from "jose";
 
-const MAIN_DOMAIN = "mykloka-git-newwhitepaper-kr-tech-s-projects.vercel.app";
+const MAIN_DOMAIN = "mysite.com";
 const PUBLIC_ROUTES = ["/login"];
 const DASHBOARD_PREFIX = "/dashboard";
 const EXCLUDED_ROUTES = ["/invalid-tenant", ...PUBLIC_ROUTES];
