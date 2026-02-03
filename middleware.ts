@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { jwtVerify } from "jose";
 
-const MAIN_DOMAIN = "mysite.com";
+const MAIN_DOMAIN = "mykloka.vercel.app";
+const ALLOWED_SUBDOMAINS = ["kr", "med"]; // Only these subdomains are allowed
 const PUBLIC_ROUTES = ["/login"];
 const DASHBOARD_PREFIX = "/dashboard";
 
@@ -30,14 +31,20 @@ export async function middleware(request: NextRequest) {
   let tenant: string | null = null;
 
   if (isLocalhost) {
-    // tenant.localhost
+    // tenant.localhost for local dev
     const parts = hostname.split(".");
     if (parts.length > 1) tenant = parts[0];
   } else if (hostname.endsWith(`.${MAIN_DOMAIN}`)) {
+    // Extract subdomain from production URL
     tenant = hostname.replace(`.${MAIN_DOMAIN}`, "");
   }
 
   const isSubdomain = !!tenant && tenant !== "www";
+
+  // Block access if subdomain is not in allowed list
+  if (isSubdomain && tenant && !ALLOWED_SUBDOMAINS.includes(tenant)) {
+    return new NextResponse("Subdomain not found", { status: 404 });
+  }
 
   /* ─────────────────────────────
      AUTH TOKEN
