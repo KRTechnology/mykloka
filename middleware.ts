@@ -1,12 +1,14 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { jwtVerify } from "jose";
-import { tenantChecker } from "@/lib/api/organization"; // mock checker
 
 const MAIN_DOMAIN = "mysite.com";
 const PUBLIC_ROUTES = ["/login"];
 const DASHBOARD_PREFIX = "/dashboard";
 const EXCLUDED_ROUTES = ["/invalid-tenant", ...PUBLIC_ROUTES];
+
+// Hardcoded allowed tenants for now
+const ALLOWED_TENANTS = ["one", "two"];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -35,6 +37,10 @@ export async function middleware(request: NextRequest) {
     if (parts.length > 1) tenant = parts[0]; // tenant.localhost
   } else if (hostname.endsWith(`.${MAIN_DOMAIN}`)) {
     tenant = hostname.replace(`.${MAIN_DOMAIN}`, "");
+  } else if (hostname.endsWith(".vercel.app")) {
+    // Handle Vercel preview domains: first part is tenant
+    const parts = hostname.split(".");
+    if (parts.length > 3) tenant = parts[0]; // e.g., one.mykloka-project.vercel.app
   }
 
   const isSubdomain = !!tenant && tenant !== "www";
@@ -44,7 +50,7 @@ export async function middleware(request: NextRequest) {
   ───────────────────────────── */
 
   if (isSubdomain && tenant && !EXCLUDED_ROUTES.includes(pathname)) {
-    const allowed = await tenantChecker.checkTenant(tenant);
+    const allowed = ALLOWED_TENANTS.includes(tenant);
     if (!allowed) {
       const redirectUrl = isLocalhost
         ? `http://localhost:3000/invalid-tenant`
