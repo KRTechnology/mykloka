@@ -15,54 +15,32 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { email, password } = loginSchema.parse(body);
 
-    // Validate credentials and get user ID
     const userId = await authService.validateLogin(email, password);
-
-    // Generate auth token
     const token = await authService.createAuthToken(userId);
 
-    // Create response with JSON
-    const response = NextResponse.json(
-      { success: true },
-      {
-        status: 200,
-        headers: {
-          "Content-Type": "application/json",
-        },
-      },
-    );
+    const response = NextResponse.json({ success: true }, { status: 200 });
 
-    // Set cookie in the response
+    const isProd = process.env.NODE_ENV === "production";
+
     response.cookies.set("auth_token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: isProd,
       sameSite: "lax",
       path: "/",
+      ...(isProd && { domain: ".mysite.com" }), // 🔥 THIS LINE FIXES SUBDOMAINS
     });
 
     return response;
   } catch (error) {
     console.error("Login error:", error);
+
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: "Validation error", details: error.errors },
-        {
-          status: 400,
-          headers: {
-            "Content-Type": "application/json",
-          },
-        },
+        { status: 400 },
       );
     }
-    console.log(error);
-    return NextResponse.json(
-      { error: "Invalid credentials" },
-      {
-        status: 401,
-        headers: {
-          "Content-Type": "application/json",
-        },
-      },
-    );
+
+    return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
   }
 }

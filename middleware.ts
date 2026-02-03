@@ -1,81 +1,140 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { jwtVerify } from "jose";
+import { tenantChecker } from "@/lib/api/organization"; // mock checker
 
-// Add auth routes that should be accessible without a token
-const publicRoutes = [
-  "/",
-  "/login",
-  "/verify",
-  "/reset-password",
-  "/forgot-password",
-];
-// Add routes that should redirect to dashboard if user is authenticated
-const authRoutes = ["/login"];
-// const authRoutes = ["/login", "/verify", "/reset-password"];
+const MAIN_DOMAIN = "mysite.com";
+const PUBLIC_ROUTES = ["/login"];
+const DASHBOARD_PREFIX = "/dashboard";
+const EXCLUDED_ROUTES = ["/invalid-tenant", ...PUBLIC_ROUTES];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Skip middleware for API routes
-  if (pathname.startsWith("/api/")) {
+  // Ignore Next internals & API
+  if (
+    pathname.startsWith("/api") ||
+    pathname.startsWith("/_next") ||
+    pathname === "/favicon.ico"
+  ) {
     return NextResponse.next();
   }
 
+  /* ─────────────────────────────
+     DOMAIN / SUBDOMAIN DETECTION
+  ───────────────────────────── */
+
+  const rawHost = request.headers.get("host") || "";
+  const hostname = rawHost.split(":")[0]; // strip port
+  const isLocalhost = hostname.endsWith("localhost");
+
+  let tenant: string | null = null;
+
+  if (isLocalhost) {
+    const parts = hostname.split(".");
+    if (parts.length > 1) tenant = parts[0]; // tenant.localhost
+  } else if (hostname.endsWith(`.${MAIN_DOMAIN}`)) {
+    tenant = hostname.replace(`.${MAIN_DOMAIN}`, "");
+  }
+
+  const isSubdomain = !!tenant && tenant !== "www";
+
+  /* ─────────────────────────────
+     CHECK IF SUBDOMAIN IS ALLOWED
+  ───────────────────────────── */
+
+  if (isSubdomain && tenant && !EXCLUDED_ROUTES.includes(pathname)) {
+    const allowed = await tenantChecker.checkTenant(tenant);
+    if (!allowed) {
+      const redirectUrl = isLocalhost
+        ? `http://localhost:3000/invalid-tenant`
+        : `https://${MAIN_DOMAIN}/invalid-tenant`;
+      return NextResponse.redirect(redirectUrl);
+    }
+  }
+
+  /* ─────────────────────────────
+     AUTH TOKEN
+  ───────────────────────────── */
+
   const token = request.cookies.get("auth_token");
+  let userPayload: any = null;
 
-  // Check if the path is a public route
-  const isPublicRoute = publicRoutes.some((route) =>
-    pathname.startsWith(route),
-  );
-  const isAuthRoute = authRoutes.some((route) => pathname.startsWith(route));
-
-  // If no token and trying to access protected route
-  if (!token && !isPublicRoute) {
-    const loginUrl = new URL("/login", request.url);
-    loginUrl.searchParams.set("from", pathname);
-    return NextResponse.redirect(loginUrl);
-  }
-
-  // If has token and trying to access auth routes (login, etc)
-  if (token && isAuthRoute) {
-    return NextResponse.redirect(new URL("/dashboard", request.url));
-  }
-
-  // For protected routes, verify token and add user info to headers
-  if (token && !isPublicRoute) {
+  if (token) {
     try {
       const verified = await jwtVerify(
         token.value,
         new TextEncoder().encode(process.env.JWT_SECRET!),
       );
-
-      const response = NextResponse.next();
-      response.headers.set("X-User-Info", JSON.stringify(verified.payload));
-
-      return response;
+      userPayload = verified.payload;
     } catch {
-      // If token is invalid, clear it and redirect to login
-      const response = NextResponse.redirect(new URL("/login", request.url));
-      response.cookies.delete("auth_token");
-      return response;
+      const redirectUrl = isLocalhost
+        ? `http://localhost:3000/login`
+        : `https://${MAIN_DOMAIN}/login`;
+      const res = NextResponse.redirect(redirectUrl);
+      res.cookies.delete("auth_token");
+      return res;
     }
   }
 
-  return NextResponse.next();
+  /* ─────────────────────────────
+     SUBDOMAIN ACCESS LOCKDOWN
+  ───────────────────────────── */
+
+  if (isSubdomain) {
+    const isDashboard =
+      pathname === DASHBOARD_PREFIX ||
+      pathname.startsWith(`${DASHBOARD_PREFIX}/`);
+
+    const isPublic = PUBLIC_ROUTES.includes(pathname);
+
+    // "/" → /login
+    if (pathname === "/") {
+      const redirectUrl = isLocalhost
+        ? `http://localhost:3000/login`
+        : `https://${MAIN_DOMAIN}/login`;
+      return NextResponse.redirect(redirectUrl);
+    }
+
+    // Logged in user should NOT see login again
+    if (token && pathname === "/login") {
+      const redirectUrl = isLocalhost
+        ? `http://localhost:3000/dashboard`
+        : `https://${MAIN_DOMAIN}/dashboard`;
+      return NextResponse.redirect(redirectUrl);
+    }
+
+    // Block everything except dashboard & public routes
+    if (!isDashboard && !isPublic) {
+      const redirectUrl = isLocalhost
+        ? `http://localhost:3000/login`
+        : `https://${MAIN_DOMAIN}/login`;
+      return NextResponse.redirect(redirectUrl);
+    }
+
+    // Dashboard requires auth
+    if (isDashboard && !token) {
+      const redirectUrl = isLocalhost
+        ? `http://localhost:3000/login`
+        : `https://${MAIN_DOMAIN}/login`;
+      return NextResponse.redirect(redirectUrl);
+    }
+  }
+
+  /* ─────────────────────────────
+     ATTACH HEADERS
+  ───────────────────────────── */
+
+  const response = NextResponse.next();
+
+  if (userPayload) {
+    response.headers.set("X-User-Info", JSON.stringify(userPayload));
+    if (isSubdomain) response.headers.set("X-Tenant", tenant!);
+  }
+
+  return response;
 }
 
 export const config = {
-  // Update matcher to include all routes that need protection
-  matcher: [
-    /*
-     * Match all request paths except:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public folder
-     * - images folder (added this)
-     */
-    "/((?!_next/static|_next/image|favicon.ico|public/|images/).*)",
-  ],
+  matcher: ["/((?!_next/static|_next/image).*)"],
 };
