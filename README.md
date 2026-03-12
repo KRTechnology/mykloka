@@ -1,6 +1,6 @@
 # Kimberly Ryan HR Management System
 
-A modern, role-based HR management system built with Next.js 15, featuring real-time attendance tracking, task management, user administration, and comprehensive permission management. The system is designed for Kimberly Ryan and provides a complete solution for managing employees, departments, attendance, and tasks.
+A modern, role-based HR management system built with Next.js 15, featuring real-time attendance tracking, task management, user administration, and comprehensive permission management. The system is designed for Kimberly Ryan and provides a complete solution for managing employees, departments, attendance, and tasks. 
 
 ## Table of Contents
 
